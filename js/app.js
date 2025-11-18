@@ -72,32 +72,41 @@ document.addEventListener("DOMContentLoaded", () => {
     App.showPage("seasonMap");
   });
   
-  // 6. Delegierte Back-Button Handler
+  document.getElementById("continueFromTeamSelectionBtn")?.addEventListener("click", () => {
+    App.showPage("selection");
+  });
+  
+  // 6. Delegierte Button Handler (alle Navigation-Buttons)
   document.addEventListener("click", (e) => {
     try {
       const btn = e.target.closest("button");
-      if (!btn) return;
+      if (!btn || !btn.id) return;
       
-      const backIds = new Set([
-        "backToStatsBtn",
-        "backToStatsFromSeasonBtn",
-        "backToStatsFromSeasonMapBtn",
-        "backFromGoalValueBtn"
-      ]);
+      // Navigation buttons mapping
+      const navigationMap = {
+        // Stats page navigation
+        "selectPlayersBtn": "selection",
+        "torbildBtn": "torbild",
+        "goalValueBtn": "goalValue",
+        "seasonBtn": "season",
+        "seasonMapBtn": "seasonMap",
+        // Back buttons
+        "backToStatsBtn": "stats",
+        "backToStatsFromSeasonBtn": "stats",
+        "backToStatsFromSeasonMapBtn": "stats",
+        "backFromGoalValueBtn": "stats",
+        "backToTeamSelectionBtn": "teamSelection",
+        // Team selection continue button
+        "continueFromTeamSelectionBtn": "selection"
+      };
       
-      if (backIds.has(btn.id)) {
-        App.showPage("stats");
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      
-      if (btn.id === "backToTeamSelectionBtn") {
-        App.showPage("teamSelection");
+      if (navigationMap[btn.id]) {
+        App.showPage(navigationMap[btn.id]);
         e.preventDefault();
         e.stopPropagation();
       }
     } catch (err) {
-      console.warn("Back button delegation failed:", err);
+      console.warn("Navigation button delegation failed:", err);
     }
   }, true);
   
