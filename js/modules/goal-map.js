@@ -144,15 +144,17 @@ App.goalMap = {
       
       // Touch Events
       img.addEventListener("touchstart", (ev) => {
+        ev.preventDefault(); // Prevent scrolling while marking
         isLong = false;
         if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
         mouseHoldTimer = setTimeout(() => {
           isLong = true;
           placeMarker(getPosFromEvent(ev.touches[0]), true);
         }, App.markerHandler.LONG_MARK_MS);
-      }, { passive: true });
+      });
       
       img.addEventListener("touchend", (ev) => {
+        ev.preventDefault(); // Prevent ghost clicks
         if (mouseHoldTimer) {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
@@ -168,7 +170,7 @@ App.goalMap = {
           lastTouchEnd = now;
         }
         isLong = false;
-      }, { passive: true });
+      });
       
       img.addEventListener("touchcancel", () => {
         if (mouseHoldTimer) {
@@ -176,7 +178,7 @@ App.goalMap = {
           mouseHoldTimer = null;
         }
         isLong = false;
-      }, { passive: true });
+      });
     });
   },
   
@@ -197,6 +199,7 @@ App.goalMap = {
         let lastTap = 0;
         let clickTimeout = null;
         let touchStart = 0;
+        let lastTouch = 0;
         
         const updateValue = (delta) => {
           const current = Number(btn.textContent) || 0;
@@ -207,8 +210,14 @@ App.goalMap = {
           localStorage.setItem("timeData", JSON.stringify(timeData));
         };
         
-        btn.addEventListener("click", () => {
+        btn.addEventListener("click", (e) => {
+          // Ignore click if it's from a recent touch event
           const now = Date.now();
+          if (now - lastTouch < 500) {
+            e.preventDefault();
+            return;
+          }
+          
           const diff = now - lastTap;
           if (diff < 300) {
             if (clickTimeout) {
@@ -227,10 +236,11 @@ App.goalMap = {
         });
         
         btn.addEventListener("touchstart", (e) => {
+          e.preventDefault(); // Prevent ghost clicks
+          lastTouch = Date.now();
           const now = Date.now();
           const diff = now - touchStart;
           if (diff < 300) {
-            e.preventDefault();
             if (clickTimeout) {
               clearTimeout(clickTimeout);
               clickTimeout = null;
@@ -246,7 +256,7 @@ App.goalMap = {
               }
             }, 300);
           }
-        }, { passive: true });
+        });
       });
     });
   },

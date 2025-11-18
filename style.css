@@ -823,6 +823,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   cursor: pointer;
   font-size: 1rem;
   transition: background 0.3s ease;
+  filter: grayscale(100%) brightness(0.4);
 }
 
 .edit-team-btn:hover {
