@@ -106,6 +106,7 @@ App.teamSelection = {
     const teamId = `team${this.currentTeam}`;
     
     // Save all current data with team prefix
+    localStorage.setItem(`playerPool_${teamId}`, JSON.stringify(App.data.players || []));
     localStorage.setItem(`selectedPlayers_${teamId}`, JSON.stringify(App.data.selectedPlayers || []));
     localStorage.setItem(`statsData_${teamId}`, JSON.stringify(App.data.statsData || {}));
     localStorage.setItem(`playerTimes_${teamId}`, JSON.stringify(App.data.playerTimes || {}));
@@ -128,12 +129,43 @@ App.teamSelection = {
     const teamId = `team${teamNumber}`;
     
     // Load team-specific data or use defaults
+    const savedPlayerPool = localStorage.getItem(`playerPool_${teamId}`);
     const savedPlayers = localStorage.getItem(`selectedPlayers_${teamId}`);
     const savedStats = localStorage.getItem(`statsData_${teamId}`);
     const savedTimes = localStorage.getItem(`playerTimes_${teamId}`);
     const savedSeason = localStorage.getItem(`seasonData_${teamId}`);
     const savedOppShots = localStorage.getItem(`opponentShots_${teamId}`);
     const savedActiveTimers = localStorage.getItem(`activeTimerPlayers_${teamId}`);
+    
+    // Load or create team-specific player pool
+    if (savedPlayerPool) {
+      App.data.players = JSON.parse(savedPlayerPool);
+    } else {
+      // Team 1 gets the default player list, Teams 2 and 3 get 30 empty slots
+      if (teamNumber === 1) {
+        App.data.players = [
+          { num: 4, name: "Ondrej Kastner" }, { num: 5, name: "Raphael Oehninger" },
+          { num: 6, name: "Nuno Meier" }, { num: 7, name: "Silas Teuber" },
+          { num: 8, name: "Diego Warth" }, { num: 9, name: "Mattia Crameri" },
+          { num: 10, name: "Mael Bernath" }, { num: 11, name: "Sean Nef" },
+          { num: 12, name: "Rafael Burri" }, { num: 13, name: "Lenny Schwarz" },
+          { num: 14, name: "David Lienert" }, { num: 15, name: "Neven Severini" },
+          { num: 16, name: "Nils Koubek" }, { num: 17, name: "Lio Kundert" },
+          { num: 18, name: "Livio Berner" }, { num: 19, name: "Robin Strasser" },
+          { num: 21, name: "Marlon Kreyenbühl" }, { num: 22, name: "Martin Lana" },
+          { num: 23, name: "Manuel Isler" }, { num: 24, name: "Moris Hürlimann" },
+          { num: "", name: "Levi Baumann" }, { num: "", name: "Corsin Blapp" },
+          { num: "", name: "Lenny Zimmermann" }, { num: "", name: "Luke Böhmichen" },
+          { num: "", name: "Livio Weissen" }, { num: "", name: "Raul Wütrich" },
+          { num: "", name: "Marco Senn" }
+        ];
+      } else {
+        // Teams 2 and 3 get 30 empty player slots
+        App.data.players = Array(30).fill(null).map((_, i) => ({ num: "", name: "" }));
+      }
+      // Save the default player pool for this team
+      localStorage.setItem(`playerPool_${teamId}`, JSON.stringify(App.data.players));
+    }
     
     // Reset App data
     App.data.selectedPlayers = savedPlayers ? JSON.parse(savedPlayers) : [];
@@ -193,6 +225,11 @@ App.teamSelection = {
   },
   
   refreshAllTables() {
+    // Refresh player selection list
+    if (App.playerSelection && App.playerSelection.render) {
+      App.playerSelection.render();
+    }
+    
     // Refresh stats table
     if (App.statsTable && App.statsTable.render) {
       App.statsTable.render();

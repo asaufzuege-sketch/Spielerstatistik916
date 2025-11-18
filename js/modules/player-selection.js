@@ -85,6 +85,11 @@ App.playerSelection = {
           const numInput = li.querySelector(".num-input");
           if (numInput) {
             num = numInput.value.trim();
+            // Update the player pool with the new number
+            const playerInPool = App.data.players.find(p => p.name === name);
+            if (playerInPool) {
+              playerInPool.num = num;
+            }
           } else {
             const numDiv = li.querySelector(".num");
             if (numDiv) num = numDiv.textContent.trim();
@@ -95,18 +100,33 @@ App.playerSelection = {
       });
       
       const customLis = Array.from(this.container.querySelectorAll("li")).slice(App.data.players.length);
-      customLis.forEach(li => {
+      customLis.forEach((li, idx) => {
         const chk = li.querySelector(".custom-checkbox");
         const numInput = li.querySelector(".custom-num");
         const nameInput = li.querySelector(".custom-name");
         
-        if (chk && chk.checked && nameInput && nameInput.value.trim() !== "") {
-          App.data.selectedPlayers.push({
-            num: numInput ? (numInput.value.trim() || "") : "",
-            name: nameInput.value.trim()
-          });
+        if (nameInput && nameInput.value.trim() !== "") {
+          const num = numInput ? (numInput.value.trim() || "") : "";
+          const name = nameInput.value.trim();
+          
+          // Update or add to player pool
+          if (idx < App.data.players.length) {
+            App.data.players[idx] = { num, name };
+          } else {
+            App.data.players.push({ num, name });
+          }
+          
+          if (chk && chk.checked) {
+            App.data.selectedPlayers.push({ num, name });
+          }
         }
       });
+      
+      // Save the updated player pool
+      if (App.teamSelection && App.teamSelection.currentTeam) {
+        const teamId = `team${App.teamSelection.currentTeam}`;
+        localStorage.setItem(`playerPool_${teamId}`, JSON.stringify(App.data.players));
+      }
       
       App.storage.saveSelectedPlayers();
       
