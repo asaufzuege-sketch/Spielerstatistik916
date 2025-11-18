@@ -523,14 +523,24 @@ App.seasonTable = {
         rows.push(totalRow);
       }
 
-      const csv = rows.map(r => r.join(";")).join("\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "season.csv";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      alert("Season CSV exportiert.");
+      // Export als HTML Tabelle für bessere Excel/Google Sheets Kompatibilität
+      if (App.csvHandler && typeof App.csvHandler.downloadHTML === 'function') {
+        const teamId = App.csvHandler.getCurrentTeamId();
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+        const filename = `season_data_${teamId}_${timestamp}.html`;
+        App.csvHandler.downloadHTML(rows, filename, "Season Data");
+        alert("Season exportiert als HTML-Tabelle.");
+      } else {
+        // Fallback: CSV Export
+        const csv = rows.map(r => r.join(";")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "season.csv";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        alert("Season CSV exportiert.");
+      }
     } catch (e) {
       console.error("Season CSV Export fehlgeschlagen:", e);
       alert("Fehler beim Season-Export (siehe Konsole).");

@@ -31,6 +31,8 @@ App.goalMap = {
       let isLong = false;
       let lastMouseUp = 0;
       let lastTouchEnd = 0;
+      let touchMoved = false;
+      let touchStartPos = null;
       
       const getPosFromEvent = (e) => {
         const boxRect = img.getBoundingClientRect();
@@ -108,6 +110,9 @@ App.goalMap = {
       
       // Mouse Events
       img.addEventListener("mousedown", (ev) => {
+        // Ignore if recent touch event (prevent ghost clicks)
+        if (Date.now() - lastTouchEnd < 500) return;
+        
         isLong = false;
         if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
         mouseHoldTimer = setTimeout(() => {
@@ -117,6 +122,9 @@ App.goalMap = {
       });
       
       img.addEventListener("mouseup", (ev) => {
+        // Ignore if recent touch event (prevent ghost clicks)
+        if (Date.now() - lastTouchEnd < 500) return;
+        
         if (mouseHoldTimer) {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
@@ -142,14 +150,41 @@ App.goalMap = {
         isLong = false;
       });
       
-      // Touch Events
+      // Touch Events with improved handling
       img.addEventListener("touchstart", (ev) => {
+        // Prevent default to avoid scrolling while placing markers
+        if (ev.touches.length === 1) {
+          ev.preventDefault();
+        }
+        
+        touchMoved = false;
+        touchStartPos = { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
         isLong = false;
+        
         if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
         mouseHoldTimer = setTimeout(() => {
-          isLong = true;
-          placeMarker(getPosFromEvent(ev.touches[0]), true);
+          if (!touchMoved) {
+            isLong = true;
+            placeMarker(getPosFromEvent(ev.touches[0]), true);
+          }
         }, App.markerHandler.LONG_MARK_MS);
+      }, { passive: false });
+      
+      img.addEventListener("touchmove", (ev) => {
+        if (!touchStartPos) return;
+        
+        const dx = ev.touches[0].clientX - touchStartPos.x;
+        const dy = ev.touches[0].clientY - touchStartPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // If moved more than 10px, consider it a swipe
+        if (distance > 10) {
+          touchMoved = true;
+          if (mouseHoldTimer) {
+            clearTimeout(mouseHoldTimer);
+            mouseHoldTimer = null;
+          }
+        }
       }, { passive: true });
       
       img.addEventListener("touchend", (ev) => {
@@ -157,6 +192,15 @@ App.goalMap = {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
         }
+        
+        // If touch moved, don't place marker
+        if (touchMoved) {
+          touchMoved = false;
+          touchStartPos = null;
+          isLong = false;
+          return;
+        }
+        
         const now = Date.now();
         const pos = getPosFromEvent(ev.changedTouches[0]);
         
@@ -167,6 +211,9 @@ App.goalMap = {
           if (!isLong) placeMarker(pos, false);
           lastTouchEnd = now;
         }
+        
+        touchMoved = false;
+        touchStartPos = null;
         isLong = false;
       }, { passive: true });
       
@@ -175,6 +222,8 @@ App.goalMap = {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
         }
+        touchMoved = false;
+        touchStartPos = null;
         isLong = false;
       }, { passive: true });
     });
@@ -184,6 +233,7 @@ App.goalMap = {
     if (!this.timeTrackingBox) return;
     
     let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
+    let lastTouchTime = 0;
     
     this.timeTrackingBox.querySelectorAll(".period").forEach(period => {
       const periodNum = period.dataset.period || Math.random().toString(36).slice(2, 6);
@@ -196,7 +246,7 @@ App.goalMap = {
         
         let lastTap = 0;
         let clickTimeout = null;
-        let touchStart = 0;
+        let touchHandled = false;
         
         const updateValue = (delta) => {
           const current = Number(btn.textContent) || 0;
@@ -207,8 +257,17 @@ App.goalMap = {
           localStorage.setItem("timeData", JSON.stringify(timeData));
         };
         
-        btn.addEventListener("click", () => {
+        // Handle click events (mouse only)
+        btn.addEventListener("click", (e) => {
           const now = Date.now();
+          
+          // Prevent ghost clicks after touch events
+          if (now - lastTouchTime < 500) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          
           const diff = now - lastTap;
           if (diff < 300) {
             if (clickTimeout) {
@@ -226,27 +285,46 @@ App.goalMap = {
           }
         });
         
+        // Handle touch events
         btn.addEventListener("touchstart", (e) => {
+          e.preventDefault(); // Prevent mouse events from firing
+          touchHandled = false;
           const now = Date.now();
-          const diff = now - touchStart;
+          
+          const diff = now - lastTap;
           if (diff < 300) {
-            e.preventDefault();
+            // Double tap - decrement
             if (clickTimeout) {
               clearTimeout(clickTimeout);
               clickTimeout = null;
             }
             updateValue(-1);
-            touchStart = 0;
+            lastTap = 0;
+            touchHandled = true;
           } else {
-            touchStart = now;
-            setTimeout(() => {
-              if (touchStart !== 0) {
+            // Single tap - schedule increment
+            clickTimeout = setTimeout(() => {
+              if (!touchHandled) {
                 updateValue(+1);
-                touchStart = 0;
               }
+              clickTimeout = null;
             }, 300);
+            lastTap = now;
           }
-        }, { passive: true });
+          
+          lastTouchTime = now;
+        }, { passive: false });
+        
+        btn.addEventListener("touchend", (e) => {
+          e.preventDefault();
+        }, { passive: false });
+        
+        btn.addEventListener("touchcancel", (e) => {
+          if (clickTimeout) {
+            clearTimeout(clickTimeout);
+            clickTimeout = null;
+          }
+        });
       });
     });
   },

@@ -21,6 +21,11 @@ App.playerSelection = {
     
     this.container.innerHTML = "";
     
+    // Ensure App.data.players exists - for Teams 2 & 3 with empty slots
+    if (!App.data.players) {
+      App.data.players = [];
+    }
+    
     const sortedPlayers = App.data.players.slice().sort((a, b) => {
       const na = Number(a.num) || 999;
       const nb = Number(b.num) || 999;
@@ -32,24 +37,41 @@ App.playerSelection = {
       const checkboxId = `player-chk-${idx}`;
       const checked = App.data.selectedPlayers.find(sp => sp.name === p.name) ? "checked" : "";
       
+      // Check if this is an empty slot (both num and name are empty)
+      const isEmpty = (p.num === "" || p.num === null || p.num === undefined || String(p.num).trim() === "") &&
+                      (p.name === "" || p.name === null || p.name === undefined || String(p.name).trim() === "");
+      
       let numAreaHtml = "";
-      if (p.num !== "" && p.num !== null && p.num !== undefined && String(p.num).trim() !== "") {
-        numAreaHtml = `<div class="num" style="flex:0 0 48px;text-align:center;"><strong>${App.helpers.escapeHtml(p.num)}</strong></div>`;
-      } else {
+      let nameAreaHtml = "";
+      
+      if (isEmpty) {
+        // Empty slot: show input fields for both number and name
         numAreaHtml = `<div style="flex:0 0 64px;text-align:center;">
                          <input class="num-input" type="text" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;padding:6px;border-radius:6px;border:1px solid #444;">
                        </div>`;
+        nameAreaHtml = `<input type="text" class="name-input" placeholder="Spielername" value="" style="flex:1;min-width:0;border-radius:6px;border:1px solid #444;padding:6px;background:var(--row-even);color:var(--text-color);">`;
+      } else if (p.num !== "" && p.num !== null && p.num !== undefined && String(p.num).trim() !== "") {
+        // Has number: show number and name
+        numAreaHtml = `<div class="num" style="flex:0 0 48px;text-align:center;"><strong>${App.helpers.escapeHtml(p.num)}</strong></div>`;
+        nameAreaHtml = `<div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>`;
+      } else {
+        // Has name but no number: show input for number
+        numAreaHtml = `<div style="flex:0 0 64px;text-align:center;">
+                         <input class="num-input" type="text" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;padding:6px;border-radius:6px;border:1px solid #444;">
+                       </div>`;
+        nameAreaHtml = `<div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>`;
       }
       
       li.innerHTML = `
         <label class="player-line" style="display:flex;align-items:center;gap:8px;width:100%;" for="${checkboxId}">
-          <input id="${checkboxId}" type="checkbox" value="${App.helpers.escapeHtml(p.name)}" ${checked} style="flex:0 0 auto">
+          <input id="${checkboxId}" type="checkbox" value="${App.helpers.escapeHtml(p.name)}" data-idx="${idx}" ${checked} style="flex:0 0 auto">
           ${numAreaHtml}
-          <div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>
+          ${nameAreaHtml}
         </label>`;
       this.container.appendChild(li);
     });
     
+    // Add 5 additional custom entry slots at the bottom
     const customSelected = App.data.selectedPlayers.filter(sp => 
       !App.data.players.some(bp => bp.name === sp.name)
     );
@@ -73,32 +95,49 @@ App.playerSelection = {
     try {
       App.data.selectedPlayers = [];
       
-      const checkedBoxes = Array.from(this.container.querySelectorAll("input[type='checkbox']:not(.custom-checkbox)"))
-        .filter(chk => chk.checked);
+      const playerLines = Array.from(this.container.querySelectorAll(".player-line"));
       
-      checkedBoxes.forEach(chk => {
-        const li = chk.closest("li");
-        const name = chk.value;
-        let num = "";
+      playerLines.forEach((line, idx) => {
+        const chk = line.querySelector("input[type='checkbox']");
+        if (!chk || !chk.checked) return;
         
-        if (li) {
-          const numInput = li.querySelector(".num-input");
-          if (numInput) {
-            num = numInput.value.trim();
-          } else {
-            const numDiv = li.querySelector(".num");
-            if (numDiv) num = numDiv.textContent.trim();
-          }
+        const numInput = line.querySelector(".num-input");
+        const nameInput = line.querySelector(".name-input");
+        const numDiv = line.querySelector(".num");
+        const nameDiv = line.querySelector(".name");
+        
+        let num = "";
+        let name = "";
+        
+        // Get number
+        if (numInput) {
+          num = numInput.value.trim();
+        } else if (numDiv) {
+          num = numDiv.textContent.trim();
         }
         
-        App.data.selectedPlayers.push({ num: num || "", name: name });
+        // Get name
+        if (nameInput) {
+          name = nameInput.value.trim();
+        } else if (nameDiv) {
+          name = nameDiv.textContent.trim();
+        } else {
+          // Fallback: use checkbox value
+          name = chk.value;
+        }
+        
+        // Only add if name is not empty
+        if (name && name !== "") {
+          App.data.selectedPlayers.push({ num: num || "", name: name });
+        }
       });
       
-      const customLis = Array.from(this.container.querySelectorAll("li")).slice(App.data.players.length);
-      customLis.forEach(li => {
-        const chk = li.querySelector(".custom-checkbox");
-        const numInput = li.querySelector(".custom-num");
-        const nameInput = li.querySelector(".custom-name");
+      // Handle custom entries
+      const customLis = Array.from(this.container.querySelectorAll(".custom-line"));
+      customLis.forEach(line => {
+        const chk = line.querySelector(".custom-checkbox");
+        const numInput = line.querySelector(".custom-num");
+        const nameInput = line.querySelector(".custom-name");
         
         if (chk && chk.checked && nameInput && nameInput.value.trim() !== "") {
           App.data.selectedPlayers.push({

@@ -39,13 +39,41 @@ const App = {
     seasonMapBoxes: "#seasonMapPage .field-box, #seasonMapPage .goal-img-box"
   },
   
-  // Theme Setup
+  // Theme Setup with system preference detection and manual override
   initTheme() {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
+    // Check if user has manually set a theme preference
+    const savedTheme = localStorage.getItem('theme-preference');
+    
+    if (savedTheme) {
+      // User has a preference, use it
+      document.documentElement.setAttribute('data-theme', savedTheme);
     } else {
-      document.documentElement.setAttribute('data-theme', 'light');
+      // No preference, use system preference
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
     }
+    
+    // Listen for system theme changes (only if no manual preference is set)
+    if (window.matchMedia) {
+      const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      darkModeQuery.addEventListener('change', (e) => {
+        // Only apply system theme if user hasn't set a manual preference
+        if (!localStorage.getItem('theme-preference')) {
+          document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        }
+      });
+    }
+  },
+  
+  // Toggle theme manually (can be called by a button)
+  toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme-preference', newTheme);
   },
   
   // CSS Injection für Season/GoalValue Tables (SCROLL FIX eingearbeitet)

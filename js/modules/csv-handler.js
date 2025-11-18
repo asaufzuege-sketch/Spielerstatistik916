@@ -125,9 +125,9 @@ App.csvHandler = {
     // Teamspezifischer Filename
     const teamId = this.getCurrentTeamId();
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-    const filename = `game_data_${teamId}_${timestamp}.csv`;
+    const filename = `game_data_${teamId}_${timestamp}.html`;
     
-    this.downloadCSV(data, filename);
+    this.downloadHTML(data, filename, "Game Data");
   },
   
   exportSeason() {
@@ -170,9 +170,9 @@ App.csvHandler = {
     // Teamspezifischer Filename
     const teamId = this.getCurrentTeamId();
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-    const filename = `season_data_${teamId}_${timestamp}.csv`;
+    const filename = `season_data_${teamId}_${timestamp}.html`;
     
-    this.downloadCSV(data, filename);
+    this.downloadHTML(data, filename, "Season Data");
   },
   
   getOpponentShots() {
@@ -199,6 +199,61 @@ App.csvHandler = {
         return total + (stats[cat] || 0) * weights[cat];
       }, 0)
     );
+  },
+  
+  // HTML Table Export - Excel/Google Sheets kompatibel mit perfekter Spaltenstruktur
+  downloadHTML(data, filename, title) {
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${this.escapeHtml(title)}</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
+    th { background-color: #1E1E1E; color: white; padding: 8px; border: 1px solid #333; text-align: center; font-weight: bold; }
+    td { padding: 8px; border: 1px solid #ccc; text-align: center; }
+    tr:nth-child(even) { background-color: #f0f0f0; }
+    tr:nth-child(odd) { background-color: #e0e0e0; }
+    tr:last-child td { background-color: #1E1E1E; color: white; font-weight: bold; }
+    td:nth-child(2), th:nth-child(2) { text-align: left; padding-left: 12px; }
+  </style>
+</head>
+<body>
+  <h1>${this.escapeHtml(title)}</h1>
+  <table>
+    <thead>
+      <tr>
+${data[0].map(header => `        <th>${this.escapeHtml(String(header))}</th>`).join('\n')}
+      </tr>
+    </thead>
+    <tbody>
+${data.slice(1).map(row => `      <tr>
+${row.map(cell => `        <td>${this.escapeHtml(String(cell))}</td>`).join('\n')}
+      </tr>`).join('\n')}
+    </tbody>
+  </table>
+</body>
+</html>`;
+    
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log('HTML Table Export completed:', filename);
+  },
+  
+  // Helper function to escape HTML
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   },
   
   // Korrigierte CSV Download mit perfekter Excel-Kompatibilität

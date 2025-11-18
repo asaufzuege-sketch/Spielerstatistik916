@@ -142,6 +142,42 @@ App.teamSelection = {
     App.data.seasonData = savedSeason ? JSON.parse(savedSeason) : {};
     App.data.activeTimers = {};
     
+    // For Team 2 and 3: Create 30 empty player slots if no data exists
+    if (teamNumber === 2 || teamNumber === 3) {
+      if (App.data.selectedPlayers.length === 0) {
+        // Initialize with empty players - these will be shown in player selection
+        App.data.players = [];
+        for (let i = 1; i <= 30; i++) {
+          App.data.players.push({ num: "", name: "" });
+        }
+      } else {
+        // If there are saved players, keep them but ensure we have App.data.players available
+        if (!App.data.players || App.data.players.length === 0) {
+          App.data.players = [];
+        }
+      }
+    } else {
+      // Team 1: Use the original predefined players
+      if (!App.data.players || App.data.players.length === 0) {
+        App.data.players = [
+          { num: 4, name: "Ondrej Kastner" }, { num: 5, name: "Raphael Oehninger" },
+          { num: 6, name: "Nuno Meier" }, { num: 7, name: "Silas Teuber" },
+          { num: 8, name: "Diego Warth" }, { num: 9, name: "Mattia Crameri" },
+          { num: 10, name: "Mael Bernath" }, { num: 11, name: "Sean Nef" },
+          { num: 12, name: "Rafael Burri" }, { num: 13, name: "Lenny Schwarz" },
+          { num: 14, name: "David Lienert" }, { num: 15, name: "Neven Severini" },
+          { num: 16, name: "Nils Koubek" }, { num: 17, name: "Lio Kundert" },
+          { num: 18, name: "Livio Berner" }, { num: 19, name: "Robin Strasser" },
+          { num: 21, name: "Marlon Kreyenbühl" }, { num: 22, name: "Martin Lana" },
+          { num: 23, name: "Manuel Isler" }, { num: 24, name: "Moris Hürlimann" },
+          { num: "", name: "Levi Baumann" }, { num: "", name: "Corsin Blapp" },
+          { num: "", name: "Lenny Zimmermann" }, { num: "", name: "Luke Böhmichen" },
+          { num: "", name: "Livio Weissen" }, { num: "", name: "Raul Wütrich" },
+          { num: "", name: "Marco Senn" }
+        ];
+      }
+    }
+    
     // Restore active timers if any
     if (savedActiveTimers) {
       const timerPlayers = JSON.parse(savedActiveTimers);
