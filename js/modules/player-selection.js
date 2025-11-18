@@ -30,22 +30,38 @@ App.playerSelection = {
     sortedPlayers.forEach((p, idx) => {
       const li = document.createElement("li");
       const checkboxId = `player-chk-${idx}`;
-      const checked = App.data.selectedPlayers.find(sp => sp.name === p.name) ? "checked" : "";
+      const checked = App.data.selectedPlayers.find(sp => sp.name === p.name && p.name !== "") ? "checked" : "";
+      
+      // Check if this is an empty player slot (both num and name are empty)
+      const isEmpty = (p.num === "" || p.num === null || p.num === undefined || String(p.num).trim() === "") &&
+                      (p.name === "" || p.name === null || p.name === undefined || String(p.name).trim() === "");
       
       let numAreaHtml = "";
-      if (p.num !== "" && p.num !== null && p.num !== undefined && String(p.num).trim() !== "") {
-        numAreaHtml = `<div class="num" style="flex:0 0 48px;text-align:center;"><strong>${App.helpers.escapeHtml(p.num)}</strong></div>`;
-      } else {
+      let nameAreaHtml = "";
+      
+      if (isEmpty) {
+        // For empty slots: show input fields for both number and name
         numAreaHtml = `<div style="flex:0 0 64px;text-align:center;">
                          <input class="num-input" type="text" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;padding:6px;border-radius:6px;border:1px solid #444;">
                        </div>`;
+        nameAreaHtml = `<input type="text" class="name-input" placeholder="Spielername eingeben" value="" style="flex:1;min-width:0;border-radius:6px;border:1px solid #444;padding:6px;color:#eee;">`;
+      } else if (p.num !== "" && p.num !== null && p.num !== undefined && String(p.num).trim() !== "") {
+        // Player has a number: show number as text, name as text
+        numAreaHtml = `<div class="num" style="flex:0 0 48px;text-align:center;"><strong>${App.helpers.escapeHtml(p.num)}</strong></div>`;
+        nameAreaHtml = `<div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>`;
+      } else {
+        // Player has name but no number: show number input, name as text
+        numAreaHtml = `<div style="flex:0 0 64px;text-align:center;">
+                         <input class="num-input" type="text" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;padding:6px;border-radius:6px;border:1px solid #444;">
+                       </div>`;
+        nameAreaHtml = `<div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>`;
       }
       
       li.innerHTML = `
         <label class="player-line" style="display:flex;align-items:center;gap:8px;width:100%;" for="${checkboxId}">
-          <input id="${checkboxId}" type="checkbox" value="${App.helpers.escapeHtml(p.name)}" ${checked} style="flex:0 0 auto">
+          <input id="${checkboxId}" type="checkbox" value="${App.helpers.escapeHtml(p.name)}" ${checked} style="flex:0 0 auto" data-player-index="${idx}">
           ${numAreaHtml}
-          <div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>
+          ${nameAreaHtml}
         </label>`;
       this.container.appendChild(li);
     });
@@ -73,30 +89,50 @@ App.playerSelection = {
     try {
       App.data.selectedPlayers = [];
       
-      const checkedBoxes = Array.from(this.container.querySelectorAll("input[type='checkbox']:not(.custom-checkbox)"))
-        .filter(chk => chk.checked);
+      // Get all checkboxes that are not custom
+      const allCheckboxes = Array.from(this.container.querySelectorAll("input[type='checkbox']:not(.custom-checkbox)"));
       
-      checkedBoxes.forEach(chk => {
+      allCheckboxes.forEach((chk, checkboxIdx) => {
         const li = chk.closest("li");
-        const name = chk.value;
-        let num = "";
+        if (!li) return;
         
-        if (li) {
-          const numInput = li.querySelector(".num-input");
-          if (numInput) {
-            num = numInput.value.trim();
-            // Update the player pool with the new number
-            const playerInPool = App.data.players.find(p => p.name === name);
-            if (playerInPool) {
-              playerInPool.num = num;
-            }
-          } else {
-            const numDiv = li.querySelector(".num");
-            if (numDiv) num = numDiv.textContent.trim();
+        const numInput = li.querySelector(".num-input");
+        const nameInput = li.querySelector(".name-input");
+        const numDiv = li.querySelector(".num");
+        const nameDiv = li.querySelector(".name");
+        
+        let num = "";
+        let name = "";
+        
+        // Get number value
+        if (numInput) {
+          num = numInput.value.trim();
+        } else if (numDiv) {
+          num = numDiv.textContent.trim();
+        }
+        
+        // Get name value
+        if (nameInput) {
+          name = nameInput.value.trim();
+        } else if (nameDiv) {
+          name = nameDiv.textContent.trim();
+        } else {
+          name = chk.value;
+        }
+        
+        // Update the player pool with any changes
+        const playerIndex = parseInt(chk.dataset.playerIndex);
+        if (!isNaN(playerIndex) && playerIndex < App.data.players.length) {
+          if (nameInput || numInput) {
+            // Update player in pool if either field was editable
+            App.data.players[playerIndex] = { num, name };
           }
         }
         
-        App.data.selectedPlayers.push({ num: num || "", name: name });
+        // Add to selected players if checked and has a name
+        if (chk.checked && name !== "") {
+          App.data.selectedPlayers.push({ num, name });
+        }
       });
       
       const customLis = Array.from(this.container.querySelectorAll("li")).slice(App.data.players.length);
