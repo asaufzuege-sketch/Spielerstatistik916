@@ -695,7 +695,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   color: #fff;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 30;
   padding: 6px 6px;
   border-bottom: 2px solid #333;
   text-align: center;
@@ -717,6 +717,22 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 .season-table tbody td:nth-child(1) {
   min-width: 60px;
   text-align: center;
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: var(--header-bg);
+}
+
+.season-table tbody td:nth-child(1) {
+  background: inherit;
+}
+
+.season-table tbody tr:nth-child(odd) td:nth-child(1) {
+  background: var(--row-odd);
+}
+
+.season-table tbody tr:nth-child(even) td:nth-child(1) {
+  background: var(--row-even);
 }
 
 .season-table thead th:nth-child(2),
@@ -725,6 +741,22 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   font-weight: 700;
   padding-left: 12px;
   min-width: 140px;
+  position: sticky;
+  left: 60px;
+  z-index: 20;
+  background: var(--header-bg);
+}
+
+.season-table tbody td:nth-child(2) {
+  background: inherit;
+}
+
+.season-table tbody tr:nth-child(odd) td:nth-child(2) {
+  background: var(--row-odd);
+}
+
+.season-table tbody tr:nth-child(even) td:nth-child(2) {
+  background: var(--row-even);
 }
 
 .season-table thead th:last-child,
