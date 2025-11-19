@@ -27,7 +27,7 @@
         // Load current team data
         loadTeamData(currentTeam);
         
-        // Setup event listeners mit Event Delegation
+        // Setup event listeners
         setupEventListeners();
         
         // Initial render
@@ -41,71 +41,44 @@
             return;
         }
         
-        // Clear and create tabs
-        tabsContainer.innerHTML = '';
-        for (let i = 1; i <= 3; i++) {
-            const tab = document.createElement('button');
-            tab.className = `team-tab ${i === currentTeam ? 'active' : ''}`;
-            tab.dataset.team = i;
-            tab.textContent = `Team ${i}`;
-            tabsContainer.appendChild(tab);
-        }
-    }
-    
-    function setupEventListeners() {
-        // Team tabs - Event Delegation
-        const tabsContainer = document.querySelector('.team-tabs');
-        if (tabsContainer) {
-            tabsContainer.addEventListener('click', function(e) {
-                if (e.target.classList.contains('team-tab')) {
-                    const newTeam = parseInt(e.target.dataset.team);
+        // Update existing tabs instead of recreating
+        document.querySelectorAll('.team-tab').forEach(tab => {
+            const teamNum = parseInt(tab.dataset.team);
+            tab.classList.toggle('active', teamNum === currentTeam);
+            
+            // Add click handler if not already added
+            if (!tab.hasAttribute('data-initialized')) {
+                tab.addEventListener('click', function() {
+                    const newTeam = parseInt(this.dataset.team);
                     if (newTeam !== currentTeam) {
                         switchTeam(newTeam);
                     }
-                }
-            });
-        }
-        
-        // Player list - Event Delegation für dynamische Inhalte
-        const playerList = document.querySelector('.player-list');
-        if (playerList) {
-            playerList.addEventListener('click', function(e) {
-                // Edit button
-                if (e.target.classList.contains('edit-btn')) {
-                    const playerCard = e.target.closest('.player-card');
-                    if (playerCard) {
-                        const index = parseInt(playerCard.dataset.index);
-                        editPlayer(index);
-                    }
-                }
-                
-                // Delete button
-                if (e.target.classList.contains('delete-btn')) {
-                    const playerCard = e.target.closest('.player-card');
-                    if (playerCard) {
-                        const index = parseInt(playerCard.dataset.index);
-                        deletePlayer(index);
-                    }
-                }
-            });
-        }
-        
+                });
+                tab.setAttribute('data-initialized', 'true');
+            }
+        });
+    }
+    
+    function setupEventListeners() {
         // Add player button
         const addBtn = document.querySelector('.add-player-btn');
-        if (addBtn) {
+        if (addBtn && !addBtn.hasAttribute('data-initialized')) {
             addBtn.addEventListener('click', addNewPlayer);
+            addBtn.setAttribute('data-initialized', 'true');
         }
         
         // Continue button
         const continueBtn = document.querySelector('.continue-btn');
-        if (continueBtn) {
+        if (continueBtn && !continueBtn.hasAttribute('data-initialized')) {
             continueBtn.addEventListener('click', function() {
-                if (getTeamData().players.length > 0) {
+                const teamData = getTeamData();
+                if (teamData.players && teamData.players.length > 0) {
                     window.location.href = 'game-setup.html';
                 } else {
                     alert('Bitte fügen Sie mindestens einen Spieler hinzu');
                 }
             });
+            continueBtn.setAttribute('data-initialized', 'true');
         }
     }
     
@@ -116,6 +89,7 @@
         saveTeamData(currentTeam);
         
         // Update current team
+        const oldTeam = currentTeam;
         currentTeam = newTeam;
         localStorage.setItem('currentTeam', currentTeam);
         
@@ -130,15 +104,11 @@
         // Render player list
         renderPlayerList();
         
-        console.log(`Successfully switched from team ${currentTeam} to team ${newTeam}`);
+        console.log(`Successfully switched from team ${oldTeam} to team ${newTeam}`);
     }
     
     function saveTeamData(teamNumber) {
-        const data = {
-            players: getTeamData().players,
-            hasStats: true,
-            hasTimers: false
-        };
+        const data = getTeamData();
         localStorage.setItem(`team${teamNumber}Data`, JSON.stringify(data));
         console.log(`Saved data for team${teamNumber}`);
     }
@@ -149,14 +119,17 @@
             try {
                 const data = JSON.parse(savedData);
                 // Ensure players is an array
+                if (!data.players) {
+                    data.players = [];
+                }
                 if (!Array.isArray(data.players)) {
                     data.players = [];
                 }
                 setTeamData(data);
                 console.log(`Loaded data for team${teamNumber}`, {
                     players: data.players.length,
-                    hasStats: data.hasStats || true,
-                    hasTimers: data.hasTimers || false
+                    hasStats: data.hasStats !== false,
+                    hasTimers: data.hasTimers === true
                 });
             } catch (e) {
                 console.error('Error loading team data:', e);
@@ -169,11 +142,16 @@
     
     function getTeamData() {
         const key = `team${currentTeam}Data`;
-        const data = window[key] || { players: [], hasStats: true, hasTimers: false };
-        if (!Array.isArray(data.players)) {
-            data.players = [];
+        if (!window[key]) {
+            window[key] = { players: [], hasStats: true, hasTimers: false };
         }
-        return data;
+        if (!window[key].players) {
+            window[key].players = [];
+        }
+        if (!Array.isArray(window[key].players)) {
+            window[key].players = [];
+        }
+        return window[key];
     }
     
     function setTeamData(data) {
@@ -195,16 +173,31 @@
             playerCard.className = 'player-card';
             playerCard.dataset.index = index;
             
-            playerCard.innerHTML = `
-                <div class="player-info">
-                    <span class="player-number">#${player.number}</span>
-                    <span class="player-name">${player.name}</span>
-                </div>
-                <div class="player-actions">
-                    <button class="edit-btn">✏️</button>
-                    <button class="delete-btn">🗑️</button>
-                </div>
+            const playerInfo = document.createElement('div');
+            playerInfo.className = 'player-info';
+            playerInfo.innerHTML = `
+                <span class="player-number">#${player.number}</span>
+                <span class="player-name">${player.name}</span>
             `;
+            
+            const playerActions = document.createElement('div');
+            playerActions.className = 'player-actions';
+            
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.textContent = '✏️';
+            editBtn.onclick = () => editPlayer(index);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.onclick = () => deletePlayer(index);
+            
+            playerActions.appendChild(editBtn);
+            playerActions.appendChild(deleteBtn);
+            
+            playerCard.appendChild(playerInfo);
+            playerCard.appendChild(playerActions);
             
             playerList.appendChild(playerCard);
         });
@@ -229,10 +222,10 @@
         }
         
         const name = prompt('Spielername:');
-        if (!name) return;
+        if (!name || !name.trim()) return;
         
         const number = prompt('Rückennummer:');
-        if (!number) return;
+        if (!number || isNaN(number)) return;
         
         teamData.players.push({
             name: name.trim(),
@@ -255,11 +248,13 @@
         const newNumber = prompt('Rückennummer:', player.number);
         if (newNumber === null) return;
         
-        player.name = newName.trim();
-        player.number = parseInt(newNumber);
-        
-        saveTeamData(currentTeam);
-        renderPlayerList();
+        if (newName.trim() && !isNaN(newNumber)) {
+            player.name = newName.trim();
+            player.number = parseInt(newNumber);
+            
+            saveTeamData(currentTeam);
+            renderPlayerList();
+        }
     }
     
     function deletePlayer(index) {
