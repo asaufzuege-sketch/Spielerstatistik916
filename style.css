@@ -768,8 +768,9 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   transition: border-color 0.3s ease;
 }
 
+/* Green bar highlighting removed as requested */
 .team-slot:hover {
-  border-color: #44bb91;
+  border-color: #333;
 }
 
 .team-display h3 {
@@ -823,6 +824,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   cursor: pointer;
   font-size: 1rem;
   transition: background 0.3s ease;
+  filter: none; /* Ensure emoji renders in default color */
 }
 
 .edit-team-btn:hover {
