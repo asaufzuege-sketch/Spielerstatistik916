@@ -785,6 +785,16 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   font-weight: 600;
 }
 
+/* Button group with fixed width to center buttons regardless of team name length */
+.team-button-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 180px;
+  justify-content: flex-end;
+}
+
 .team-btn {
   background: #44bb91;
   color: white;
@@ -795,7 +805,6 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-right: 10px;
 }
 
 .team-btn:hover {

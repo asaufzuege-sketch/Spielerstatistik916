@@ -63,18 +63,17 @@ App.teamSelection = (function() {
             const teamTitle = document.createElement('h3');
             teamTitle.textContent = teamData.name;
             
-            const playerCount = teamData.players ? teamData.players.length : 0;
+            // Count only players that have names
+            const playersWithNames = teamData.players ? teamData.players.filter(p => p.name && p.name.trim() !== '').length : 0;
             const teamInfo = document.createElement('p');
             teamInfo.className = 'team-name';
-            teamInfo.textContent = `${playerCount} Spieler`;
+            teamInfo.textContent = `${playersWithNames} Spieler`;
             
             teamDisplay.appendChild(teamTitle);
             teamDisplay.appendChild(teamInfo);
             
             const buttonGroup = document.createElement('div');
-            buttonGroup.style.display = 'flex';
-            buttonGroup.style.gap = '10px';
-            buttonGroup.style.alignItems = 'center';
+            buttonGroup.className = 'team-button-group';
             
             const selectBtn = document.createElement('button');
             selectBtn.className = 'team-btn';
