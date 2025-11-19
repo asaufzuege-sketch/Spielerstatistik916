@@ -525,11 +525,39 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   border-bottom: 2px solid #333;
   background: var(--header-bg) !important;
   color: #fff !important;
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }
 .goalvalue-table td {
   padding: 6px 4px !important;
   text-align: center;
   border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Sticky first column (Spieler) */
+.goalvalue-table th:first-child,
+.goalvalue-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: var(--header-bg);
+}
+
+.goalvalue-table th:first-child {
+  z-index: 40;
+}
+
+.goalvalue-table td:first-child {
+  background: inherit;
+}
+
+.goalvalue-table tbody tr:nth-child(odd) td:first-child {
+  background: var(--row-odd);
+}
+
+.goalvalue-table tbody tr:nth-child(even) td:first-child {
+  background: var(--row-even);
 }
 
 /* Name Zellen */
@@ -695,7 +723,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   color: #fff;
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 30;
   padding: 6px 6px;
   border-bottom: 2px solid #333;
   text-align: center;
@@ -717,6 +745,22 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 .season-table tbody td:nth-child(1) {
   min-width: 60px;
   text-align: center;
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  background: var(--header-bg);
+}
+
+.season-table tbody td:nth-child(1) {
+  background: inherit;
+}
+
+.season-table tbody tr:nth-child(odd) td:nth-child(1) {
+  background: var(--row-odd);
+}
+
+.season-table tbody tr:nth-child(even) td:nth-child(1) {
+  background: var(--row-even);
 }
 
 .season-table thead th:nth-child(2),
@@ -725,6 +769,22 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   font-weight: 700;
   padding-left: 12px;
   min-width: 140px;
+  position: sticky;
+  left: 60px;
+  z-index: 20;
+  background: var(--header-bg);
+}
+
+.season-table tbody td:nth-child(2) {
+  background: inherit;
+}
+
+.season-table tbody tr:nth-child(odd) td:nth-child(2) {
+  background: var(--row-odd);
+}
+
+.season-table tbody tr:nth-child(even) td:nth-child(2) {
+  background: var(--row-even);
 }
 
 .season-table thead th:last-child,
@@ -768,8 +828,9 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   transition: border-color 0.3s ease;
 }
 
+/* Green bar highlighting removed as requested */
 .team-slot:hover {
-  border-color: #44bb91;
+  border-color: #333;
 }
 
 .team-display h3 {
@@ -784,6 +845,16 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   font-weight: 600;
 }
 
+/* Button group with fixed width to center buttons regardless of team name length */
+.team-button-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 180px;
+  justify-content: flex-end;
+}
+
 .team-btn {
   background: #44bb91;
   color: white;
@@ -794,7 +865,6 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-right: 10px;
 }
 
 .team-btn:hover {
@@ -823,6 +893,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   cursor: pointer;
   font-size: 1rem;
   transition: background 0.3s ease;
+  filter: none; /* Ensure emoji renders in default color */
 }
 
 .edit-team-btn:hover {
