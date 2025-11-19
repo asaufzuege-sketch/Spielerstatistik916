@@ -135,8 +135,16 @@ App.teamSelection = {
     const savedOppShots = localStorage.getItem(`opponentShots_${teamId}`);
     const savedActiveTimers = localStorage.getItem(`activeTimerPlayers_${teamId}`);
     
+    // WICHTIG: Nur Team 1 bekommt default players, Team 2 und 3 starten leer
+    let defaultPlayers = [];
+    if (teamNumber === 1 && !savedPlayers) {
+      // Team 1: Verwende defaultPlayers nur wenn keine gespeicherten Daten existieren
+      // Dies ist nur für das erste Mal, danach kommen die Spieler aus localStorage
+      defaultPlayers = [];
+    }
+    
     // Reset App data
-    App.data.selectedPlayers = savedPlayers ? JSON.parse(savedPlayers) : [];
+    App.data.selectedPlayers = savedPlayers ? JSON.parse(savedPlayers) : defaultPlayers;
     App.data.statsData = savedStats ? JSON.parse(savedStats) : {};
     App.data.playerTimes = savedTimes ? JSON.parse(savedTimes) : {};
     App.data.seasonData = savedSeason ? JSON.parse(savedSeason) : {};

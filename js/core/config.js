@@ -39,15 +39,6 @@ const App = {
     seasonMapBoxes: "#seasonMapPage .field-box, #seasonMapPage .goal-img-box"
   },
   
-  // Theme Setup
-  initTheme() {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  },
-  
   // CSS Injection für Season/GoalValue Tables (SCROLL FIX eingearbeitet)
   injectTableStyles() {
     const existing = document.getElementById('season-goalvalue-left-align');

@@ -2,11 +2,15 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log(`Spielerstatistik App v${App.version} wird geladen...`);
   
-  // 1. Theme & Styles initialisieren
-  App.initTheme();
+  // 1. Theme initialisieren (FRÜH laden um Flashing zu vermeiden)
+  if (App.themeToggle && typeof App.themeToggle.init === 'function') {
+    App.themeToggle.init();
+  }
+  
+  // 2. Styles initialisieren
   App.injectTableStyles();
   
-  // 2. Pages registrieren
+  // 3. Pages registrieren
   App.pages = {
     teamSelection: document.getElementById("teamSelectionPage"),
     selection: document.getElementById("playerSelectionPage"),
@@ -17,10 +21,10 @@ document.addEventListener("DOMContentLoaded", () => {
     seasonMap: document.getElementById("seasonMapPage")
   };
   
-  // 3. Daten aus LocalStorage laden
+  // 4. Daten aus LocalStorage laden
   App.storage.load();
   
-  // 4. Alle Module initialisieren
+  // 5. Alle Module initialisieren
   App.teamSelection.init();
   App.timer.init();
   App.csvHandler.init();
