@@ -31,8 +31,19 @@ App.goalValue = {
     return {};
   },
   
-  setData(obj) {
+  setData(obj, skipNotify = false) {
     localStorage.setItem("goalValueData", JSON.stringify(obj));
+    // Auto-sync: Notify Season page to update (unless explicitly skipped)
+    if (!skipNotify) {
+      this.notifyDataChange();
+    }
+  },
+  
+  notifyDataChange() {
+    // Trigger Season table re-render if it exists
+    if (App.seasonTable && typeof App.seasonTable.render === "function") {
+      App.seasonTable.render();
+    }
   },
   
   getBottom() {
@@ -43,8 +54,12 @@ App.goalValue = {
     return this.getOpponents().map(() => 0);
   },
   
-  setBottom(arr) {
+  setBottom(arr, skipNotify = false) {
     localStorage.setItem("goalValueBottom", JSON.stringify(arr));
+    // Auto-sync: Notify Season page to update (unless explicitly skipped)
+    if (!skipNotify) {
+      this.notifyDataChange();
+    }
   },
   
   computeValueForPlayer(name) {
@@ -71,7 +86,7 @@ App.goalValue = {
       }
     });
     
-    this.setData(all);
+    this.setData(all, true); // Skip notification to prevent infinite loop
   },
   
   render() {
@@ -108,6 +123,10 @@ App.goalValue = {
     thPlayer.style.borderBottom = "2px solid #333";
     thPlayer.style.minWidth = "160px";
     thPlayer.style.whiteSpace = "nowrap";
+    thPlayer.style.position = "sticky";
+    thPlayer.style.left = "0";
+    thPlayer.style.zIndex = "10";
+    thPlayer.style.backgroundColor = "var(--header-bg, #f0f0f0)";
     headerRow.appendChild(thPlayer);
     
     opponents.forEach((op, idx) => {
@@ -162,6 +181,10 @@ App.goalValue = {
       tdName.style.whiteSpace = "nowrap";
       tdName.style.overflow = "visible";
       tdName.style.textOverflow = "clip";
+      tdName.style.position = "sticky";
+      tdName.style.left = "0";
+      tdName.style.zIndex = "5";
+      tdName.style.backgroundColor = (rowIdx % 2 === 0 ? "var(--row-even, #ffffff)" : "var(--row-odd, #f6f7f9)");
       row.appendChild(tdName);
       
       const vals = (gData[name] && Array.isArray(gData[name])) ? gData[name].slice() : opponents.map(() => 0);
@@ -251,6 +274,10 @@ App.goalValue = {
     labelTd.style.padding = "6px";
     labelTd.style.fontWeight = "700";
     labelTd.style.textAlign = "center";
+    labelTd.style.position = "sticky";
+    labelTd.style.left = "0";
+    labelTd.style.zIndex = "5";
+    labelTd.style.backgroundColor = (playersList.length % 2 === 0 ? "var(--row-even, #ffffff)" : "var(--row-odd, #f6f7f9)");
     bottomRow.appendChild(labelTd);
     
     const scaleOptions = [];
@@ -259,7 +286,7 @@ App.goalValue = {
     const storedBottom = this.getBottom();
     while (storedBottom.length < opponents.length) storedBottom.push(0);
     if (storedBottom.length > opponents.length) storedBottom.length = opponents.length;
-    this.setBottom(storedBottom);
+    this.setBottom(storedBottom, true); // Skip notification during render
     
     opponents.forEach((_, i) => {
       const td = document.createElement("td");
