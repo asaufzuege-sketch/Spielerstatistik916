@@ -54,14 +54,8 @@ App.themeToggle = {
     
     btn.addEventListener('click', () => this.toggleTheme());
     
-    // Add to page - insert at top of first page that loads
-    const teamSelectionPage = document.getElementById('teamSelectionPage');
-    if (teamSelectionPage) {
-      const h1 = teamSelectionPage.querySelector('h1');
-      if (h1) {
-        h1.parentNode.insertBefore(btn, h1);
-      }
-    }
+    // Add to body so it's visible on all pages
+    document.body.appendChild(btn);
   },
 
   watchSystemPreference() {

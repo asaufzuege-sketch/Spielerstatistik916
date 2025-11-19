@@ -4,71 +4,37 @@ App.teamSelection = {
   currentTeam: 1,
   
   init() {
-    this.container = document.getElementById("teamSelectionContainer");
-    this.createTeamButtons();
+    // Wire up the existing HTML team buttons
+    this.setupTeamButtons();
     this.initTeamFromStorage();
   },
   
-  createTeamButtons() {
-    if (!this.container) return;
-    
-    // Clear container
-    this.container.innerHTML = "";
-    
-    // Create team buttons wrapper
-    const wrapper = document.createElement("div");
-    wrapper.className = "team-buttons-wrapper";
-    wrapper.style.cssText = `
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin: 10px 0;
-      flex-wrap: wrap;
-    `;
-    
-    // Create 3 team buttons
+  setupTeamButtons() {
+    // Add event listeners to the team selection buttons in HTML
     for (let i = 1; i <= 3; i++) {
-      const button = document.createElement("button");
-      button.className = "team-btn";
-      button.textContent = `Team ${i}`;
-      button.dataset.team = i;
-      button.style.cssText = `
-        padding: 8px 16px;
-        border: 2px solid #44bb91;
-        background-color: transparent;
-        color: #44bb91;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: all 0.3s ease;
-        min-width: 80px;
-      `;
-      
-      // Event listener for team switch
-      button.addEventListener("click", () => {
-        this.switchTeam(i);
-      });
-      
-      // Hover effects
-      button.addEventListener("mouseenter", () => {
-        if (!button.classList.contains('active')) {
-          button.style.backgroundColor = "rgba(68, 187, 145, 0.2)";
-        }
-      });
-      
-      button.addEventListener("mouseleave", () => {
-        if (!button.classList.contains('active')) {
-          button.style.backgroundColor = "transparent";
-        }
-      });
-      
-      wrapper.appendChild(button);
+      const btn = document.getElementById(`teamBtn${i}`);
+      if (btn) {
+        btn.addEventListener('click', () => {
+          this.selectTeamAndNavigate(i);
+        });
+      }
     }
+  },
+  
+  selectTeamAndNavigate(teamNumber) {
+    // Switch to the selected team
+    this.switchTeam(teamNumber);
     
-    this.container.appendChild(wrapper);
-    
-    // Set initial active state
-    this.updateButtonStates();
+    // Navigate to player selection page
+    if (typeof App.showPage === 'function') {
+      App.showPage('selection');
+    }
+  },
+  
+  createTeamButtons() {
+    // This function is kept for compatibility but HTML buttons are used instead
+    // The actual team button setup happens in setupTeamButtons()
+    return;
   },
   
   switchTeam(teamNumber) {
@@ -186,18 +152,17 @@ App.teamSelection = {
   },
   
   updateButtonStates() {
-    document.querySelectorAll('.team-btn').forEach((btn, index) => {
-      const teamNum = index + 1;
-      if (teamNum === this.currentTeam) {
-        btn.classList.add('active');
-        btn.style.backgroundColor = '#44bb91';
-        btn.style.color = 'white';
-      } else {
-        btn.classList.remove('active');
-        btn.style.backgroundColor = 'transparent';
-        btn.style.color = '#44bb91';
+    // Update the visual state of team buttons in HTML
+    for (let i = 1; i <= 3; i++) {
+      const btn = document.getElementById(`teamBtn${i}`);
+      if (btn) {
+        if (i === this.currentTeam) {
+          btn.classList.add('active-team');
+        } else {
+          btn.classList.remove('active-team');
+        }
       }
-    });
+    }
   },
   
   refreshAllTables() {
