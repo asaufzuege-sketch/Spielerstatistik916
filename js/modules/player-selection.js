@@ -21,40 +21,53 @@ App.playerSelection = {
     
     this.container.innerHTML = "";
     
-    const sortedPlayers = App.data.players.slice().sort((a, b) => {
-      const na = Number(a.num) || 999;
-      const nb = Number(b.num) || 999;
-      return na - nb;
-    });
+    // Get current team from App.data.currentTeam (e.g., "team1", "team2", "team3")
+    const currentTeam = App.data.currentTeam || "team1";
+    const isTeam1 = currentTeam === "team1";
     
-    sortedPlayers.forEach((p, idx) => {
-      const li = document.createElement("li");
-      const checkboxId = `player-chk-${idx}`;
-      const checked = App.data.selectedPlayers.find(sp => sp.name === p.name) ? "checked" : "";
+    // Team 1: Show default players + 5 custom fields
+    // Team 2 & 3: NO default players, only 30 custom fields
+    if (isTeam1) {
+      // Render default players for Team 1
+      const sortedPlayers = App.data.players.slice().sort((a, b) => {
+        const na = Number(a.num) || 999;
+        const nb = Number(b.num) || 999;
+        return na - nb;
+      });
       
-      let numAreaHtml = "";
-      if (p.num !== "" && p.num !== null && p.num !== undefined && String(p.num).trim() !== "") {
-        numAreaHtml = `<div class="num" style="flex:0 0 48px;text-align:center;"><strong>${App.helpers.escapeHtml(p.num)}</strong></div>`;
-      } else {
-        numAreaHtml = `<div style="flex:0 0 64px;text-align:center;">
-                         <input class="num-input" type="text" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;padding:6px;border-radius:6px;border:1px solid #444;">
-                       </div>`;
-      }
-      
-      li.innerHTML = `
-        <label class="player-line" style="display:flex;align-items:center;gap:8px;width:100%;" for="${checkboxId}">
-          <input id="${checkboxId}" type="checkbox" value="${App.helpers.escapeHtml(p.name)}" ${checked} style="flex:0 0 auto">
-          ${numAreaHtml}
-          <div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>
-        </label>`;
-      this.container.appendChild(li);
-    });
+      sortedPlayers.forEach((p, idx) => {
+        const li = document.createElement("li");
+        const checkboxId = `player-chk-${idx}`;
+        const checked = App.data.selectedPlayers.find(sp => sp.name === p.name) ? "checked" : "";
+        
+        let numAreaHtml = "";
+        if (p.num !== "" && p.num !== null && p.num !== undefined && String(p.num).trim() !== "") {
+          numAreaHtml = `<div class="num" style="flex:0 0 48px;text-align:center;"><strong>${App.helpers.escapeHtml(p.num)}</strong></div>`;
+        } else {
+          numAreaHtml = `<div style="flex:0 0 64px;text-align:center;">
+                           <input class="num-input" type="text" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;padding:6px;border-radius:6px;border:1px solid #444;">
+                         </div>`;
+        }
+        
+        li.innerHTML = `
+          <label class="player-line" style="display:flex;align-items:center;gap:8px;width:100%;" for="${checkboxId}">
+            <input id="${checkboxId}" type="checkbox" value="${App.helpers.escapeHtml(p.name)}" ${checked} style="flex:0 0 auto">
+            ${numAreaHtml}
+            <div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>
+          </label>`;
+        this.container.appendChild(li);
+      });
+    }
     
+    // Custom player fields
     const customSelected = App.data.selectedPlayers.filter(sp => 
       !App.data.players.some(bp => bp.name === sp.name)
     );
     
-    for (let i = 0; i < 5; i++) {
+    // Team 1: 5 custom fields, Team 2 & 3: 30 custom fields
+    const customFieldCount = isTeam1 ? 5 : 30;
+    
+    for (let i = 0; i < customFieldCount; i++) {
       const pre = customSelected[i];
       const li = document.createElement("li");
       const chkId = `custom-chk-${i}`;
@@ -73,28 +86,36 @@ App.playerSelection = {
     try {
       App.data.selectedPlayers = [];
       
-      const checkedBoxes = Array.from(this.container.querySelectorAll("input[type='checkbox']:not(.custom-checkbox)"))
-        .filter(chk => chk.checked);
+      // Get current team
+      const currentTeam = App.data.currentTeam || "team1";
+      const isTeam1 = currentTeam === "team1";
       
-      checkedBoxes.forEach(chk => {
-        const li = chk.closest("li");
-        const name = chk.value;
-        let num = "";
+      if (isTeam1) {
+        // Team 1: Handle default players
+        const checkedBoxes = Array.from(this.container.querySelectorAll("input[type='checkbox']:not(.custom-checkbox)"))
+          .filter(chk => chk.checked);
         
-        if (li) {
-          const numInput = li.querySelector(".num-input");
-          if (numInput) {
-            num = numInput.value.trim();
-          } else {
-            const numDiv = li.querySelector(".num");
-            if (numDiv) num = numDiv.textContent.trim();
+        checkedBoxes.forEach(chk => {
+          const li = chk.closest("li");
+          const name = chk.value;
+          let num = "";
+          
+          if (li) {
+            const numInput = li.querySelector(".num-input");
+            if (numInput) {
+              num = numInput.value.trim();
+            } else {
+              const numDiv = li.querySelector(".num");
+              if (numDiv) num = numDiv.textContent.trim();
+            }
           }
-        }
-        
-        App.data.selectedPlayers.push({ num: num || "", name: name });
-      });
+          
+          App.data.selectedPlayers.push({ num: num || "", name: name });
+        });
+      }
       
-      const customLis = Array.from(this.container.querySelectorAll("li")).slice(App.data.players.length);
+      // Handle custom players (all teams)
+      const customLis = Array.from(this.container.querySelectorAll("li")).slice(isTeam1 ? App.data.players.length : 0);
       customLis.forEach(li => {
         const chk = li.querySelector(".custom-checkbox");
         const numInput = li.querySelector(".custom-num");
