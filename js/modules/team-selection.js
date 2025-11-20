@@ -14,6 +14,9 @@
             currentTeam = parseInt(savedTeam);
         }
         
+        // Render team selection UI
+        renderTeamSelection();
+        
         // Setup team tabs
         setupTeamTabs();
         
@@ -25,6 +28,54 @@
         
         // Initial render
         renderPlayerList();
+    }
+    
+    function renderTeamSelection() {
+        const container = document.getElementById('teamSelectionContainer');
+        if (!container) {
+            console.warn('Team selection container not found');
+            return;
+        }
+        
+        // Clear existing content
+        container.innerHTML = '';
+        
+        // Create team buttons (4 teams)
+        for (let i = 1; i <= 4; i++) {
+            const teamBtn = document.createElement('button');
+            teamBtn.className = 'team-selection-btn';
+            teamBtn.textContent = `Team ${i}`;
+            teamBtn.dataset.team = i;
+            
+            if (i === currentTeam) {
+                teamBtn.classList.add('active');
+            }
+            
+            teamBtn.addEventListener('click', function() {
+                selectTeam(parseInt(this.dataset.team));
+            });
+            
+            container.appendChild(teamBtn);
+        }
+    }
+    
+    function selectTeam(teamNumber) {
+        console.log(`Team ${teamNumber} selected`);
+        currentTeam = teamNumber;
+        localStorage.setItem('currentTeam', currentTeam);
+        
+        // Update active button
+        document.querySelectorAll('.team-selection-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.team) === currentTeam);
+        });
+        
+        // Load team data
+        loadTeamData(currentTeam);
+        
+        // Navigate to player selection
+        setTimeout(() => {
+            App.showPage('selection');
+        }, 300);
     }
     
     function setupTeamTabs() {
@@ -259,12 +310,24 @@
         }
     }
     
-    // Get current team info (returns object with id and number)
+    // Get current team info (returns object with id and number, or null if no team selected)
     function getCurrentTeamInfo() {
+        const savedTeam = localStorage.getItem('currentTeam');
+        if (!savedTeam) {
+            return null;
+        }
         return {
             id: `team${currentTeam}`,
             number: currentTeam
         };
+    }
+    
+    // Update button states on team selection page
+    function updateButtonStates() {
+        const buttons = document.querySelectorAll('.team-selection-btn');
+        buttons.forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.team) === currentTeam);
+        });
     }
     
     // Public API - Register on App.teamSelection
@@ -277,7 +340,8 @@
         saveTeamData: saveTeamData,
         loadTeamData: loadTeamData,
         switchTeam: switchTeam,
-        refresh: renderPlayerList
+        refresh: renderPlayerList,
+        updateButtonStates: updateButtonStates
     };
     
     console.log('✅ Team Selection module registered on App.teamSelection');
