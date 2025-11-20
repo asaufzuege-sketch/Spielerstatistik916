@@ -386,6 +386,14 @@ App.statsTable = {
     const player = td.dataset.player;
     const cat = td.dataset.cat;
     
+    // Check if this is a Goal or Shot event and delta is positive
+    if (delta > 0 && (cat === "Goals" || cat === "Shot")) {
+      // Start the Goal Map workflow
+      const eventType = cat === "Goals" ? 'goal' : 'shot';
+      App.startGoalMapWorkflow(player, eventType);
+      return;
+    }
+    
     if (!App.data.statsData[player]) {
       App.data.statsData[player] = {};
     }

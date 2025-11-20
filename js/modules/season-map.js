@@ -4,6 +4,7 @@ App.seasonMap = {
   
   init() {
     this.timeTrackingBox = document.getElementById("seasonMapTimeTrackingBox");
+    this.playerFilter = null;
     
     // Event Listeners
     document.getElementById("exportSeasonMapBtn")?.addEventListener("click", () => {
@@ -16,6 +17,62 @@ App.seasonMap = {
     
     // Time Tracking (Read-Only)
     this.initTimeTracking();
+    
+    // Player Filter
+    this.initPlayerFilter();
+  },
+  
+  initPlayerFilter() {
+    const filterSelect = document.getElementById("seasonMapPlayerFilter");
+    if (!filterSelect) return;
+    
+    // Populate dropdown with players
+    filterSelect.innerHTML = '<option value="">Alle Spieler</option>';
+    App.data.selectedPlayers.forEach(player => {
+      const option = document.createElement("option");
+      option.value = player.name;
+      option.textContent = player.name;
+      filterSelect.appendChild(option);
+    });
+    
+    // Add change event listener
+    filterSelect.addEventListener("change", () => {
+      this.playerFilter = filterSelect.value || null;
+      this.applyPlayerFilter();
+    });
+    
+    // Restore filter from localStorage
+    const savedFilter = localStorage.getItem("seasonMapPlayerFilter");
+    if (savedFilter) {
+      filterSelect.value = savedFilter;
+      this.playerFilter = savedFilter;
+      this.applyPlayerFilter();
+    }
+  },
+  
+  applyPlayerFilter() {
+    // Save filter to localStorage
+    if (this.playerFilter) {
+      localStorage.setItem("seasonMapPlayerFilter", this.playerFilter);
+    } else {
+      localStorage.removeItem("seasonMapPlayerFilter");
+    }
+    
+    // Filter markers in field and goal boxes
+    const boxes = document.querySelectorAll(App.selectors.seasonMapBoxes);
+    boxes.forEach(box => {
+      const markers = box.querySelectorAll(".marker-dot");
+      markers.forEach(marker => {
+        // For now, show all markers since we don't have player association yet
+        // This will be enhanced when we load seasonMapMarkers with player data
+        marker.style.display = '';
+      });
+    });
+    
+    // Re-render goal area stats with filter
+    this.renderGoalAreaStats();
+    
+    console.log(`Season Map player filter applied: ${this.playerFilter || 'All players'}`);
   },
   
   render() {
