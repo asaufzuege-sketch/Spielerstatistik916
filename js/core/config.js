@@ -100,14 +100,13 @@ const App = {
       @media (min-width: 1200px) {
         #seasonContainer, #goalValueContainer {
           width: 100vw !important;
-          overflow: visible !important;
         }
-        /* Season soll auf sehr breiten Screens nicht mehr horizontal scrollen */
-        #seasonContainer .table-scroll {
-          overflow-x: hidden !important;
+        /* Season should scroll horizontally to show sticky columns */
+        #seasonContainer {
+          overflow-x: auto !important;
         }
-        /* Goal Value DARF weiterhin scrollen -> KEIN overflow-x: hidden! */
-        #goalValueContainer .table-scroll {
+        /* Goal Value can also scroll */
+        #goalValueContainer {
           overflow-x: auto !important;
         }
         #seasonContainer table {
@@ -178,15 +177,8 @@ const App = {
       };
       document.title = titles[page] || "Spielerstatistik";
       
-      // Render bei Seitenwechsel verzögert - NUR EINMAL
-      // Verhindert mehrfache render() Aufrufe
-      if (this._renderTimeout) {
-        clearTimeout(this._renderTimeout);
-      }
-      
-      this._renderTimeout = setTimeout(() => {
-        console.log("[Config] Rendering page:", page); // Debug-Log
-        
+      // Render bei Seitenwechsel verzögert
+      setTimeout(() => {
         if (page === "stats" && this.statsTable && typeof this.statsTable.render === 'function') {
           this.statsTable.render();
         }
@@ -202,8 +194,9 @@ const App = {
         if (page === "teamSelection" && this.teamSelection && typeof this.teamSelection.updateButtonStates === 'function') {
           this.teamSelection.updateButtonStates();
         }
-        
-        this._renderTimeout = null;
+        if (page === "selection" && this.playerSelection && typeof this.playerSelection.render === 'function') {
+          this.playerSelection.render();
+        }
       }, 60);
       
     } catch (err) {
