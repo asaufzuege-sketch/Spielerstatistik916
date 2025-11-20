@@ -178,8 +178,15 @@ const App = {
       };
       document.title = titles[page] || "Spielerstatistik";
       
-      // Render bei Seitenwechsel verzögert
-      setTimeout(() => {
+      // Render bei Seitenwechsel verzögert - NUR EINMAL
+      // Verhindert mehrfache render() Aufrufe
+      if (this._renderTimeout) {
+        clearTimeout(this._renderTimeout);
+      }
+      
+      this._renderTimeout = setTimeout(() => {
+        console.log("[Config] Rendering page:", page); // Debug-Log
+        
         if (page === "stats" && this.statsTable && typeof this.statsTable.render === 'function') {
           this.statsTable.render();
         }
@@ -195,6 +202,8 @@ const App = {
         if (page === "teamSelection" && this.teamSelection && typeof this.teamSelection.updateButtonStates === 'function') {
           this.teamSelection.updateButtonStates();
         }
+        
+        this._renderTimeout = null;
       }, 60);
       
     } catch (err) {
