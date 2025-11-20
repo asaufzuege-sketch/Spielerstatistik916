@@ -2,7 +2,7 @@
 App.goalValue = {
   container: null,
   clickTimers: {},
-  isUpdatingData: false, // NEU: Flag um Rekursion zu verhindern
+  isUpdatingData: false, // Flag um Rekursion zu verhindern
   
   init() {
     this.container = document.getElementById("goalValueContainer");
@@ -15,42 +15,71 @@ App.goalValue = {
   getOpponents() {
     try {
       const raw = localStorage.getItem("goalValueOpponents");
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) return arr;
+      }
+    } catch (e) {
+      console.warn("[GoalValue] getOpponents parse error:", e);
+    }
     return Array.from({ length: 19 }, (_, i) => `Gegner ${i + 1}`);
   },
   
   setOpponents(arr) {
-    localStorage.setItem("goalValueOpponents", JSON.stringify(arr));
+    try {
+      if (!Array.isArray(arr)) return;
+      localStorage.setItem("goalValueOpponents", JSON.stringify(arr));
+    } catch (e) {
+      console.warn("[GoalValue] setOpponents failed:", e);
+    }
   },
   
   getData() {
     try {
       const raw = localStorage.getItem("goalValueData");
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return {};
+      if (!raw) return {};
+      const obj = JSON.parse(raw);
+      return (obj && typeof obj === "object") ? obj : {};
+    } catch (e) {
+      console.warn("[GoalValue] getData parse error:", e);
+      return {};
+    }
   },
   
   setData(obj) {
-    // WICHTIG: Verhindere rekursive Aufrufe
+    // Verhindere rekursive Aufrufe
     if (this.isUpdatingData) {
       console.warn("[Goal Value] setData blocked during update to prevent recursion");
       return;
     }
-    localStorage.setItem("goalValueData", JSON.stringify(obj));
+    try {
+      if (!obj || typeof obj !== "object") return;
+      localStorage.setItem("goalValueData", JSON.stringify(obj));
+    } catch (e) {
+      console.warn("[GoalValue] setData failed:", e);
+    }
   },
   
   getBottom() {
     try {
       const raw = localStorage.getItem("goalValueBottom");
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return this.getOpponents().map(() => 0);
+      if (!raw) return this.getOpponents().map(() => 0);
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return this.getOpponents().map(() => 0);
+      return arr;
+    } catch (e) {
+      console.warn("[GoalValue] getBottom parse error:", e);
+      return this.getOpponents().map(() => 0);
+    }
   },
   
   setBottom(arr) {
-    localStorage.setItem("goalValueBottom", JSON.stringify(arr));
+    try {
+      if (!Array.isArray(arr)) return;
+      localStorage.setItem("goalValueBottom", JSON.stringify(arr));
+    } catch (e) {
+      console.warn("[GoalValue] setBottom failed:", e);
+    }
   },
   
   computeValueForPlayer(name) {
@@ -65,9 +94,9 @@ App.goalValue = {
   },
   
   ensureDataForSeason() {
-    // WICHTIG: Verhindere rekursive Aufrufe
+    // Verhindere rekursive Aufrufe
     if (this.isUpdatingData) {
-      console.warn("[Goal Value] ensureDataForSeason blocked to prevent recursion");
+      console.warn("[Goal Value] ensureDataForSeason blocked during update to prevent recursion");
       return;
     }
     
@@ -88,6 +117,8 @@ App.goalValue = {
       
       localStorage.setItem("goalValueData", JSON.stringify(all));
       console.log("[Goal Value] ensureDataForSeason completed");
+    } catch (e) {
+      console.warn("[GoalValue] ensureDataForSeason failed:", e);
     } finally {
       this.isUpdatingData = false;
     }
@@ -121,7 +152,7 @@ App.goalValue = {
     
     const thPlayer = document.createElement("th");
     thPlayer.textContent = "Spieler";
-    thPlayer.classList.add("gv-name-header"); // NEU: für sticky Name-Header
+    thPlayer.classList.add("gv-name-header"); // sticky Name-Header
     thPlayer.style.textAlign = "center";
     thPlayer.style.padding = "8px 6px";
     thPlayer.style.borderBottom = "2px solid #333";
@@ -173,7 +204,7 @@ App.goalValue = {
       
       const tdName = document.createElement("td");
       tdName.textContent = name;
-      tdName.classList.add("gv-name-cell"); // NEU: für sticky Spieler-Spalte
+      tdName.classList.add("gv-name-cell"); // sticky Spieler-Spalte
       tdName.style.textAlign = "left";
       tdName.style.padding = "6px";
       tdName.style.fontWeight = "700";
@@ -213,7 +244,9 @@ App.goalValue = {
             
             // DOPPELKLICK: -1
             const d = this.getData();
-            if (!d[playerName]) d[playerName] = opponents.map(() => 0);
+            if (!d[playerName] || !Array.isArray(d[playerName])) {
+              d[playerName] = opponents.map(() => 0);
+            }
             d[playerName][oppIdx] = Math.max(0, Number(d[playerName][oppIdx] || 0) - 1);
             this.setData(d);
             
@@ -230,7 +263,9 @@ App.goalValue = {
               
               // EINZELKLICK: +1
               const d = this.getData();
-              if (!d[playerName]) d[playerName] = opponents.map(() => 0);
+              if (!d[playerName] || !Array.isArray(d[playerName])) {
+                d[playerName] = opponents.map(() => 0);
+              }
               d[playerName][oppIdx] = Number(d[playerName][oppIdx] || 0) + 1;
               this.setData(d);
               
@@ -321,7 +356,7 @@ App.goalValue = {
     tbody.appendChild(bottomRow);
     table.appendChild(tbody);
     
-    // KRITISCH: Wrap table in scroll wrapper (aus Repo 909)
+    // Wrap table in scroll wrapper
     const wrapper = document.createElement('div');
     wrapper.className = 'table-scroll';
     wrapper.style.width = '100%';
