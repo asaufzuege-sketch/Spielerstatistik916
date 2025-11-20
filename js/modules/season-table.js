@@ -23,8 +23,11 @@ App.seasonTable = {
   render() {
     if (!this.container) return;
 
-    // Nur leeren, KEINE inline Layout-Styles setzen – Scroll steuert CSS (#seasonContainer)
+    // Container komplett leeren und sicherstellen, dass keine Duplikate entstehen
     this.container.innerHTML = "";
+    
+    // Debug-Log um zu prüfen, ob render() mehrfach aufgerufen wird
+    console.log("[Season Table] Rendering started at:", new Date().toISOString());
 
     const headerCols = [
       "Nr", "Spieler", "Games",
@@ -34,9 +37,10 @@ App.seasonTable = {
       "MVP", "MVP Points"
     ];
 
-    // Tabelle direkt in den Container (kein zusätzlicher Wrapper) – wie Goal Value
+    // Tabelle direkt in den Container (kein zusätzlicher Wrapper)
     const table = document.createElement("table");
-    table.className = "season-table"; // eigener Klassenname für gezieltes CSS
+    table.className = "season-table";
+    table.setAttribute("data-table-id", "season-main-table"); // NEU: Eindeutige ID für Debugging
 
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
@@ -254,23 +258,43 @@ App.seasonTable = {
 
     table.appendChild(tbody);
 
-    // Wichtig: Tabelle direkt in den Container (nur EIN Scroll-Container)
+    // WICHTIG: Prüfen ob bereits eine Tabelle im Container ist (sollte nicht sein)
+    const existingTables = this.container.querySelectorAll('table');
+    if (existingTables.length > 0) {
+      console.warn("[Season Table] Found existing tables, removing them:", existingTables.length);
+      existingTables.forEach(t => t.remove());
+    }
+
+    // Tabelle direkt in den Container (nur EINE Tabelle)
     this.container.appendChild(table);
+
+    // Debug: Zählen wie viele Tabellen jetzt im Container sind
+    const tablesAfter = this.container.querySelectorAll('table');
+    console.log("[Season Table] Tables in container after render:", tablesAfter.length);
 
     // Sort UI
     this.updateSortUI(table);
+    
+    // Event Listener für Sortierung - EINMAL pro Header hinzufügen
     table.querySelectorAll("th.sortable").forEach(th => {
-      th.addEventListener("click", () => {
-        const idx = Number(th.dataset.colIndex);
-        if (this.sortState.index === idx) {
-          this.sortState.asc = !this.sortState.asc;
-        } else {
-          this.sortState.index = idx;
-          this.sortState.asc = true;
-        }
-        this.render();
-      });
+      // Prüfen ob bereits Listener existiert
+      const hasListener = th.hasAttribute('data-listener-attached');
+      if (!hasListener) {
+        th.setAttribute('data-listener-attached', 'true');
+        th.addEventListener("click", () => {
+          const idx = Number(th.dataset.colIndex);
+          if (this.sortState.index === idx) {
+            this.sortState.asc = !this.sortState.asc;
+          } else {
+            this.sortState.index = idx;
+            this.sortState.asc = true;
+          }
+          this.render();
+        });
+      }
     });
+    
+    console.log("[Season Table] Rendering completed");
   },
 
   updateSortUI(table) {
