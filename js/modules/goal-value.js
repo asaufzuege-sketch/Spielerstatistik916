@@ -2,6 +2,7 @@
 App.goalValue = {
   container: null,
   clickTimers: {},
+  isUpdatingData: false, // NEU: Flag um Rekursion zu verhindern
   
   init() {
     this.container = document.getElementById("goalValueContainer");
@@ -32,6 +33,11 @@ App.goalValue = {
   },
   
   setData(obj) {
+    // WICHTIG: Verhindere rekursive Aufrufe
+    if (this.isUpdatingData) {
+      console.warn("[Goal Value] setData blocked during update to prevent recursion");
+      return;
+    }
     localStorage.setItem("goalValueData", JSON.stringify(obj));
   },
   
@@ -59,19 +65,32 @@ App.goalValue = {
   },
   
   ensureDataForSeason() {
-    const opponents = this.getOpponents();
-    const all = this.getData();
+    // WICHTIG: Verhindere rekursive Aufrufe
+    if (this.isUpdatingData) {
+      console.warn("[Goal Value] ensureDataForSeason blocked to prevent recursion");
+      return;
+    }
     
-    Object.keys(App.data.seasonData).forEach(name => {
-      if (!all[name] || !Array.isArray(all[name])) {
-        all[name] = opponents.map(() => 0);
-      } else {
-        while (all[name].length < opponents.length) all[name].push(0);
-        if (all[name].length > opponents.length) all[name] = all[name].slice(0, opponents.length);
-      }
-    });
+    this.isUpdatingData = true;
     
-    this.setData(all);
+    try {
+      const opponents = this.getOpponents();
+      const all = this.getData();
+      
+      Object.keys(App.data.seasonData).forEach(name => {
+        if (!all[name] || !Array.isArray(all[name])) {
+          all[name] = opponents.map(() => 0);
+        } else {
+          while (all[name].length < opponents.length) all[name].push(0);
+          if (all[name].length > opponents.length) all[name] = all[name].slice(0, opponents.length);
+        }
+      });
+      
+      localStorage.setItem("goalValueData", JSON.stringify(all));
+      console.log("[Goal Value] ensureDataForSeason completed");
+    } finally {
+      this.isUpdatingData = false;
+    }
   },
   
   render() {
@@ -80,7 +99,6 @@ App.goalValue = {
     this.container.innerHTML = "";
     
     const opponents = this.getOpponents();
-    this.ensureDataForSeason();
     const gData = this.getData();
     const bottom = this.getBottom();
     
@@ -126,7 +144,6 @@ App.goalValue = {
         const arr = this.getOpponents();
         arr[idx] = input.value || `Gegner ${idx+1}`;
         this.setOpponents(arr);
-        this.ensureDataForSeason();
         this.render();
       });
       th.appendChild(input);
