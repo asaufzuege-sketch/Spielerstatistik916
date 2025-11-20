@@ -1,42 +1,653 @@
-/*** Fixed name column for Goal Value table */
-.goalvalue-table .gv-name-cell {
-  position: sticky !important;
-  left: 0 !important;
-  background-color: var(--row-even) !important;
-  z-index: 5 !important;
-  border-right: 2px solid #333 !important;
+/* ========================================
+   SPIELERSTATISTIK - MAIN STYLES
+   Dark Theme Sports Statistics App
+   ======================================== */
+
+/* CSS Variables - Dark Theme */
+:root,
+[data-theme="dark"] {
+  /* Background Colors */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2a2a2a;
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-muted: #808080;
+  
+  /* Accent Colors */
+  --accent-primary: #44bb91;
+  --accent-secondary: #00ff80;
+  --accent-danger: #ff4c4c;
+  
+  /* Table Colors */
+  --header-bg: #1a1a1a;
+  --row-odd: #0f0f0f;
+  --row-even: #1a1a1a;
+  --row-hover: #2a2a2a;
+  
+  /* Cell Value Colors */
+  --cell-positive: #00ff80;
+  --cell-negative: #ff4c4c;
+  --cell-zero-color: #ffffff;
+  
+  /* Ice Time Colors */
+  --ice-top: #00c06f;
+  --ice-bottom: #ff4c4c;
+  
+  /* Border Colors */
+  --border-primary: #333333;
+  --border-secondary: #444444;
+  
+  /* Button Colors */
+  --btn-primary-bg: #44bb91;
+  --btn-primary-hover: #3aa57d;
+  --btn-danger-bg: #ff4c4c;
+  --btn-danger-hover: #e63939;
 }
 
-.goalvalue-table .gv-name-header {
-  position: sticky !important;
-  left: 0 !important;
-  background-color: var(--header-bg) !important;
-  z-index: 15 !important;
-  border-right: 2px solid #333 !important;
+/* Light Theme (fallback) */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e5e5e5;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  --header-bg: #f0f0f0;
+  --row-odd: #f9f9f9;
+  --row-even: #ffffff;
+  --row-hover: #e8f4ff;
+  --border-primary: #cccccc;
+  --border-secondary: #dddddd;
 }
 
-.goalvalue-table tbody tr:nth-child(odd) .gv-name-cell {
-  background-color: var(--row-odd) !important;
+/* ========================================
+   GLOBAL STYLES
+   ======================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.goalvalue-table tbody tr:nth-child(even) .gv-name-cell {
-  background-color: var(--row-even) !important;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
 }
 
-/* Fix Season table width constraints - KORRIGIERT */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 2rem;
+  text-align: center;
+  margin: 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* ========================================
+   PAGE LAYOUT
+   ======================================== */
+
+.page {
+  min-height: 100vh;
+  padding: 0;
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.page-top {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--bg-primary);
+  border-bottom: 2px solid var(--border-primary);
+  padding: 0.5rem 0;
+}
+
+.top-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.center-text {
+  text-align: center;
+  color: var(--text-secondary);
+  margin: 1rem 0;
+}
+
+.current-team-info {
+  text-align: center;
+  padding: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.current-team-info strong {
+  color: var(--accent-primary);
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+
+button, .btn {
+  background-color: var(--btn-primary-bg);
+  color: var(--text-primary);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+button:hover, .btn:hover {
+  background-color: var(--btn-primary-hover);
+  transform: translateY(-1px);
+}
+
+button:active, .btn:active {
+  transform: translateY(0);
+}
+
+.top-btn {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+}
+
+.top-btn:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+}
+
+.back-btn {
+  background-color: var(--bg-tertiary);
+}
+
+.danger-btn, .reset-btn {
+  background-color: var(--btn-danger-bg);
+}
+
+.danger-btn:hover, .reset-btn:hover {
+  background-color: var(--btn-danger-hover);
+}
+
+.confirm-btn {
+  background-color: var(--accent-primary);
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  margin: 2rem auto;
+  display: block;
+}
+
+.confirm-btn:hover {
+  background-color: var(--btn-primary-hover);
+}
+
+.season-highlight {
+  border: 2px solid var(--accent-primary);
+  background-color: var(--bg-secondary);
+}
+
+.export-season, .export-csv {
+  background-color: var(--accent-primary);
+}
+
+/* Timer Button */
+.timer {
+  min-width: 80px;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  background-color: var(--bg-tertiary);
+}
+
+.timer.reset {
+  background-color: var(--bg-secondary);
+}
+
+/* ========================================
+   TABLES
+   ======================================== */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-secondary);
+  margin: 1rem 0;
+}
+
+thead {
+  background-color: var(--header-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+th {
+  padding: 0.8rem;
+  text-align: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+td {
+  padding: 0.8rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+tbody tr:nth-child(odd) {
+  background-color: var(--row-odd);
+}
+
+tbody tr:nth-child(even) {
+  background-color: var(--row-even);
+}
+
+tbody tr:hover {
+  background-color: var(--row-hover);
+}
+
+.stats-table {
+  font-size: 0.95rem;
+}
+
+.stats-table td[data-player][data-cat] {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  transition: background-color 0.1s;
+}
+
+.stats-table td[data-player][data-cat]:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.even-row {
+  background-color: var(--row-even);
+}
+
+.odd-row {
+  background-color: var(--row-odd);
+}
+
+.total-row {
+  background-color: var(--bg-tertiary);
+  font-weight: 700;
+  border-top: 2px solid var(--border-primary);
+}
+
+.total-row td {
+  padding: 1rem 0.8rem;
+  font-size: 1rem;
+}
+
+.ice-time-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+/* ========================================
+   GOAL MAP & SEASON MAP
+   ======================================== */
+
+.torbild-layout {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.field-column {
+  flex: 1;
+  min-width: 300px;
+  max-width: 600px;
+}
+
+.goal-column {
+  flex: 1;
+  min-width: 300px;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.img-box {
+  position: relative;
+  width: 100%;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.field-box {
+  aspect-ratio: 2 / 1;
+}
+
+.goal-img-box {
+  aspect-ratio: 16 / 10;
+}
+
+.img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.marker-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.marker-dot:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Time Tracking Box */
+.time-tracking-box {
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.period {
+  margin-bottom: 1.5rem;
+}
+
+.period:last-child {
+  margin-bottom: 0;
+}
+
+.period-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.period-buttons {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 0.5rem;
+}
+
+.period-numbers {
+  display: flex;
+  justify-content: space-evenly;
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.num-center {
+  text-align: center;
+  flex: 1;
+}
+
+.time-btn {
+  flex: 1;
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
+  border: 1px solid var(--border-secondary);
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 50px;
+}
+
+.time-btn:hover {
+  background-color: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+}
+
+.time-btn.disabled-readonly {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.goal-area-label {
+  position: absolute;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 
+    0 0 4px rgba(0, 0, 0, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ========================================
+   PLAYER SELECTION
+   ======================================== */
+
+.player-list {
+  list-style: none;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.player-list li {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 6px;
+  margin: 0.5rem 0;
+  padding: 0.8rem 1rem;
+  transition: all 0.2s;
+}
+
+.player-list li:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+}
+
+.player-list label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 1rem;
+}
+
+.player-list input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--accent-primary);
+}
+
+.player-list input[type="text"] {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  width: 60px;
+  text-align: center;
+}
+
+.player-list strong {
+  flex: 1;
+  font-size: 1rem;
+}
+
+/* ========================================
+   TEAM SELECTION
+   ======================================== */
+
+#teamSelectionContainer {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+}
+
+.modal-content h3 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modal-content input {
+  width: 100%;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: 0.8rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 0.8rem 1.5rem;
+}
+
+.cancel-btn {
+  background-color: var(--bg-tertiary);
+}
+
+.cancel-btn:hover {
+  background-color: var(--border-secondary);
+}
+
+/* ========================================
+   DRAG HANDLE
+   ======================================== */
+
+.drag-handle {
+  color: var(--accent-primary);
+  font-size: 1.2rem;
+  cursor: grab;
+  user-select: none;
+  margin-right: 0.5rem;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+  .top-bar {
+    gap: 0.3rem;
+    padding: 0.5rem;
+  }
+  
+  .top-btn {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  .torbild-layout {
+    flex-direction: column;
+  }
+  
+  th, td {
+    padding: 0.5rem 0.3rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ========================================
+   SEASON TABLE SPECIFIC FIXES
+   ======================================== */
+
 #seasonContainer {
   width: 100% !important;
   max-width: 100% !important;
   overflow-x: auto !important;
-  overflow-y: auto !important;  /* GEÄNDERT: von hidden zu auto */
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   padding-right: 20px !important;
   padding-bottom: 20px !important;
   box-sizing: border-box !important;
   position: relative !important;
   height: auto !important;
-  min-height: 0 !important;  /* NEU HINZUGEFÜGT */
-  max-height: calc(100vh - 200px) !important;  /* GEÄNDERT: von 80vh zu calc */
+  min-height: 0 !important;
+  max-height: calc(100vh - 200px) !important;
 }
 
 .season-table {
@@ -47,5 +658,117 @@
   font-size: 0.95rem !important;
   margin: 6px 0 10px 0 !important;
   table-layout: auto !important;
-  display: table !important;  /* NEU HINZUGEFÜGT */
+  display: table !important;
+}
+
+/* ========================================
+   GOAL VALUE TABLE SPECIFIC
+   ======================================== */
+
+.goalvalue-table .gv-name-cell {
+  position: sticky !important;
+  left: 0 !important;
+  background-color: var(--row-even) !important;
+  z-index: 5 !important;
+  border-right: 2px solid var(--border-primary) !important;
+}
+
+.goalvalue-table .gv-name-header {
+  position: sticky !important;
+  left: 0 !important;
+  background-color: var(--header-bg) !important;
+  z-index: 15 !important;
+  border-right: 2px solid var(--border-primary) !important;
+}
+
+.goalvalue-table tbody tr:nth-child(odd) .gv-name-cell {
+  background-color: var(--row-odd) !important;
+}
+
+.goalvalue-table tbody tr:nth-child(even) .gv-name-cell {
+  background-color: var(--row-even) !important;
+}
+
+/* ========================================
+   WORKFLOW INDICATOR
+   ======================================== */
+
+#workflowStatusIndicator {
+  display: none;
+  background: var(--accent-primary);
+  color: var(--text-primary);
+  padding: 1rem;
+  margin: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================
+   FILTERS & SELECTS
+   ======================================== */
+
+select {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--accent-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+select:hover {
+  border-color: var(--accent-secondary);
+  background-color: var(--bg-tertiary);
+}
+
+select:focus {
+  border-color: var(--accent-secondary);
+  box-shadow: 0 0 0 2px rgba(68, 187, 145, 0.2);
+}
+
+select option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 0.5rem;
+}
+
+label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* ========================================
+   SCROLLBAR STYLING (Dark Theme)
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-secondary) var(--bg-secondary);
 }
