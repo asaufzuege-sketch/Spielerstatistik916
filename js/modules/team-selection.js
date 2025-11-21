@@ -15,13 +15,16 @@
     function init() {
         console.log('Initializing Team Selection');
         
-        // Load saved team
+        // Load saved team - ensure it's always a valid number
         const savedTeam = localStorage.getItem('currentTeam');
-        if (savedTeam) {
+        if (savedTeam && !isNaN(parseInt(savedTeam))) {
             currentTeam = parseInt(savedTeam);
+        } else {
+            currentTeam = 1; // Default to team 1
+            localStorage.setItem('currentTeam', '1');
         }
         
-        // Setup team tabs
+        // Setup team tabs (only if they exist)
         setupTeamTabs();
         
         // Load current team data
@@ -37,7 +40,12 @@
     function setupTeamTabs() {
         const tabsContainer = document.querySelector('.team-tabs');
         if (!tabsContainer) {
-            console.error('Team tabs container not found');
+            console.log('Team tabs container not found - using single team mode');
+            // In single team mode, just ensure we have a valid currentTeam
+            if (!currentTeam || isNaN(currentTeam)) {
+                currentTeam = 1;
+                localStorage.setItem('currentTeam', '1');
+            }
             return;
         }
         
@@ -108,12 +116,25 @@
     }
     
     function saveTeamData(teamNumber) {
+        // Ensure teamNumber is valid
+        if (!teamNumber || isNaN(teamNumber)) {
+            console.error('Invalid team number for save:', teamNumber);
+            teamNumber = currentTeam || 1;
+        }
         const data = getTeamData();
         localStorage.setItem(`team${teamNumber}Data`, JSON.stringify(data));
         console.log(`Saved data for team${teamNumber}`);
     }
     
     function loadTeamData(teamNumber) {
+        // Ensure teamNumber is valid
+        if (!teamNumber || isNaN(teamNumber)) {
+            console.error('Invalid team number for load:', teamNumber);
+            teamNumber = 1;
+            currentTeam = 1;
+            localStorage.setItem('currentTeam', '1');
+        }
+        
         const savedData = localStorage.getItem(`team${teamNumber}Data`);
         if (savedData) {
             try {
@@ -293,9 +314,42 @@
             return confirmed;
         },
         updateButtonStates() {
-            // No-op for compatibility
+            // Render team selection interface if we're on that page
+            const container = document.getElementById('teamSelectionContainer');
+            if (container && document.getElementById('teamSelectionPage').style.display !== 'none') {
+                renderTeamSelectionButtons();
+            }
         }
     };
+    
+    function renderTeamSelectionButtons() {
+        const container = document.getElementById('teamSelectionContainer');
+        if (!container) return;
+        
+        // Clear existing content
+        container.innerHTML = '';
+        
+        // Create team buttons container
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.style.cssText = 'display: flex; flex-direction: column; gap: 20px; max-width: 500px; margin: 40px auto; padding: 20px;';
+        
+        // Continue with current team button
+        const continueBtn = document.createElement('button');
+        continueBtn.textContent = `Mit Team ${currentTeam} fortfahren`;
+        continueBtn.style.cssText = 'padding: 20px 40px; font-size: 1.2rem; background: #44bb91; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;';
+        continueBtn.addEventListener('click', () => {
+            App.showPage('selection');
+        });
+        continueBtn.addEventListener('mouseenter', () => {
+            continueBtn.style.background = '#3aa57d';
+        });
+        continueBtn.addEventListener('mouseleave', () => {
+            continueBtn.style.background = '#44bb91';
+        });
+        
+        buttonsDiv.appendChild(continueBtn);
+        container.appendChild(buttonsDiv);
+    }
     
     window.TeamSelection = api;
     App.teamSelection = api;
