@@ -524,19 +524,10 @@ App.statsTable = {
   
   // Reset nur für aktuelles Team
   reset() {
-    // Try using teamSelection's reset if available
-    if (App.teamSelection && typeof App.teamSelection.resetCurrentTeam === 'function') {
-      const handled = App.teamSelection.resetCurrentTeam();
-      if (handled) {
-        // teamSelection handled the reset
-        this.render();
-        return;
-      }
-    }
-    
-    // Fallback für direkten Reset
+    // Show confirmation dialog
     if (!confirm("Spieldaten zurücksetzen?")) return;
     
+    // Clear in-memory data
     App.data.statsData = {};
     App.data.playerTimes = {};
     
@@ -553,6 +544,7 @@ App.statsTable = {
     localStorage.removeItem(`activeTimerPlayers_${teamId}`);
     localStorage.removeItem(`opponentShots_${teamId}`);
     
+    // Re-render table
     this.render();
     alert("Spieldaten zurückgesetzt.");
   }
