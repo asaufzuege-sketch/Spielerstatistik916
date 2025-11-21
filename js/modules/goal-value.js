@@ -188,8 +188,8 @@ App.goalValue = {
       tdName.style.position = "sticky";
       tdName.style.left = "0";
       tdName.style.zIndex = "2";
-      // FIX 1: Transparent background - übernimmt Farbe der Zeile
-      tdName.style.background = "";
+      // FIX 1: inherit background - übernimmt Farbe der Zeile und bleibt beim Scrollen sichtbar
+      tdName.style.background = "inherit";
       row.appendChild(tdName);
       
       const vals = (gData[name] && Array.isArray(gData[name])) ? gData[name].slice() : opponents.map(() => 0);
@@ -282,8 +282,8 @@ App.goalValue = {
     labelTd.style.position = "sticky";
     labelTd.style.left = "0";
     labelTd.style.zIndex = "2";
-    // FIX 2: Transparent background - übernimmt Farbe der Zeile
-    labelTd.style.background = "";
+    // FIX 2: Solider Hintergrund - bleibt beim Scrollen sichtbar
+    labelTd.style.background = "rgba(0,0,0,0.03)";
     bottomRow.appendChild(labelTd);
     
     const scaleOptions = [];
