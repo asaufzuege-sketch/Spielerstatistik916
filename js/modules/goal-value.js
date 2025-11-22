@@ -364,10 +364,19 @@ App.goalValue = {
       ? Object.keys(App.data.seasonData) 
       : App.data.selectedPlayers.map(p => p.name);
     
+    // Goal-Value-Daten zurücksetzen
     const newData = {};
     playersList.forEach(n => newData[n] = opponents.map(() => 0));
     this.setData(newData);
+    
+    // Bottom-Weights zurücksetzen
     this.setBottom(opponents.map(() => 0));
+    
+    // Gegnernamen löschen (alle Einträge leer)
+    this.setOpponents(opponents.map(() => ""));
+    
+    // Add line to clear the opponent names
+    this.setOpponents(opponents.map(() => ""));
     
     this.render();
     alert("Goal Value zurückgesetzt.");
