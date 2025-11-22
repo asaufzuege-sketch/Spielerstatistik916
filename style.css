@@ -580,26 +580,27 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 /* Sticky positioning for first column (Spieler) - RESTORED */
 .goalvalue-table th:first-child,
 .goalvalue-table td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 20;
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 20 !important;
+  min-width: 160px !important;
 }
 
 .goalvalue-table thead th:first-child {
   background: var(--header-bg) !important;
-  z-index: 30;
+  z-index: 30 !important;
 }
 
 .goalvalue-table tbody td:first-child {
-  background: inherit;
+  background: inherit !important;
 }
 
 .goalvalue-table tbody tr:nth-child(odd) td:first-child {
-  background: var(--row-odd);
+  background: var(--row-odd) !important;
 }
 
 .goalvalue-table tbody tr:nth-child(even) td:first-child {
-  background: var(--row-even);
+  background: var(--row-even) !important;
 }
 
 /* Name Zellen */
