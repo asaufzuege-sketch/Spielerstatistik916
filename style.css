@@ -1,5 +1,12 @@
-.team-slots { gap: 100px; }
-.goalvalue-title-input { color: #fff !important; }
-#statsPage .total-row td { color: #fff !important; }
-#goalValuePage .goalvalue-table tbody tr:last-child td { color: #fff !important; }
-.season-table .total-row td { color: #fff !important; }
+.goalvalue-title-input {
+    color: white;
+}
+
+.game-data-row,
+.season-table-row {
+    color: white;
+}
+
+.team-box {
+    margin-bottom: 100px;
+}
