@@ -25,6 +25,12 @@ App.playerSelection = {
     const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
     const currentTeamId = currentTeamInfo?.id;
     
+    // Update team display
+    const teamDisplayElement = document.getElementById("currentTeamDisplay");
+    if (teamDisplayElement && currentTeamInfo) {
+      teamDisplayElement.textContent = currentTeamInfo.name || '';
+    }
+    
     // Team 1 gets the pre-filled player list, Teams 2 and 3 get 30 empty cells
     if (currentTeamId === 'team1') {
       // Show pre-filled players for Team 1
