@@ -846,7 +846,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 .team-slots {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 60px;
 }
 
 .team-slot {
