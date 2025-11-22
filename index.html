@@ -12,7 +12,7 @@
 
   <!-- TEAMAUSWAHL SEITE (NEUE ERSTE SEITE) -->
   <div id="teamSelectionPage" class="page">
-    <h1>TEAM AUSWAHL</h1>
+    <h1>TEAM SELECTION</h1>
     <p class="center-text">Wähle ein Team aus oder erstelle ein neues Team</p>
     
     <!-- HIER: Dynamischer Container für Team-Buttons -->
@@ -41,7 +41,8 @@
     <h1>PLAYER SELECTION</h1>
     <p class="center-text">Wähle die Spieler, die in der Tabelle angezeigt werden sollen</p>
     <div class="current-team-info">
-      <span>Aktuelles Team: <strong id="currentTeamDisplay"></strong></span>
+      <!-- Text 'Aktuelles Team:' entfernt, nur noch der Teamname -->
+      <span id="currentTeamDisplay"></span>
     </div>
     <ul id="playerList" class="player-list"></ul>
     <button id="confirmSelection" class="confirm-btn">Bestätigen</button>
@@ -78,10 +79,16 @@
       <div class="top-bar">
         <button id="backToStatsBtn" class="top-btn back-btn">← Zurück</button>
         <button id="exportSeasonMapBtn" class="top-btn export-season">Export Season Map</button>
+        <select id="goalMapPlayerFilter" class="top-btn player-filter-btn">
+          <option value="">Alle Spieler</option>
+        </select>
         <button id="resetTorbildBtn" class="top-btn danger-btn reset-btn">Reset</button>
       </div>
     </div>
     <h1>GOAL MAP</h1>
+    <div id="workflowStatusIndicator" class="workflow-indicator" style="display: none;">
+      <span id="workflowStatusText"></span>
+    </div>
     <div class="torbild-layout">
       <div class="field-column">
         <div class="img-box field-box" id="fieldBox">
@@ -166,6 +173,9 @@
       <div class="top-bar">
         <button id="backToStatsFromSeasonMapBtn" class="top-btn back-btn">← Zurück</button>
         <button id="exportSeasonMapPageBtn" class="top-btn export-csv">Export</button>
+        <select id="seasonMapPlayerFilter" class="top-btn player-filter-btn">
+          <option value="">Alle Spieler</option>
+        </select>
         <button id="resetSeasonMapBtn" class="top-btn danger-btn reset-btn">Reset</button>
       </div>
     </div>

@@ -4,6 +4,7 @@ App.seasonMap = {
   
   init() {
     this.timeTrackingBox = document.getElementById("seasonMapTimeTrackingBox");
+    this.playerFilter = null;
     
     // Event Listeners
     document.getElementById("exportSeasonMapBtn")?.addEventListener("click", () => {
@@ -16,6 +17,74 @@ App.seasonMap = {
     
     // Time Tracking (Read-Only)
     this.initTimeTracking();
+    
+    // Player Filter
+    this.initPlayerFilter();
+  },
+  
+  initPlayerFilter() {
+    const filterSelect = document.getElementById("seasonMapPlayerFilter");
+    if (!filterSelect) return;
+    
+    // Populate dropdown with players
+    filterSelect.innerHTML = '<option value="">Alle Spieler</option>';
+    App.data.selectedPlayers.forEach(player => {
+      const option = document.createElement("option");
+      option.value = player.name;
+      option.textContent = player.name;
+      filterSelect.appendChild(option);
+    });
+    
+    // Add change event listener
+    filterSelect.addEventListener("change", () => {
+      this.playerFilter = filterSelect.value || null;
+      this.applyPlayerFilter();
+    });
+    
+    // Restore filter from localStorage
+    const savedFilter = localStorage.getItem("seasonMapPlayerFilter");
+    if (savedFilter) {
+      filterSelect.value = savedFilter;
+      this.playerFilter = savedFilter;
+      this.applyPlayerFilter();
+    }
+  },
+  
+  applyPlayerFilter() {
+    // Save filter to localStorage
+    if (this.playerFilter) {
+      localStorage.setItem("seasonMapPlayerFilter", this.playerFilter);
+    } else {
+      localStorage.removeItem("seasonMapPlayerFilter");
+    }
+    
+    // Filter markers in field and goal boxes
+    const boxes = document.querySelectorAll(App.selectors.seasonMapBoxes);
+    boxes.forEach(box => {
+      const markers = box.querySelectorAll(".marker-dot");
+      markers.forEach(marker => {
+        if (this.playerFilter) {
+          // Show only markers for selected player
+          if (marker.dataset.player === this.playerFilter) {
+            marker.style.display = '';
+          } else {
+            marker.style.display = 'none';
+          }
+        } else {
+          // Show all markers
+          marker.style.display = '';
+        }
+      });
+    });
+    
+    // Update timebox display with player filter
+    const timeDataWithPlayers = JSON.parse(localStorage.getItem("seasonMapTimeDataWithPlayers")) || {};
+    this.writeTimeTrackingToBox(timeDataWithPlayers);
+    
+    // Re-render goal area stats with filter
+    this.renderGoalAreaStats();
+    
+    console.log(`Season Map player filter applied: ${this.playerFilter || 'All players'}`);
   },
   
   render() {
@@ -65,7 +134,7 @@ App.seasonMap = {
           if (!box || !Array.isArray(markersForBox)) return;
           
           markersForBox.forEach(m => {
-            App.markerHandler.createMarkerPercent(m.xPct, m.yPct, m.color || "#444", box, false);
+            App.markerHandler.createMarkerPercent(m.xPct, m.yPct, m.color || "#444", box, false, m.player);
           });
         });
       } catch (e) {
@@ -73,15 +142,20 @@ App.seasonMap = {
       }
     }
     
-    // Time Data laden
-    const rawTime = localStorage.getItem("seasonMapTimeData");
-    if (rawTime) {
+    // Time Data with player associations laden
+    const rawTimeWithPlayers = localStorage.getItem("seasonMapTimeDataWithPlayers");
+    if (rawTimeWithPlayers) {
       try {
-        const tdata = JSON.parse(rawTime);
-        this.writeTimeTrackingToBox(tdata);
+        const timeDataWithPlayers = JSON.parse(rawTimeWithPlayers);
+        this.writeTimeTrackingToBox(timeDataWithPlayers);
       } catch (e) {
-        console.warn("Invalid seasonMapTimeData", e);
+        console.warn("Invalid seasonMapTimeDataWithPlayers", e);
       }
+    }
+    
+    // Apply player filter if set
+    if (this.playerFilter) {
+      this.applyPlayerFilter();
     }
     
     // Goal Area Stats rendern
@@ -100,13 +174,19 @@ App.seasonMap = {
         const bg = dot.style.backgroundColor || "";
         const xPct = parseFloat(left.replace("%", "")) || 0;
         const yPct = parseFloat(top.replace("%", "")) || 0;
-        markers.push({ xPct, yPct, color: bg });
+        const playerName = dot.dataset.player || null;
+        markers.push({ xPct, yPct, color: bg, player: playerName });
       });
       return markers;
     });
     
     localStorage.setItem("seasonMapMarkers", JSON.stringify(allMarkers));
     
+    // Export time tracking data with player associations
+    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
+    
+    // Also export flat time data for momentum graph
     const timeData = this.readTimeTrackingFromBox();
     localStorage.setItem("seasonMapTimeData", JSON.stringify(timeData));
     
@@ -115,6 +195,7 @@ App.seasonMap = {
       document.querySelectorAll("#torbildPage .marker-dot").forEach(d => d.remove());
       document.querySelectorAll("#torbildPage .time-btn").forEach(btn => btn.textContent = "0");
       localStorage.removeItem("timeData");
+      localStorage.removeItem("timeDataWithPlayers");
     }
     
     App.showPage("seasonMap");
@@ -136,15 +217,27 @@ App.seasonMap = {
     return result;
   },
   
-  writeTimeTrackingToBox(data) {
-    if (!this.timeTrackingBox || !data) return;
+  writeTimeTrackingToBox(timeDataWithPlayers) {
+    if (!this.timeTrackingBox || !timeDataWithPlayers) return;
     
     const periods = Array.from(this.timeTrackingBox.querySelectorAll(".period"));
     periods.forEach((period, pIdx) => {
-      const key = period.dataset.period || (`p${pIdx}`);
-      const arr = data[key] || data[Object.keys(data)[pIdx]] || [];
-      period.querySelectorAll(".time-btn").forEach((btn, idx) => {
-        btn.textContent = (typeof arr[idx] !== "undefined") ? arr[idx] : btn.textContent;
+      const periodKey = period.dataset.period || `period${pIdx}`;
+      period.querySelectorAll(".time-btn").forEach((btn, btnIdx) => {
+        const buttonId = `${periodKey}_${btnIdx}`;
+        const playerData = timeDataWithPlayers[buttonId] || {};
+        
+        // Calculate total or filtered count
+        let count = 0;
+        if (this.playerFilter) {
+          // Show only selected player's count
+          count = playerData[this.playerFilter] || 0;
+        } else {
+          // Show total across all players
+          count = Object.values(playerData).reduce((sum, val) => sum + val, 0);
+        }
+        
+        btn.textContent = count;
       });
     });
   },
@@ -169,7 +262,13 @@ App.seasonMap = {
       
       box.querySelectorAll(".goal-area-label").forEach(el => el.remove());
       
-      const markers = Array.from(box.querySelectorAll(".marker-dot"));
+      // Filter markers based on player filter and visibility
+      const markers = Array.from(box.querySelectorAll(".marker-dot")).filter(m => {
+        if (this.playerFilter) {
+          return m.dataset.player === this.playerFilter && m.style.display !== 'none';
+        }
+        return m.style.display !== 'none';
+      });
       const total = markers.length;
       
       const counts = { tl: 0, tr: 0, bl: 0, bm: 0, br: 0 };

@@ -32,9 +32,9 @@ App.goalValue = {
     return {};
   },
   
-  setData(obj) {
-    // WICHTIG: Verhindere rekursive Aufrufe
-    if (this.isUpdatingData) {
+  setData(obj, forceWrite = false) {
+    // WICHTIG: Verhindere rekursive Aufrufe (außer bei forceWrite)
+    if (this.isUpdatingData && !forceWrite) {
       console.warn("[Goal Value] setData blocked during update to prevent recursion");
       return;
     }
@@ -61,7 +61,7 @@ App.goalValue = {
   },
   
   formatValueNumber(v) {
-    return Math.abs(v - Math.round(v)) < 1e-4 ? String(Math.round(v)) : String(Number(v.toFixed(1)));
+    return Math.abs(v - Math.round(v)) < 1e-4 ? String(Math.round(v)) : String(Number(v.toFixed(1))); 
   },
   
   ensureDataForSeason() {
@@ -121,11 +121,13 @@ App.goalValue = {
     
     const thPlayer = document.createElement("th");
     thPlayer.textContent = "Spieler";
+    thPlayer.className = "gv-name-header";
     thPlayer.style.textAlign = "center";
     thPlayer.style.padding = "8px 6px";
     thPlayer.style.borderBottom = "2px solid #333";
     thPlayer.style.minWidth = "160px";
     thPlayer.style.whiteSpace = "nowrap";
+    // REMOVED: thPlayer.style.background = "#1e1e1e"; - Let CSS handle it for sticky
     headerRow.appendChild(thPlayer);
     
     opponents.forEach((op, idx) => {
@@ -135,14 +137,15 @@ App.goalValue = {
       th.style.textAlign = "center";
       const input = document.createElement("input");
       input.type = "text";
-      input.value = op || `Gegner ${idx+1}`;
+      input.value = op || "";
+      input.placeholder = `Gegner ${idx+1}`;
       input.className = "goalvalue-title-input";
       input.style.width = "100%";
       input.style.boxSizing = "border-box";
       input.style.textAlign = "center";
       input.addEventListener("change", () => {
         const arr = this.getOpponents();
-        arr[idx] = input.value || `Gegner ${idx+1}`;
+        arr[idx] = input.value || "";
         this.setOpponents(arr);
         this.render();
       });
@@ -172,6 +175,7 @@ App.goalValue = {
       
       const tdName = document.createElement("td");
       tdName.textContent = name;
+      tdName.className = "gv-name-cell";
       tdName.style.textAlign = "left";
       tdName.style.padding = "6px";
       tdName.style.fontWeight = "700";
@@ -179,6 +183,7 @@ App.goalValue = {
       tdName.style.whiteSpace = "nowrap";
       tdName.style.overflow = "visible";
       tdName.style.textOverflow = "clip";
+      // REMOVED: tdName.style.background = "inherit"; - Let CSS handle it for sticky
       row.appendChild(tdName);
       
       const vals = (gData[name] && Array.isArray(gData[name])) ? gData[name].slice() : opponents.map(() => 0);
@@ -213,7 +218,7 @@ App.goalValue = {
             const d = this.getData();
             if (!d[playerName]) d[playerName] = opponents.map(() => 0);
             d[playerName][oppIdx] = Math.max(0, Number(d[playerName][oppIdx] || 0) - 1);
-            this.setData(d);
+            this.setData(d, true); // FORCE WRITE to persist click changes
             
             const nv = d[playerName][oppIdx];
             td.textContent = String(nv);
@@ -230,7 +235,7 @@ App.goalValue = {
               const d = this.getData();
               if (!d[playerName]) d[playerName] = opponents.map(() => 0);
               d[playerName][oppIdx] = Number(d[playerName][oppIdx] || 0) + 1;
-              this.setData(d);
+              this.setData(d, true); // FORCE WRITE to persist click changes
               
               const nv = d[playerName][oppIdx];
               td.textContent = String(nv);
@@ -268,6 +273,7 @@ App.goalValue = {
     labelTd.style.padding = "6px";
     labelTd.style.fontWeight = "700";
     labelTd.style.textAlign = "center";
+    labelTd.style.background = "rgba(0,0,0,0.03)";
     bottomRow.appendChild(labelTd);
     
     const scaleOptions = [];
@@ -295,7 +301,13 @@ App.goalValue = {
       });
       
       const b = this.getBottom();
-      if (b && typeof b[i] !== "undefined") select.value = String(b[i]);
+      const currentValue = b && typeof b[i] !== "undefined" ? b[i] : 0;
+      
+      // FIX: setTimeout um sicherzustellen, dass value NACH DOM-Einfügung gesetzt wird
+      td.appendChild(select);
+      setTimeout(() => {
+        select.value = String(currentValue);
+      }, 0);
       
       select.addEventListener("change", () => {
         const arr = this.getBottom();
@@ -307,7 +319,6 @@ App.goalValue = {
         });
       });
       
-      td.appendChild(select);
       bottomRow.appendChild(td);
     });
     
@@ -353,10 +364,16 @@ App.goalValue = {
       ? Object.keys(App.data.seasonData) 
       : App.data.selectedPlayers.map(p => p.name);
     
+    // Goal-Value-Daten zurücksetzen
     const newData = {};
     playersList.forEach(n => newData[n] = opponents.map(() => 0));
     this.setData(newData);
+    
+    // Bottom-Weights zurücksetzen
     this.setBottom(opponents.map(() => 0));
+    
+    // Gegnernamen löschen (alle Einträge leer)
+    this.setOpponents(opponents.map(() => ""));
     
     this.render();
     alert("Goal Value zurückgesetzt.");
