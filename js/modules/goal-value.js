@@ -127,9 +127,6 @@ App.goalValue = {
     thPlayer.style.borderBottom = "2px solid #333";
     thPlayer.style.minWidth = "160px";
     thPlayer.style.whiteSpace = "nowrap";
-    thPlayer.style.position = "sticky";
-    thPlayer.style.left = "0";
-    thPlayer.style.zIndex = "3";
     thPlayer.style.background = "#1e1e1e";
     headerRow.appendChild(thPlayer);
     
@@ -140,7 +137,8 @@ App.goalValue = {
       th.style.textAlign = "center";
       const input = document.createElement("input");
       input.type = "text";
-      input.value = op || `Gegner ${idx+1}`;
+      input.value = op || "";
+      input.placeholder = `Gegner ${idx+1}`;
       input.className = "goalvalue-title-input";
       input.style.width = "100%";
       input.style.boxSizing = "border-box";
@@ -185,10 +183,6 @@ App.goalValue = {
       tdName.style.whiteSpace = "nowrap";
       tdName.style.overflow = "visible";
       tdName.style.textOverflow = "clip";
-      tdName.style.position = "sticky";
-      tdName.style.left = "0";
-      tdName.style.zIndex = "2";
-      // FIX 1: inherit background - übernimmt Farbe der Zeile und bleibt beim Scrollen sichtbar
       tdName.style.background = "inherit";
       row.appendChild(tdName);
       
@@ -279,10 +273,6 @@ App.goalValue = {
     labelTd.style.padding = "6px";
     labelTd.style.fontWeight = "700";
     labelTd.style.textAlign = "center";
-    labelTd.style.position = "sticky";
-    labelTd.style.left = "0";
-    labelTd.style.zIndex = "2";
-    // FIX 2: Solider Hintergrund - bleibt beim Scrollen sichtbar
     labelTd.style.background = "rgba(0,0,0,0.03)";
     bottomRow.appendChild(labelTd);
     
@@ -313,7 +303,7 @@ App.goalValue = {
       const b = this.getBottom();
       const currentValue = b && typeof b[i] !== "undefined" ? b[i] : 0;
       
-      // FIX 3: setTimeout um sicherzustellen, dass value NACH DOM-Einfügung gesetzt wird
+      // FIX: setTimeout um sicherzustellen, dass value NACH DOM-Einfügung gesetzt wird
       td.appendChild(select);
       setTimeout(() => {
         select.value = String(currentValue);
