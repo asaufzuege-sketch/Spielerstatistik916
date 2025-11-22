@@ -115,6 +115,25 @@ h1 {
   flex: 1;
 }
 
+/* Aktuelles Team mittig & im Player-Selection-Stil anzeigen */
+#playerSelectionPage .current-team-info {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 8px;
+}
+
+#playerSelectionPage #currentTeamDisplay {
+  font-family: "Astroz", "Segoe UI", sans-serif;
+  font-size: 1.69em;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--page-title-start) 0%, var(--page-title-end) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  display: inline-block;
+}
+
 /* Basis Top-Bar (für alle Seiten) */
 .top-bar {
   display: flex;
