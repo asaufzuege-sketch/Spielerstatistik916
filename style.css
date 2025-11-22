@@ -603,6 +603,14 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   background: var(--row-even) !important;
 }
 
+/* Bottom row label cell - also sticky */
+.gv-bottom-label-cell {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 20 !important;
+  background: rgba(0,0,0,0.03) !important;
+}
+
 /* Name Zellen */
 .gv-name-cell {
   text-align: left !important;

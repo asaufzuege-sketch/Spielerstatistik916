@@ -270,13 +270,11 @@ App.goalValue = {
     
     const labelTd = document.createElement("td");
     labelTd.textContent = "";
+    labelTd.className = "gv-bottom-label-cell";
     labelTd.style.padding = "6px";
     labelTd.style.fontWeight = "700";
     labelTd.style.textAlign = "center";
     labelTd.style.background = "rgba(0,0,0,0.03)";
-    labelTd.style.position = "sticky";
-    labelTd.style.left = "0";
-    labelTd.style.zIndex = "20";
     bottomRow.appendChild(labelTd);
     
     const scaleOptions = [];
@@ -287,6 +285,9 @@ App.goalValue = {
     if (storedBottom.length > opponents.length) storedBottom.length = opponents.length;
     this.setBottom(storedBottom);
     
+    // Get bottom values once outside the loop for efficiency
+    const bottomValues = this.getBottom();
+    
     opponents.forEach((_, i) => {
       const td = document.createElement("td");
       td.style.padding = "6px";
@@ -296,8 +297,7 @@ App.goalValue = {
       select.className = "gv-scale-dropdown";
       select.style.width = "80px";
       
-      const b = this.getBottom();
-      const currentValue = b && typeof b[i] !== "undefined" ? b[i] : 0;
+      const currentValue = bottomValues && typeof bottomValues[i] !== "undefined" ? bottomValues[i] : 0;
       const currentValueStr = Number(currentValue).toFixed(1);
       
       scaleOptions.forEach(opt => {
