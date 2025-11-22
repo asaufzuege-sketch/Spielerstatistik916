@@ -145,7 +145,7 @@ App.goalValue = {
       input.style.textAlign = "center";
       input.addEventListener("change", () => {
         const arr = this.getOpponents();
-        arr[idx] = input.value || `Gegner ${idx+1}`;
+        arr[idx] = input.value || "";
         this.setOpponents(arr);
         this.render();
       });
