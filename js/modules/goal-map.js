@@ -1,6 +1,7 @@
 // Goal Map Modul
 App.goalMap = {
   timeTrackingBox: null,
+  playerFilter: null,
   
   init() {
     this.timeTrackingBox = document.getElementById("timeTrackingBox");
@@ -26,6 +27,13 @@ App.goalMap = {
         if (confirm("Workflow abbrechen? Gesammelte Punkte gehen verloren.")) {
           App.cancelGoalMapWorkflow();
         }
+      }
+    });
+    
+    // Export Button
+    document.getElementById("exportSeasonMapBtn")?.addEventListener("click", () => {
+      if (App.seasonMap && typeof App.seasonMap.exportFromGoalMap === 'function') {
+        App.seasonMap.exportFromGoalMap();
       }
     });
   },
@@ -356,6 +364,7 @@ App.goalMap = {
       buttons.forEach((btn, idx) => {
         const key = `${periodNum}_${idx}`;
         
+        // 1. Aktuellen Wert setzen (Anzeige initialisieren)
         const playerData = timeDataWithPlayers[key] || {};
         let total = 0;
         Object.values(playerData).forEach(count => {
@@ -363,12 +372,21 @@ App.goalMap = {
         });
         btn.textContent = total;
         
+        // 2. FIX: Mehrfache Listener verhindern
+        if (btn.dataset.hasListener === "true") {
+          return; 
+        }
+        btn.dataset.hasListener = "true";
+        
         // NEUES VEREINFACHTES SYSTEM
         let clickCount = 0;
         let clickTimer = null;
         
         const updateValue = (delta) => {
           const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous';
+          
+          // Daten neu laden um Race Conditions zu minimieren
+          timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
           
           if (!timeDataWithPlayers[key]) {
             timeDataWithPlayers[key] = {};
