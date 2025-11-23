@@ -2,16 +2,21 @@
 App.goalMap = {
   timeTrackingBox: null,
   playerFilter: null,
+  clickStates: {}, // Zentraler Speicher für Klick-Status (Debouncing)
   
   init() {
     this.timeTrackingBox = document.getElementById("timeTrackingBox");
     this.playerFilter = null;
+    this.clickStates = {}; 
     
     // Marker Handler für Goal Map Boxen
     this.attachMarkerHandlers();
     
-    // Time Tracking initialisieren
-    this.initTimeTracking();
+    // Time Tracking: Event Delegation einrichten (nur einmal!)
+    this.setupTimeBoxDelegation();
+    
+    // Werte anzeigen
+    this.refreshTimeTrackingDisplay();
     
     // Player Filter initialisieren
     this.initPlayerFilter();
@@ -36,6 +41,141 @@ App.goalMap = {
         App.seasonMap.exportFromGoalMap();
       }
     });
+  },
+  
+  // NEU: Event Delegation für die gesamte TimeBox
+  // Verhindert garantiert, dass Listener mehrfach registriert werden
+  setupTimeBoxDelegation() {
+    if (!this.timeTrackingBox) return;
+    
+    // Prüfen, ob Delegation schon aktiv ist
+    if (this.timeTrackingBox.dataset.hasDelegation === "true") return;
+    
+    const handler = (e) => {
+      // Prüfen, ob ein Time-Button geklickt wurde
+      const btn = e.target.closest('.time-btn');
+      if (!btn) return;
+      
+      // Bei Touch-Geräten den Maus-Klick unterdrücken, um doppeltes Feuern zu vermeiden
+      if (e.type === 'touchend') {
+        e.preventDefault();
+      }
+      
+      this.handleTimeBtnInteraction(btn);
+    };
+
+    // Listener auf den Container, nicht die Buttons
+    this.timeTrackingBox.addEventListener('click', handler);
+    this.timeTrackingBox.addEventListener('touchend', handler, { passive: false });
+    
+    // Markieren als "initialisiert"
+    this.timeTrackingBox.dataset.hasDelegation = "true";
+    console.log("TimeBox delegation initialized");
+  },
+
+  // Logik für Klick auf einen Button (Debouncing: 1 Klick = +1, 2+ Klicks = -1)
+  handleTimeBtnInteraction(btn) {
+    const period = btn.closest('.period');
+    if (!period) return;
+
+    // Button eindeutig identifizieren (Key: PeriodID_ButtonIndex)
+    // Fallback auf Index, falls data-period fehlt
+    const allPeriods = Array.from(this.timeTrackingBox.querySelectorAll('.period'));
+    const pIdx = allPeriods.indexOf(period);
+    const periodNum = period.dataset.period || ('p' + pIdx);
+    
+    const allBtns = Array.from(period.querySelectorAll('.time-btn'));
+    const btnIdx = allBtns.indexOf(btn);
+    if (btnIdx === -1) return;
+
+    const key = `${periodNum}_${btnIdx}`;
+
+    // Status für diesen Button initialisieren falls nötig
+    if (!this.clickStates[key]) {
+      this.clickStates[key] = { count: 0, timer: null };
+    }
+    
+    const state = this.clickStates[key];
+    state.count++;
+
+    // Laufenden Timer stoppen (Debouncing)
+    if (state.timer) {
+      clearTimeout(state.timer);
+    }
+
+    // Neuen Timer starten
+    state.timer = setTimeout(() => {
+      if (state.count === 1) {
+        this.updateTimeValue(key, btn, 1); // Einzelklick: +1
+      } else if (state.count >= 2) {
+        this.updateTimeValue(key, btn, -1); // Mehrfachklick: -1
+      }
+      
+      // Reset
+      state.count = 0;
+      state.timer = null;
+    }, 300);
+  },
+
+  // Wert aktualisieren und speichern
+  updateTimeValue(key, btn, delta) {
+    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous';
+
+    if (!timeDataWithPlayers[key]) timeDataWithPlayers[key] = {};
+    if (!timeDataWithPlayers[key][playerName]) timeDataWithPlayers[key][playerName] = 0;
+
+    // Wert ändern (nicht unter 0)
+    timeDataWithPlayers[key][playerName] = Math.max(0, timeDataWithPlayers[key][playerName] + delta);
+
+    // Speichern
+    localStorage.setItem("timeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
+
+    // Anzeige aktualisieren
+    this.refreshTimeTrackingDisplay();
+
+    // Wenn Workflow aktiv, Punkt registrieren (nur bei +1)
+    if (delta > 0 && App.goalMapWorkflow.active) {
+        const btnRect = btn.getBoundingClientRect();
+        const boxRect = this.timeTrackingBox.getBoundingClientRect();
+        
+        // Position relativ zur Box berechnen für Marker
+        const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
+        const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
+        
+        App.addGoalMapPoint('time', xPct, yPct, '#888888', 'timeTrackingBox');
+    }
+  },
+
+  // Anzeige aller Buttons aktualisieren (ersetzt das alte initTimeTracking)
+  refreshTimeTrackingDisplay() {
+    if (!this.timeTrackingBox) return;
+    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+
+    this.timeTrackingBox.querySelectorAll(".period").forEach((period, pIdx) => {
+      const periodNum = period.dataset.period || ('p' + pIdx);
+      const buttons = period.querySelectorAll(".time-btn");
+
+      buttons.forEach((btn, idx) => {
+        const key = `${periodNum}_${idx}`;
+        const playerData = timeDataWithPlayers[key] || {};
+        
+        let displayVal = 0;
+        if (this.playerFilter) {
+            // Wenn Filter aktiv: Nur Wert des Spielers anzeigen
+            displayVal = playerData[this.playerFilter] || 0;
+        } else {
+            // Sonst: Summe aller Spieler anzeigen
+            displayVal = Object.values(playerData).reduce((a, b) => a + b, 0);
+        }
+        btn.textContent = displayVal;
+      });
+    });
+  },
+  
+  // Alias für Kompatibilität, falls initTimeTracking noch woanders aufgerufen wird
+  initTimeTracking() {
+      this.refreshTimeTrackingDisplay();
   },
   
   initPlayerFilter() {
@@ -100,33 +240,7 @@ App.goalMap = {
   },
   
   applyTimeTrackingFilter() {
-    if (!this.timeTrackingBox) return;
-    
-    // Get time tracking data with player associations
-    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
-    
-    this.timeTrackingBox.querySelectorAll(".period").forEach(period => {
-      const periodNum = period.dataset.period || Math.random().toString(36).slice(2, 6);
-      const buttons = period.querySelectorAll(".time-btn");
-      
-      buttons.forEach((btn, idx) => {
-        const key = `${periodNum}_${idx}`;
-        const playerData = timeDataWithPlayers[key] || {};
-        
-        if (this.playerFilter) {
-          // Show count for selected player only
-          const count = playerData[this.playerFilter] || 0;
-          btn.textContent = count;
-        } else {
-          // Show total count for all players
-          let total = 0;
-          Object.values(playerData).forEach(count => {
-            total += count;
-          });
-          btn.textContent = total;
-        }
-      });
-    });
+    this.refreshTimeTrackingDisplay();
   },
   
   updateWorkflowIndicator() {
@@ -349,103 +463,6 @@ App.goalMap = {
         }
         isLong = false;
       }, { passive: true });
-    });
-  },
-  
-  initTimeTracking() {
-    if (!this.timeTrackingBox) return;
-    
-    // Initial load of data
-    let timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
-    
-    this.timeTrackingBox.querySelectorAll(".period").forEach(period => {
-      const periodNum = period.dataset.period || Math.random().toString(36).slice(2, 6);
-      const buttons = period.querySelectorAll(".time-btn");
-      
-      buttons.forEach((oldBtn, idx) => {
-        const key = `${periodNum}_${idx}`;
-        
-        // Calculate current total
-        const playerData = timeDataWithPlayers[key] || {};
-        let total = 0;
-        Object.values(playerData).forEach(count => {
-          total += count;
-        });
-        
-        // Update text on old button before cloning (so clone has correct text)
-        oldBtn.textContent = total;
-        
-        // ROBUST FIX: Clone button to strip ALL existing event listeners
-        // This prevents multiple listeners from accumulating
-        const btn = oldBtn.cloneNode(true);
-        oldBtn.replaceWith(btn);
-        
-        // From now on, use 'btn' (the new element)
-        
-        // NEUES VEREINFACHTES SYSTEM
-        let clickCount = 0;
-        let clickTimer = null;
-        
-        const updateValue = (delta) => {
-          const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous';
-          
-          // Daten neu laden um Race Conditions zu minimieren
-          timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
-          
-          if (!timeDataWithPlayers[key]) {
-            timeDataWithPlayers[key] = {};
-          }
-          if (!timeDataWithPlayers[key][playerName]) {
-            timeDataWithPlayers[key][playerName] = 0;
-          }
-          
-          timeDataWithPlayers[key][playerName] = Math.max(0, timeDataWithPlayers[key][playerName] + delta);
-          
-          let newTotal = 0;
-          Object.values(timeDataWithPlayers[key]).forEach(count => {
-            newTotal += count;
-          });
-          
-          btn.textContent = newTotal;
-          localStorage.setItem("timeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
-          
-          if (delta > 0 && App.goalMapWorkflow.active) {
-            const btnRect = btn.getBoundingClientRect();
-            const boxRect = this.timeTrackingBox.getBoundingClientRect();
-            
-            const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
-            const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
-            
-            App.addGoalMapPoint('time', xPct, yPct, '#888888', 'timeTrackingBox');
-          }
-        };
-        
-        const handleClick = () => {
-          clickCount++;
-          
-          if (clickTimer) {
-            clearTimeout(clickTimer);
-          }
-          
-          clickTimer = setTimeout(() => {
-            if (clickCount === 1) {
-              updateValue(+1);
-            } else if (clickCount >= 2) {
-              updateValue(-1);
-            }
-            
-            clickCount = 0;
-            clickTimer = null;
-          }, 300);
-        };
-        
-        btn.addEventListener("click", handleClick);
-        
-        btn.addEventListener("touchend", (e) => {
-          e.preventDefault();
-          handleClick();
-        }, { passive: false });
-      });
     });
   },
   
