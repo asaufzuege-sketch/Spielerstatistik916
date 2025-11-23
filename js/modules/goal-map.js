@@ -355,28 +355,32 @@ App.goalMap = {
   initTimeTracking() {
     if (!this.timeTrackingBox) return;
     
+    // Initial load of data
     let timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     
     this.timeTrackingBox.querySelectorAll(".period").forEach(period => {
       const periodNum = period.dataset.period || Math.random().toString(36).slice(2, 6);
       const buttons = period.querySelectorAll(".time-btn");
       
-      buttons.forEach((btn, idx) => {
+      buttons.forEach((oldBtn, idx) => {
         const key = `${periodNum}_${idx}`;
         
-        // 1. Aktuellen Wert setzen (Anzeige initialisieren)
+        // Calculate current total
         const playerData = timeDataWithPlayers[key] || {};
         let total = 0;
         Object.values(playerData).forEach(count => {
           total += count;
         });
-        btn.textContent = total;
         
-        // 2. FIX: Mehrfache Listener verhindern
-        if (btn.dataset.hasListener === "true") {
-          return; 
-        }
-        btn.dataset.hasListener = "true";
+        // Update text on old button before cloning (so clone has correct text)
+        oldBtn.textContent = total;
+        
+        // ROBUST FIX: Clone button to strip ALL existing event listeners
+        // This prevents multiple listeners from accumulating
+        const btn = oldBtn.cloneNode(true);
+        oldBtn.replaceWith(btn);
+        
+        // From now on, use 'btn' (the new element)
         
         // NEUES VEREINFACHTES SYSTEM
         let clickCount = 0;
