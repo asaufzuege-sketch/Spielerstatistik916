@@ -16,6 +16,9 @@
   --sticky-header-height: 56px;
   --ice-top: #00c06f;
   --ice-bottom: #ff4c4c;
+  
+  /* NEU: Hintergrund für Bilderboxen (Light Mode: Weiß) */
+  --img-box-bg: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -28,6 +31,9 @@
   --cell-neg-color: #ff4c4c;
   --cell-zero-color: #ffffff;
   --timer-left-bg: #3b3b3b;
+  
+  /* NEU: Hintergrund für Bilderboxen (Dark Mode: Dunkel) */
+  --img-box-bg: #1e1e1e;
 }
 
 body {
@@ -326,7 +332,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 }
 .field-column { flex: 1; display: flex; justify-content: center; }
 .field-box, .img-box {
-  background: #1e1e1e;
+  background: var(--img-box-bg); /* FIX: Nutze Variable für Hintergrund */
   border: 2px solid #333;
   border-radius: 10px;
   padding: 5px;
@@ -427,14 +433,15 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   width: 100% !important;
   max-width: 100% !important;
   overflow-x: auto !important;
-  overflow-y: hidden !important;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch !important;
   padding-right: 20px !important;
   padding-bottom: 20px !important;
   box-sizing: border-box !important;
   position: relative !important;
-  display: flex !important;
-  justify-content: center !important;
+  height: auto;
+  min-height: 0;
+  max-height: calc(100vh - 200px);
 }
 
 #seasonContainer::-webkit-scrollbar {
@@ -749,9 +756,6 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   max-height: calc(100vh - 200px);
 }
 
-/* Entferne ggf. .table-scroll Padding-Anpassung, wenn nicht mehr genutzt */
-.table-scroll { padding-bottom: 0; }
-
 .season-table {
   width: auto;
   min-width: max-content;
@@ -840,7 +844,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 
 .season-table .total-row td {
   background: var(--header-bg);
-  color: #ffffff; /* FIX: Schriftfarbe in Season-Totalzeile immer weiß */
+  color: #ffffff; /* FIX: Schriftfarbe in Season-Tabelle Totalzeile immer weiß */
   font-weight: 700;
   border-top: 2px solid #333;
   padding: 8px 6px;
