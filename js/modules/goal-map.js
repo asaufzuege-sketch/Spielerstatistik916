@@ -109,115 +109,145 @@ App.goalMap = {
   },
   
   initTimeTracking() {
-    if (!this.timeTrackingBox) return;
+    // 0. Grundcheck: Box vorhanden?
+    this.timeTrackingBox = this.timeTrackingBox || document.getElementById("timeTrackingBox");
+    if (!this.timeTrackingBox) {
+      console.warn("[Goal Map] timeTrackingBox not found – no time tracking initialized");
+      return;
+    }
     
     console.log("[Goal Map] Initializing time tracking...");
     
-    // 1. Bestehende Daten laden
+    // 1. Bestehende Daten defensiv laden
     let timeDataWithPlayers = {};
     try {
       const stored = localStorage.getItem("timeDataWithPlayers");
       if (stored) {
         timeDataWithPlayers = JSON.parse(stored);
+        if (typeof timeDataWithPlayers !== "object" || timeDataWithPlayers === null) {
+          console.warn("[Goal Map] timeDataWithPlayers is not an object, resetting");
+          timeDataWithPlayers = {};
+        }
       }
     } catch (e) {
-      console.warn("Failed to load timeDataWithPlayers:", e);
+      console.warn("[Goal Map] Failed to load timeDataWithPlayers, resetting:", e);
+      timeDataWithPlayers = {};
     }
     
-    this.timeTrackingBox.querySelectorAll(".period").forEach((period, pIdx) => {
-      // WICHTIG: Konstante Keys verwenden, kein Random!
+    const periods = this.timeTrackingBox.querySelectorAll(".period");
+    if (!periods.length) {
+      console.warn("[Goal Map] No .period elements found inside timeTrackingBox");
+    }
+    
+    periods.forEach((period, pIdx) => {
       const periodNum = period.dataset.period || `p${pIdx}`;
       const buttons = period.querySelectorAll(".time-btn");
       
       console.log(`[Goal Map] Processing period ${periodNum} with ${buttons.length} buttons`);
       
+      if (!buttons.length) {
+        console.warn(`[Goal Map] No .time-btn found in period ${periodNum}`);
+      }
+      
       buttons.forEach((btn, idx) => {
         const key = `${periodNum}_${idx}`;
+        
+        // Falls ein geklonter Button mit altem data-listener-attached da ist: entfernen
+        // (ansonsten blockieren wir uns selbst)
+        if (!btn._goalMapClickBound && btn.hasAttribute('data-listener-attached') && !btn.onclick) {
+          // Entferne altes Attribut, das evtl. mitkopiert wurde
+          btn.removeAttribute('data-listener-attached');
+        }
         
         // 2. INITIALEN WERT SETZEN
         const playerData = timeDataWithPlayers[key] || {};
         let total = 0;
-        Object.values(playerData).forEach(count => total += count);
+        Object.values(playerData).forEach(count => total += Number(count) || 0);
         btn.textContent = total;
         
         console.log(`[Goal Map] Button ${key} initial value: ${total}`);
         
         // 3. EVENT LISTENER NUR EINMAL HINZUFÜGEN
-        // Check if listener already attached
-        if (btn.hasAttribute('data-listener-attached')) {
-          console.log(`[Goal Map] Button ${key} already has listener, skipping`);
-          return; // Skip if already has listener
+        if (btn._goalMapClickBound) {
+          console.log(`[Goal Map] Button ${key} already has click handler, skipping`);
+          return;
         }
+        btn._goalMapClickBound = true;
         btn.setAttribute('data-listener-attached', 'true');
         
-        // VEREINFACHTER CLICK HANDLER - NUR EIN EVENT!
         const handleIncrement = (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          console.log(`[Goal Map] Button ${key} clicked`);
-          
-          // Daten IMMER frisch laden
-          let currentData = {};
           try {
-            const stored = localStorage.getItem("timeDataWithPlayers");
-            if (stored) {
-              currentData = JSON.parse(stored);
-            }
-          } catch (e) {
-            console.warn("Failed to load current data:", e);
-          }
-          
-          if (!currentData[key]) currentData[key] = {};
-          
-          const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous';
-          
-          if (!currentData[key][playerName]) currentData[key][playerName] = 0;
-          
-          // +1 Increment
-          const oldValue = currentData[key][playerName];
-          currentData[key][playerName] = oldValue + 1;
-          
-          console.log(`[Goal Map] Incremented ${playerName} for ${key}: ${oldValue} -> ${currentData[key][playerName]}`);
-          
-          // Speichern
-          try {
-            localStorage.setItem("timeDataWithPlayers", JSON.stringify(currentData));
-          } catch (e) {
-            console.error("Failed to save timeDataWithPlayers:", e);
-            return;
-          }
-          
-          // Anzeige Update (Filter beachten)
-          const currentPlayerMap = currentData[key];
-          let displayVal = 0;
-          
-          if (this.playerFilter) {
-            displayVal = currentPlayerMap[this.playerFilter] || 0;
-          } else {
-            displayVal = Object.values(currentPlayerMap).reduce((a, b) => a + b, 0);
-          }
-          
-          btn.textContent = displayVal;
-          console.log(`[Goal Map] Display value updated to: ${displayVal}`);
-          
-          // Workflow Point
-          if (App.goalMapWorkflow && App.goalMapWorkflow.active) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log(`[Goal Map] Button ${key} clicked`);
+            
+            // Daten IMMER frisch laden
+            let currentData = {};
             try {
-              const btnRect = btn.getBoundingClientRect();
-              const boxRect = this.timeTrackingBox.getBoundingClientRect();
-              const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
-              const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
-              
-              App.addGoalMapPoint('time', xPct, yPct, '#888888', 'timeTrackingBox');
-              console.log(`[Goal Map] Workflow point added at ${xPct.toFixed(1)}%, ${yPct.toFixed(1)}%`);
-            } catch (e) {
-              console.warn("Failed to add workflow point:", e);
+              const stored = localStorage.getItem("timeDataWithPlayers");
+              if (stored) {
+                currentData = JSON.parse(stored);
+                if (typeof currentData !== "object" || currentData === null) {
+                  console.warn("[Goal Map] current timeDataWithPlayers invalid, resetting");
+                  currentData = {};
+                }
+              }
+            } catch (e2) {
+              console.warn("[Goal Map] Failed to parse timeDataWithPlayers on click, resetting:", e2);
+              currentData = {};
             }
+            
+            if (!currentData[key]) currentData[key] = {};
+            
+            const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous';
+            
+            if (!currentData[key][playerName]) currentData[key][playerName] = 0;
+            
+            const oldValue = Number(currentData[key][playerName]) || 0;
+            currentData[key][playerName] = oldValue + 1;
+            
+            console.log(`[Goal Map] Incremented ${playerName} for ${key}: ${oldValue} -> ${currentData[key][playerName]}`);
+            
+            // Speichern
+            try {
+              localStorage.setItem("timeDataWithPlayers", JSON.stringify(currentData));
+            } catch (e3) {
+              console.error("[Goal Map] Failed to save timeDataWithPlayers:", e3);
+            }
+            
+            // Anzeige Update (Filter beachten)
+            const currentPlayerMap = currentData[key] || {};
+            let displayVal = 0;
+            
+            if (this.playerFilter) {
+              displayVal = Number(currentPlayerMap[this.playerFilter]) || 0;
+            } else {
+              displayVal = Object.values(currentPlayerMap).reduce((a, b) => a + (Number(b) || 0), 0);
+            }
+            
+            btn.textContent = displayVal;
+            console.log(`[Goal Map] Display value updated to: ${displayVal}`);
+            
+            // Workflow Point
+            if (App.goalMapWorkflow && App.goalMapWorkflow.active) {
+              try {
+                const btnRect = btn.getBoundingClientRect();
+                const boxRect = this.timeTrackingBox.getBoundingClientRect();
+                const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
+                const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
+                
+                App.addGoalMapPoint('time', xPct, yPct, '#888888', 'timeTrackingBox');
+                console.log(`[Goal Map] Workflow point added at ${xPct.toFixed(1)}%, ${yPct.toFixed(1)}%`);
+              } catch (e4) {
+                console.warn("[Goal Map] Failed to add workflow point:", e4);
+              }
+            }
+          } catch (err) {
+            console.error("[Goal Map] handleIncrement failed for key", key, err);
           }
         };
         
-        // NUR EINEN Event Listener - click
         btn.addEventListener("click", handleIncrement);
         console.log(`[Goal Map] Click listener attached to button ${key}`);
       });
@@ -273,14 +303,12 @@ App.goalMap = {
       const markers = box.querySelectorAll(".marker-dot");
       markers.forEach(marker => {
         if (this.playerFilter) {
-          // Show only markers for selected player
           if (marker.dataset.player === this.playerFilter) {
             marker.style.display = '';
           } else {
             marker.style.display = 'none';
           }
         } else {
-          // Show all markers
           marker.style.display = '';
         }
       });
@@ -295,7 +323,15 @@ App.goalMap = {
   applyTimeTrackingFilter() {
     if (!this.timeTrackingBox) return;
     
-    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    let timeDataWithPlayers = {};
+    try {
+      timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+      if (typeof timeDataWithPlayers !== "object" || timeDataWithPlayers === null) {
+        timeDataWithPlayers = {};
+      }
+    } catch {
+      timeDataWithPlayers = {};
+    }
     
     this.timeTrackingBox.querySelectorAll(".period").forEach((period, pIdx) => {
       const periodNum = period.dataset.period || `p${pIdx}`;
@@ -307,11 +343,9 @@ App.goalMap = {
         
         let displayVal = 0;
         if (this.playerFilter) {
-          // Show only selected player's count
-          displayVal = playerData[this.playerFilter] || 0;
+          displayVal = Number(playerData[this.playerFilter]) || 0;
         } else {
-          // Show total across all players
-          displayVal = Object.values(playerData).reduce((sum, val) => sum + val, 0);
+          displayVal = Object.values(playerData).reduce((sum, val) => sum + (Number(val) || 0), 0);
         }
         
         btn.textContent = displayVal;
@@ -343,7 +377,6 @@ App.goalMap = {
   },
   
   exportGoalMap() {
-    // Export markers
     const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
     const allMarkers = boxes.map(box => {
       const markers = [];
@@ -361,7 +394,6 @@ App.goalMap = {
     
     localStorage.setItem("goalMapMarkers", JSON.stringify(allMarkers));
     
-    // Export time data
     const timeData = this.readTimeTrackingFromBox();
     localStorage.setItem("timeData", JSON.stringify(timeData));
     
@@ -385,10 +417,8 @@ App.goalMap = {
   reset() {
     if (!confirm("⚠️ Goal Map zurücksetzen (Marker + Timeboxen)?")) return;
     
-    // Clear markers
     document.querySelectorAll("#torbildPage .marker-dot").forEach(d => d.remove());
     
-    // Clear time data
     document.querySelectorAll("#torbildPage .time-btn").forEach(btn => btn.textContent = "0");
     localStorage.removeItem("timeData");
     localStorage.removeItem("timeDataWithPlayers");
