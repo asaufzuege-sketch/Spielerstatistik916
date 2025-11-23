@@ -19,6 +19,14 @@
   
   /* NEU: Hintergrund für Bilderboxen (Light Mode: Weiß) */
   --img-box-bg: #ffffff;
+  
+  /* NEU: Hintergrund & Text für Time Box (Light Mode: Weiß/Schwarz) */
+  --time-box-bg: #ffffff;
+  --time-box-text: #000000;
+  
+  /* NEU: Perioden-Boxen sollen "bleiben wie sie sind" (dunkel mit weißem Text) */
+  --period-bg: #2a2a2a;
+  --period-text: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -34,6 +42,14 @@
   
   /* NEU: Hintergrund für Bilderboxen (Dark Mode: Dunkel) */
   --img-box-bg: #1e1e1e;
+  
+  /* NEU: Hintergrund & Text für Time Box (Dark Mode: Dunkel/Weiß) */
+  --time-box-bg: #1a1a1a;
+  --time-box-text: #ffffff;
+  
+  /* NEU: Perioden-Boxen (Dark Mode: transparent dunkel) */
+  --period-bg: rgba(255,255,255,0.05);
+  --period-text: #ffffff;
 }
 
 body {
@@ -332,7 +348,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 }
 .field-column { flex: 1; display: flex; justify-content: center; }
 .field-box, .img-box {
-  background: var(--img-box-bg); /* FIX: Nutze Variable für Hintergrund */
+  background: var(--img-box-bg);
   border: 2px solid #333;
   border-radius: 10px;
   padding: 5px;
@@ -368,11 +384,11 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background: #1a1a1a;
+  background: var(--time-box-bg); /* NEU: Variable für Hintergrund */
   border: 2px solid #333;
   border-radius: 10px;
   padding: 10px 14px;
-  color: #fff;
+  color: var(--time-box-text); /* NEU: Variable für Schriftfarbe */
   font-size: 0.95rem;
   height: 100%;
   gap: 10px;
@@ -386,9 +402,10 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   row-gap: 2px;
   column-gap: 12px;
   padding: 6px 10px;
-  background: rgba(255,255,255,0.05);
+  background: var(--period-bg); /* NEU: Variable für Perioden-Hintergrund */
   border: 1px solid rgba(255,255,255,0.3);
   border-radius: 8px;
+  color: var(--period-text); /* NEU: Schriftfarbe weiß erzwingen */
 }
 .period-title { grid-column: 1 / -1; font-weight: bold; text-align: center; margin-bottom: 4px; font-size: 0.85rem; }
 .period-buttons.top-row, .period-buttons.bottom-row, .period-numbers { display: contents; }
@@ -476,10 +493,12 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   padding: 6px 4px !important;
   border-bottom: 2px solid #333;
   background: var(--header-bg);
-  color: #fff;
+  color: #ffffff; /* FIX: Schriftfarbe in Headern immer weiß */
   position: sticky;
   top: 0;
   z-index: 40;
+  padding: 8px 6px;
+  border-bottom: 2px solid #333;
   text-align: center;
 }
 
