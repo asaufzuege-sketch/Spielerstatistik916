@@ -356,36 +356,40 @@ App.goalMap = {
   initTimeTracking() {
     if (!this.timeTrackingBox) return;
     
-    // 1. Bestehende Daten laden
-    // (Wir laden sie hier einmal, aber im Klick-Handler immer frisch)
+    // Load initial data
     let timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     
     this.timeTrackingBox.querySelectorAll(".period").forEach((period, pIdx) => {
-      // WICHTIG: Konstante Keys verwenden, kein Random!
+      // Use consistent keys, no random IDs
       const periodNum = period.dataset.period || `p${pIdx}`;
       const buttons = period.querySelectorAll(".time-btn");
       
-      buttons.forEach((oldBtn, idx) => {
+      buttons.forEach((btn, idx) => {
         const key = `${periodNum}_${idx}`;
         
-        // 2. BUTTON KLONEN & ERSETZEN
-        // Das entfernt ALLE alten Event-Listener garantiert.
-        const btn = oldBtn.cloneNode(true);
-        oldBtn.replaceWith(btn);
+        // Check if listener already attached (prevents duplicate listeners)
+        if (btn.dataset.listenerAttached === 'true') {
+          return;
+        }
         
-        // 3. INITIALEN WERT SETZEN
+        // Mark button as having listener attached
+        btn.dataset.listenerAttached = 'true';
+        
+        // Set initial display value
         const playerData = timeDataWithPlayers[key] || {};
         let total = 0;
-        // Filtern oder Gesamt? Initial meist Gesamt, update übernimmt Filterlogik
         Object.values(playerData).forEach(count => total += count);
         btn.textContent = total;
         
-        // 4. NEUE LOGIK HINZUFÜGEN
-        let clickCount = 0;
-        let clickTimer = null;
+        // Processing flag to prevent double events (touch + click)
+        let isProcessing = false;
         
-        const updateValue = (delta) => {
-          // Daten IMMER frisch laden, um Überschreibungen zu vermeiden
+        const updateValue = () => {
+          // Prevent double event execution
+          if (isProcessing) return;
+          isProcessing = true;
+          
+          // Always load fresh data to avoid race conditions
           let currentData = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
           
           if (!currentData[key]) currentData[key] = {};
@@ -394,13 +398,13 @@ App.goalMap = {
           
           if (!currentData[key][playerName]) currentData[key][playerName] = 0;
           
-          // Wert ändern
-          currentData[key][playerName] = Math.max(0, currentData[key][playerName] + delta);
+          // Increment by 1
+          currentData[key][playerName] = currentData[key][playerName] + 1;
           
-          // Speichern
+          // Save atomically
           localStorage.setItem("timeDataWithPlayers", JSON.stringify(currentData));
           
-          // Anzeige Update (Filter beachten)
+          // Update display (respect filter)
           const currentPlayerMap = currentData[key];
           let displayVal = 0;
           
@@ -411,8 +415,8 @@ App.goalMap = {
           }
           btn.textContent = displayVal;
           
-          // Workflow Point (nur bei +1)
-          if (delta > 0 && App.goalMapWorkflow.active) {
+          // Add workflow point if active
+          if (App.goalMapWorkflow.active) {
             const btnRect = btn.getBoundingClientRect();
             const boxRect = App.goalMap.timeTrackingBox.getBoundingClientRect();
             const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
@@ -420,38 +424,32 @@ App.goalMap = {
             
             App.addGoalMapPoint('time', xPct, yPct, '#888888', 'timeTrackingBox');
           }
-        };
-        
-        const handleClick = (e) => {
-          // Verhindert doppelte Ausführung bei Touch-Devices
-          if (e.type === 'touchend') {
-             e.preventDefault(); 
-          }
           
-          clickCount++;
-          
-          if (clickTimer) {
-            clearTimeout(clickTimer);
-          }
-          
-          clickTimer = setTimeout(() => {
-            if (clickCount === 1) {
-              updateValue(+1);
-            } else if (clickCount >= 2) {
-              updateValue(-1);
-            }
-            clickCount = 0;
-            clickTimer = null;
+          // Reset processing flag after a short delay
+          setTimeout(() => {
+            isProcessing = false;
           }, 300);
         };
         
+        const handleClick = (e) => {
+          // Prevent default to avoid touch+click double firing
+          e.preventDefault();
+          updateValue();
+        };
+        
+        const handleTouch = (e) => {
+          // Prevent click event from firing after touch
+          e.preventDefault();
+          updateValue();
+        };
+        
+        // Add event listeners
         btn.addEventListener("click", handleClick);
-        // Wichtig für Touch-Response ohne Delay
-        btn.addEventListener("touchend", handleClick);
+        btn.addEventListener("touchend", handleTouch, { passive: false });
       });
     });
     
-    // Filter anwenden, falls einer aktiv ist (aktualisiert die Anzeigen nochmal)
+    // Apply filter if one is active
     if (this.playerFilter) {
         this.applyTimeTrackingFilter();
     }
