@@ -29,209 +29,204 @@ App.goalMap = {
     const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
     
     boxes.forEach((box) => {
-      let pressTimer = null;
-      let isLongPress = false;
+      const img = box.querySelector("img");
+      if (!img) return;
       
-      // Mouse Events
-      box.addEventListener("mousedown", (e) => {
-        isLongPress = false;
+      box.style.position = box.style.position || "relative";
+      App.markerHandler.createImageSampler(img);
+      
+      let mouseHoldTimer = null;
+      let isLong = false;
+      let lastMouseUp = 0;
+      let lastTouchEnd = 0;
+      
+      const getPosFromEvent = (e) => {
+        const boxRect = img.getBoundingClientRect();
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches?.[0]?.clientX);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches?.[0]?.clientY);
         
-        // Start timer für langen Klick (grauer Punkt)
-        pressTimer = setTimeout(() => {
-          isLongPress = true;
+        const xPctContainer = Math.max(0, Math.min(1, (clientX - boxRect.left) / (boxRect.width || 1))) * 100;
+        const yPctContainer = Math.max(0, Math.min(1, (clientY - boxRect.top) / (boxRect.height || 1))) * 100;
+        
+        const rendered = App.markerHandler.computeRenderedImageRect(img);
+        let insideImage = false;
+        let xPctImage = 0;
+        let yPctImage = 0;
+        
+        if (rendered) {
+          insideImage = (clientX >= rendered.x && clientX <= rendered.x + rendered.width && 
+                        clientY >= rendered.y && clientY <= rendered.y + rendered.height);
+          if (insideImage) {
+            xPctImage = Math.max(0, Math.min(1, (clientX - rendered.x) / (rendered.width || 1))) * 100;
+            yPctImage = Math.max(0, Math.min(1, (clientY - rendered.y) / (rendered.height || 1))) * 100;
+          }
+        } else {
+          insideImage = true;
+          xPctImage = xPctContainer;
+          yPctContainer = yPctContainer;
+        }
+        
+        return { xPctContainer, yPctContainer, xPctImage, yPctImage, insideImage };
+      };
+      
+      const placeMarker = (pos, long, forceGrey = false) => {
+        // Spielername aus Filter oder Workflow
+        const playerName = this.playerFilter || (App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : null);
+        
+        if (box.classList.contains("field-box")) {
+          if (!pos.insideImage) return;
           
-          const rect = App.markerHandler.computeRenderedImageRect(box.querySelector('img'));
-          if (!rect) return;
-          
-          const x = e.clientX - rect.x;
-          const y = e.clientY - rect.y;
-          const xPct = App.markerHandler.clampPct((x / rect.width) * 100);
-          const yPct = App.markerHandler.clampPct((y / rect.height) * 100);
-          
-          const img = box.querySelector('img');
-          if (!img) return;
-          
-          // Bildanalyse für Farbbestimmung
           const sampler = App.markerHandler.createImageSampler(img);
-          let color = "#808080"; // Standard: GRAU für langen Klick
           
-          // Optional: Farbe basierend auf Bildbereich anpassen
-          if (sampler?.isGreenAt(xPct, yPct)) {
-            color = "#808080"; // Trotzdem grau bei langem Klick
-          } else if (sampler?.isRedAt(xPct, yPct)) {
-            color = "#808080"; // Trotzdem grau bei langem Klick
+          // Langer Klick oder Doppelklick = GRAUER PUNKT (Tor)
+          if (long || forceGrey) {
+            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
+            
+            // Add workflow point if active
+            if (App.goalMapWorkflow.active) {
+              App.addGoalMapPoint('field', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
+            }
+            return;
           }
           
-          const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : null;
-          App.markerHandler.createMarkerPercent(xPct, yPct, color, box, true, playerName);
-          
-          // Add workflow point if workflow is active
-          if (App.goalMapWorkflow.active) {
-            App.addGoalMapPoint('field', xPct, yPct, color, box.id);
+          // Normaler Klick = GRÜNER PUNKT (Schuss)
+          // Mit intelligenter Farberkennung basierend auf Bildbereich
+          if (sampler && sampler.valid) {
+            const isGreen = sampler.isGreenAt(pos.xPctImage, pos.yPctImage, 110, 30);
+            const isRed = sampler.isRedAt(pos.xPctImage, pos.yPctImage, 95, 22);
+            
+            let color = "#00ff00"; // Standard: Grün für Schuss
+            
+            // Optional: Farbe anpassen basierend auf Spielfeld-Bereich
+            if (isGreen) {
+              color = "#00ff66";  // Helleres Grün auf grünem Bereich
+            } else if (isRed) {
+              color = "#ff0000";  // Rot auf rotem Bereich (defensive Zone)
+            }
+            
+            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, color, box, true, playerName);
+            
+            // Add workflow point if active
+            if (App.goalMapWorkflow.active) {
+              App.addGoalMapPoint('field', pos.xPctContainer, pos.yPctContainer, color, box.id);
+            }
+          } else {
+            // Fallback wenn keine Bilderkennung möglich
+            const color = "#00ff00"; // Grün für Schuss
+            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, color, box, true, playerName);
+            
+            if (App.goalMapWorkflow.active) {
+              App.addGoalMapPoint('field', pos.xPctContainer, pos.yPctContainer, color, box.id);
+            }
           }
+        } else if (box.classList.contains("goal-img-box") || box.id === "goalGreenBox" || box.id === "goalRedBox") {
+          // Tor-Boxen: Nur auf weißem Bereich platzieren
+          const sampler = App.markerHandler.createImageSampler(img);
+          if (!sampler || !sampler.valid) return;
           
-          // Haptic feedback
-          if (navigator.vibrate) {
-            navigator.vibrate(50);
+          if (box.id === "goalGreenBox") {
+            if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
+            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
+            
+            if (App.goalMapWorkflow.active) {
+              App.addGoalMapPoint('goal', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
+            }
+          } else if (box.id === "goalRedBox") {
+            if (!sampler.isNeutralWhiteAt(pos.xPctContainer, pos.yPctContainer, 235, 12)) return;
+            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
+            
+            if (App.goalMapWorkflow.active) {
+              App.addGoalMapPoint('goal', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
+            }
+          } else {
+            if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
+            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
+            
+            if (App.goalMapWorkflow.active) {
+              App.addGoalMapPoint('goal', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
+            }
           }
+        }
+      };
+      
+      // MOUSE EVENTS
+      img.addEventListener("mousedown", (ev) => {
+        isLong = false;
+        if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
+        mouseHoldTimer = setTimeout(() => {
+          isLong = true;
+          placeMarker(getPosFromEvent(ev), true);  // Langer Klick = grauer Punkt
         }, 600); // 600ms für langen Klick
       });
       
-      box.addEventListener("mouseup", (e) => {
-        if (pressTimer) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
+      img.addEventListener("mouseup", (ev) => {
+        if (mouseHoldTimer) {
+          clearTimeout(mouseHoldTimer);
+          mouseHoldTimer = null;
         }
+        const now = Date.now();
+        const pos = getPosFromEvent(ev);
         
-        // Wenn es KEIN langer Klick war, dann normaler Klick
-        if (!isLongPress) {
-          const rect = App.markerHandler.computeRenderedImageRect(box.querySelector('img'));
-          if (!rect) return;
-          
-          const x = e.clientX - rect.x;
-          const y = e.clientY - rect.y;
-          const xPct = App.markerHandler.clampPct((x / rect.width) * 100);
-          const yPct = App.markerHandler.clampPct((y / rect.height) * 100);
-          
-          const img = box.querySelector('img');
-          if (!img) return;
-          
-          // Bildanalyse für intelligente Farbwahl
-          const sampler = App.markerHandler.createImageSampler(img);
-          let color = "#00ff00"; // Standard: GRÜN für normalen Klick
-          
-          // Farbe basierend auf Bildbereich anpassen
-          if (sampler?.isGreenAt(xPct, yPct)) {
-            color = "#00ff00"; // Grün auf grünem Bereich
-          } else if (sampler?.isRedAt(xPct, yPct)) {
-            color = "#ff0000"; // Rot auf rotem Bereich
-          } else if (sampler?.isNeutralWhiteAt(xPct, yPct)) {
-            color = "#ffffff"; // Weiß auf weißem Bereich
-          } else {
-            color = "#00ff00"; // Standard: Grün
-          }
-          
-          const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : null;
-          App.markerHandler.createMarkerPercent(xPct, yPct, color, box, true, playerName);
-          
-          // Add workflow point if workflow is active
-          if (App.goalMapWorkflow.active) {
-            // Für Workflow ist es wichtig, welcher Box-Typ es ist
-            const boxType = box.classList.contains('goal-img-box') ? 'goal' : 'field';
-            App.addGoalMapPoint(boxType, xPct, yPct, color, box.id);
-          }
+        // Doppelklick-Erkennung
+        if (now - lastMouseUp < 300) {
+          placeMarker(pos, true, true);  // Doppelklick = grauer Punkt
+          lastMouseUp = 0;
+        } else {
+          if (!isLong) placeMarker(pos, false);  // Normaler Klick = grüner Punkt
+          lastMouseUp = now;
         }
-        
-        isLongPress = false;
+        isLong = false;
       });
       
-      box.addEventListener("mouseleave", () => {
-        if (pressTimer) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
+      img.addEventListener("mouseleave", () => {
+        if (mouseHoldTimer) {
+          clearTimeout(mouseHoldTimer);
+          mouseHoldTimer = null;
         }
-        isLongPress = false;
+        isLong = false;
       });
       
-      // Touch Events
-      box.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        isLongPress = false;
-        
-        const touch = e.touches[0];
-        
-        // Start timer für langen Touch (grauer Punkt)
-        pressTimer = setTimeout(() => {
-          isLongPress = true;
+      // TOUCH EVENTS
+      img.addEventListener("touchstart", (ev) => {
+        isLong = false;
+        if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
+        mouseHoldTimer = setTimeout(() => {
+          isLong = true;
+          placeMarker(getPosFromEvent(ev.touches[0]), true);  // Langer Touch = grauer Punkt
           
-          const rect = App.markerHandler.computeRenderedImageRect(box.querySelector('img'));
-          if (!rect) return;
-          
-          const x = touch.clientX - rect.x;
-          const y = touch.clientY - rect.y;
-          const xPct = App.markerHandler.clampPct((x / rect.width) * 100);
-          const yPct = App.markerHandler.clampPct((y / rect.height) * 100);
-          
-          const img = box.querySelector('img');
-          if (!img) return;
-          
-          // Bildanalyse für Farbbestimmung
-          const sampler = App.markerHandler.createImageSampler(img);
-          let color = "#808080"; // Standard: GRAU für langen Touch
-          
-          const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : null;
-          App.markerHandler.createMarkerPercent(xPct, yPct, color, box, true, playerName);
-          
-          // Add workflow point if workflow is active
-          if (App.goalMapWorkflow.active) {
-            App.addGoalMapPoint('field', xPct, yPct, color, box.id);
-          }
-          
-          // Haptic feedback
+          // Haptic feedback für langen Touch
           if (navigator.vibrate) {
             navigator.vibrate(50);
           }
-        }, 600); // 600ms für langen Touch
-      }, { passive: false });
+        }, 600);
+      }, { passive: true });
       
-      box.addEventListener("touchend", (e) => {
-        e.preventDefault();
-        
-        if (pressTimer) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
+      img.addEventListener("touchend", (ev) => {
+        if (mouseHoldTimer) {
+          clearTimeout(mouseHoldTimer);
+          mouseHoldTimer = null;
         }
+        const now = Date.now();
+        const pos = getPosFromEvent(ev.changedTouches[0]);
         
-        // Wenn es KEIN langer Touch war, dann normaler Touch
-        if (!isLongPress && e.changedTouches.length > 0) {
-          const touch = e.changedTouches[0];
-          const rect = App.markerHandler.computeRenderedImageRect(box.querySelector('img'));
-          if (!rect) return;
-          
-          const x = touch.clientX - rect.x;
-          const y = touch.clientY - rect.y;
-          const xPct = App.markerHandler.clampPct((x / rect.width) * 100);
-          const yPct = App.markerHandler.clampPct((y / rect.height) * 100);
-          
-          const img = box.querySelector('img');
-          if (!img) return;
-          
-          // Bildanalyse für intelligente Farbwahl
-          const sampler = App.markerHandler.createImageSampler(img);
-          let color = "#00ff00"; // Standard: GRÜN für normalen Touch
-          
-          // Farbe basierend auf Bildbereich anpassen
-          if (sampler?.isGreenAt(xPct, yPct)) {
-            color = "#00ff00"; // Grün auf grünem Bereich
-          } else if (sampler?.isRedAt(xPct, yPct)) {
-            color = "#ff0000"; // Rot auf rotem Bereich
-          } else if (sampler?.isNeutralWhiteAt(xPct, yPct)) {
-            color = "#ffffff"; // Weiß auf weißem Bereich
-          } else {
-            color = "#00ff00"; // Standard: Grün
-          }
-          
-          const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : null;
-          App.markerHandler.createMarkerPercent(xPct, yPct, color, box, true, playerName);
-          
-          // Add workflow point if workflow is active
-          if (App.goalMapWorkflow.active) {
-            // Für Workflow ist es wichtig, welcher Box-Typ es ist
-            const boxType = box.classList.contains('goal-img-box') ? 'goal' : 'field';
-            App.addGoalMapPoint(boxType, xPct, yPct, color, box.id);
-          }
+        // Doppel-Touch-Erkennung
+        if (now - lastTouchEnd < 300) {
+          placeMarker(pos, true, true);  // Doppel-Touch = grauer Punkt
+          lastTouchEnd = 0;
+        } else {
+          if (!isLong) placeMarker(pos, false);  // Normaler Touch = grüner Punkt
+          lastTouchEnd = now;
         }
-        
-        isLongPress = false;
-      }, { passive: false });
+        isLong = false;
+      }, { passive: true });
       
-      box.addEventListener("touchcancel", () => {
-        if (pressTimer) {
-          clearTimeout(pressTimer);
-          pressTimer = null;
+      img.addEventListener("touchcancel", () => {
+        if (mouseHoldTimer) {
+          clearTimeout(mouseHoldTimer);
+          mouseHoldTimer = null;
         }
-        isLongPress = false;
-      });
+        isLong = false;
+      }, { passive: true });
     });
   },
   
@@ -300,10 +295,14 @@ App.goalMap = {
         btn._goalMapClickBound = true;
         btn.setAttribute('data-listener-attached', 'true');
         
-        // Gemeinsame Logik für +1 / -1
-        const handleIncrement = (delta = 1) => {
+        // Click / Double-Click Unterscheidung wie in 912
+        let lastTap = 0;
+        let clickTimeout = null;
+        let touchStart = 0;
+        
+        const updateValue = (delta) => {
           try {
-            console.log(`[Goal Map] Button ${key} clicked, delta=${delta}`);
+            console.log(`[Goal Map] Button ${key} update, delta=${delta}`);
             
             // Daten IMMER frisch laden
             let currentData = {};
@@ -312,54 +311,41 @@ App.goalMap = {
               if (stored) {
                 currentData = JSON.parse(stored);
                 if (typeof currentData !== "object" || currentData === null) {
-                  console.warn("[Goal Map] current timeDataWithPlayers invalid, resetting");
                   currentData = {};
                 }
               }
             } catch (e2) {
-              console.warn("[Goal Map] Failed to parse timeDataWithPlayers on click, resetting:", e2);
               currentData = {};
             }
             
             if (!currentData[key]) currentData[key] = {};
             
             // SPIELER-LOGIK:
-            // 1. Wenn Filter aktiv → Klick zählt für gefilterten Spieler
-            // 2. sonst, wenn Workflow aktiv → Spieler aus Workflow
-            // 3. sonst '_anonymous'
             const playerName =
               this.playerFilter || (App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous');
             
             if (!currentData[key][playerName]) currentData[key][playerName] = 0;
             
             const oldValue = Number(currentData[key][playerName]) || 0;
-            const newValue = oldValue + delta;
-            // Untergrenze 0, damit nicht ins Negative läuft
-            currentData[key][playerName] = newValue < 0 ? 0 : newValue;
+            const newValue = Math.max(0, oldValue + delta);
+            currentData[key][playerName] = newValue;
             
-            console.log(`[Goal Map] Updated ${playerName} for ${key}: ${oldValue} -> ${currentData[key][playerName]}`);
+            console.log(`[Goal Map] Updated ${playerName} for ${key}: ${oldValue} -> ${newValue}`);
             
             // Speichern
-            try {
-              localStorage.setItem("timeDataWithPlayers", JSON.stringify(currentData));
-            } catch (e3) {
-              console.error("[Goal Map] Failed to save timeDataWithPlayers:", e3);
-            }
+            localStorage.setItem("timeDataWithPlayers", JSON.stringify(currentData));
             
-            // Anzeige Update (Filter beachten)
+            // Anzeige Update
             const currentPlayerMap = currentData[key] || {};
             let displayVal = 0;
             
             if (this.playerFilter) {
-              // Nur der aktuell gefilterte Spieler
               displayVal = Number(currentPlayerMap[this.playerFilter]) || 0;
             } else {
-              // Summe über alle Spieler (inkl. _anonymous)
               displayVal = Object.values(currentPlayerMap).reduce((a, b) => a + (Number(b) || 0), 0);
             }
             
             btn.textContent = displayVal;
-            console.log(`[Goal Map] Display value updated to: ${displayVal}`);
             
             // Workflow Point nur bei +1 und aktivem Workflow
             if (delta > 0 && App.goalMapWorkflow && App.goalMapWorkflow.active) {
@@ -376,38 +362,54 @@ App.goalMap = {
               }
             }
           } catch (err) {
-            console.error("[Goal Map] handleIncrement failed for key", key, err);
+            console.error("[Goal Map] updateValue failed for key", key, err);
           }
         };
         
-        // Click / Double-Click Unterscheidung
-        let clickTimeout = null;
-        
-        // Einzelklick: +1
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          if (clickTimeout) clearTimeout(clickTimeout);
-          clickTimeout = setTimeout(() => {
-            handleIncrement(+1);
-            clickTimeout = null;
-          }, 220);
-        });
-        
-        // Doppelklick: -1
-        btn.addEventListener("dblclick", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          if (clickTimeout) {
-            clearTimeout(clickTimeout);
-            clickTimeout = null;
+        // MOUSE CLICK
+        btn.addEventListener("click", () => {
+          const now = Date.now();
+          const diff = now - lastTap;
+          if (diff < 300) {
+            if (clickTimeout) {
+              clearTimeout(clickTimeout);
+              clickTimeout = null;
+            }
+            updateValue(-1);  // Doppelklick: -1
+            lastTap = 0;
+          } else {
+            clickTimeout = setTimeout(() => {
+              updateValue(+1);  // Einzelklick: +1
+              clickTimeout = null;
+            }, 300);
+            lastTap = now;
           }
-          handleIncrement(-1);
         });
         
-        console.log(`[Goal Map] Click/dblclick listener attached to button ${key}`);
+        // TOUCH (für mobile Geräte)
+        btn.addEventListener("touchstart", (e) => {
+          const now = Date.now();
+          const diff = now - touchStart;
+          if (diff < 300) {
+            e.preventDefault();
+            if (clickTimeout) {
+              clearTimeout(clickTimeout);
+              clickTimeout = null;
+            }
+            updateValue(-1);  // Doppel-Touch: -1
+            touchStart = 0;
+          } else {
+            touchStart = now;
+            setTimeout(() => {
+              if (touchStart !== 0) {
+                updateValue(+1);  // Single-Touch: +1
+                touchStart = 0;
+              }
+            }, 300);
+          }
+        }, { passive: true });
+        
+        console.log(`[Goal Map] Click/touch listener attached to button ${key}`);
       });
     });
     
