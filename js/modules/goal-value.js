@@ -1,4 +1,4 @@
-// Goal Value Modul - MIT STICKY COLUMNS
+// Goal Value Modul - MIT SCROLLING und STICKY COLUMN
 App.goalValue = {
   container: null,
   clickTimers: {},
@@ -34,6 +34,7 @@ App.goalValue = {
   
   setData(obj, forceWrite = false) {
     if (this.isUpdatingData && !forceWrite) {
+      console.warn("[Goal Value] setData blocked during update to prevent recursion");
       return;
     }
     localStorage.setItem("goalValueData", JSON.stringify(obj));
@@ -64,8 +65,10 @@ App.goalValue = {
   
   ensureDataForSeason() {
     if (this.isUpdatingData) {
+      console.warn("[Goal Value] ensureDataForSeason blocked to prevent recursion");
       return;
     }
+    
     this.isUpdatingData = true;
     
     try {
@@ -82,6 +85,7 @@ App.goalValue = {
       });
       
       localStorage.setItem("goalValueData", JSON.stringify(all));
+      console.log("[Goal Value] ensureDataForSeason completed");
     } finally {
       this.isUpdatingData = false;
     }
@@ -100,13 +104,25 @@ App.goalValue = {
       ? Object.keys(App.data.seasonData).sort() 
       : App.data.selectedPlayers.map(p => p.name);
     
+    // Wrapper für horizontales Scrollen
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-scroll';
+    wrapper.style.width = '100%';
+    wrapper.style.boxSizing = 'border-box';
+    wrapper.style.overflowX = 'auto';
+    wrapper.style.overflowY = 'hidden';
+    wrapper.style.WebkitOverflowScrolling = 'touch';
+    wrapper.style.position = 'relative';
+    
     const table = document.createElement("table");
-    table.className = "goalvalue-table";
+    table.className = "goalvalue-table gv-no-patch";
     table.style.width = "auto";
     table.style.margin = "0";
-    // border-collapse: separate für sticky columns notwendig
     table.style.borderCollapse = "separate";
     table.style.borderSpacing = "0";
+    table.style.borderRadius = "8px";
+    table.style.overflow = "hidden";
+    table.style.tableLayout = "auto";
     
     // Header
     const thead = document.createElement("thead");
@@ -122,14 +138,11 @@ App.goalValue = {
     thPlayer.style.minWidth = "160px";
     thPlayer.style.maxWidth = "200px";
     thPlayer.style.whiteSpace = "nowrap";
-    
-    // STICKY PROPERTIES - Explicit Background is crucial!
     thPlayer.style.position = "sticky";
     thPlayer.style.left = "0";
     thPlayer.style.zIndex = "35";
-    thPlayer.style.backgroundColor = "var(--header-bg)"; // WICHTIG!
+    thPlayer.style.backgroundColor = "var(--header-bg)";
     thPlayer.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.15)";
-    
     headerRow.appendChild(thPlayer);
     
     opponents.forEach((op, idx) => {
@@ -187,14 +200,12 @@ App.goalValue = {
       tdName.style.overflow = "hidden";
       tdName.style.textOverflow = "ellipsis";
       tdName.style.borderRight = "1px solid #444";
-      
-      // STICKY PROPERTIES
       tdName.style.position = "sticky";
       tdName.style.left = "0";
       tdName.style.zIndex = "20";
       tdName.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.1)";
       
-      // BACKGROUND IS CRUCIAL for sticky
+      // Hintergrund basierend auf Zeile setzen
       if (rowIdx % 2 === 0) {
         tdName.style.backgroundColor = "var(--row-even)";
       } else {
@@ -222,6 +233,7 @@ App.goalValue = {
         
         td.addEventListener("click", (e) => {
           e.preventDefault();
+          
           const cellId = `${name}-${i}`;
           const playerName = td.dataset.player;
           const oppIdx = Number(td.dataset.oppIdx);
@@ -242,6 +254,7 @@ App.goalValue = {
             td.style.fontWeight = nv !== 0 ? "700" : "400";
             
             this.updateValueCell(playerName, valueCellMap);
+            
           } else {
             this.clickTimers[cellId] = setTimeout(() => {
               delete this.clickTimers[cellId];
@@ -261,6 +274,7 @@ App.goalValue = {
             }, 300);
           }
         });
+        
         row.appendChild(td);
       });
       
@@ -280,6 +294,7 @@ App.goalValue = {
     // Bottom Scale Row
     const bottomRow = document.createElement("tr");
     bottomRow.className = (playersList.length % 2 === 0 ? "even-row" : "odd-row");
+    bottomRow.style.background = "rgba(0,0,0,0.03)";
     
     const labelTd = document.createElement("td");
     labelTd.textContent = "";
@@ -287,22 +302,13 @@ App.goalValue = {
     labelTd.style.padding = "6px 12px";
     labelTd.style.fontWeight = "700";
     labelTd.style.textAlign = "center";
+    labelTd.style.background = "rgba(0,0,0,0.03)";
     labelTd.style.borderRight = "1px solid #444";
     labelTd.style.borderTop = "2px solid #333";
-    
-    // STICKY PROPERTIES
     labelTd.style.position = "sticky";
     labelTd.style.left = "0";
     labelTd.style.zIndex = "20";
     labelTd.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.1)";
-    
-    // Hintergrund passend zur Zeile
-    if (playersList.length % 2 === 0) {
-      labelTd.style.backgroundColor = "var(--row-even)";
-    } else {
-      labelTd.style.backgroundColor = "var(--row-odd)";
-    }
-    
     bottomRow.appendChild(labelTd);
     
     const scaleOptions = [];
@@ -310,6 +316,7 @@ App.goalValue = {
     
     const storedBottom = this.getBottom();
     while (storedBottom.length < opponents.length) storedBottom.push(0);
+    if (storedBottom.length > opponents.length) storedBottom.length = opponents.length;
     this.setBottom(storedBottom);
     
     opponents.forEach((_, i) => {
@@ -341,6 +348,7 @@ App.goalValue = {
         const arr = this.getBottom();
         arr[i] = Number(select.value);
         this.setBottom(arr);
+        
         Object.keys(valueCellMap).forEach(pn => {
           this.updateValueCell(pn, valueCellMap);
         });
@@ -358,17 +366,11 @@ App.goalValue = {
     tbody.appendChild(bottomRow);
     table.appendChild(tbody);
     
-    // Wrapper for scrolling
-    const wrapper = document.createElement('div');
-    wrapper.className = 'table-scroll';
-    wrapper.style.width = '100%';
-    wrapper.style.boxSizing = 'border-box';
-    wrapper.style.overflowX = 'auto';
-    wrapper.style.overflowY = 'hidden';
-    wrapper.style.WebkitOverflowScrolling = 'touch';
+    // Tabelle in Wrapper einfügen
     wrapper.appendChild(table);
-    
     this.container.appendChild(wrapper);
+    
+    console.log('Goal Value Table rendered with scroll wrapper and WORKING sticky columns');
   },
   
   updateValueCell(playerName, valueCellMap) {
