@@ -78,9 +78,18 @@ App.goalMap = {
        * Marker setzen – Logik wie 912, erweitert um:
        * - playerName (Filter oder aktiver Workflow-Spieler)
        * - Goal/Shot Workflow (addGoalMapPoint)
+       *
+       * Regeln:
+       * - Shot-Workflow: Feldpunkte grün/rot (Eisfarbe)
+       * - Goal-Workflow: Feld- UND Torpunkte grau
+       * - Longpress/Doppelklick immer grau (neutral)
        */
       const placeMarker = (pos, long, forceGrey = false) => {
         const workflowActive = App.goalMapWorkflow?.active;
+        const eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
+        const isGoalWorkflow = workflowActive && eventType === 'goal';
+        const neutralGrey = "#666666"; // einheitliches Grau für Feld & Tor
+        
         const pointPlayer =
           this.playerFilter ||
           (workflowActive ? App.goalMapWorkflow.playerName : null);
@@ -92,11 +101,14 @@ App.goalMap = {
           const sampler = App.markerHandler.createImageSampler(img);
           let color = null;
           
-          if (long || forceGrey) {
-            // Longpress / Doppelklick → neutral grau
-            color = "#444444";
+          if (isGoalWorkflow) {
+            // IM GOAL-WORKFLOW: Feldpunkte immer grau, nicht grün/rot
+            color = neutralGrey;
+          } else if (long || forceGrey) {
+            // Longpress / Doppelklick: auch grau
+            color = neutralGrey;
           } else if (sampler && sampler.valid) {
-            // SCHWELLEN GELockert + Fallback, damit immer grün/rot rauskommt
+            // Shot-Workflow oder freies Klicken: grün/rot vom Eis, mit Fallback
             const isGreen = sampler.isGreenAt(pos.xPctImage, pos.yPctImage, 80, 15);
             const isRed   = sampler.isRedAt  (pos.xPctImage, pos.yPctImage, 80, 15);
             
@@ -105,15 +117,13 @@ App.goalMap = {
             } else if (isRed) {
               color = "#ff0000";
             } else {
-              // Fallback: obere Hälfte grün, untere rot
               color = pos.yPctImage > 50 ? "#ff0000" : "#00ff66";
             }
           } else {
-            // Sampler ungültig → ebenfalls Fallback
+            // Sampler ungültig: Fallback grün/rot
             color = pos.yPctImage > 50 ? "#ff0000" : "#00ff66";
           }
           
-          // Marker setzen (mit Spielername, falls vorhanden)
           App.markerHandler.createMarkerPercent(
             pos.xPctContainer,
             pos.yPctContainer,
@@ -123,7 +133,6 @@ App.goalMap = {
             pointPlayer
           );
           
-          // Workflow-Integration: Feldpunkt hinzufügen
           if (workflowActive) {
             App.addGoalMapPoint(
               "field",
@@ -146,8 +155,8 @@ App.goalMap = {
           const sampler = App.markerHandler.createImageSampler(img);
           if (!sampler || !sampler.valid) return;
           
-          // Standard-Farbe für Tore: grau
-          let color = "#444444";
+          // immer dasselbe Grau wie Feld-Grau im Goal-Workflow / Longpress
+          const color = neutralGrey;
           
           if (box.id === "goalGreenBox") {
             if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
@@ -199,7 +208,6 @@ App.goalMap = {
         const now = Date.now();
         const pos = getPosFromEvent(ev);
         
-        // Schneller Doppelklick = Long-Effekt + forceGrey
         if (now - lastMouseUp < 300) {
           placeMarker(pos, true, true);
           lastMouseUp = 0;
