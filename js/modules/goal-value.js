@@ -110,7 +110,9 @@ App.goalValue = {
     table.className = "goalvalue-table gv-no-patch";
     table.style.width = "auto";
     table.style.margin = "0";
-    table.style.borderCollapse = "collapse";
+    // WICHTIG: border-collapse SEPARATE für sticky columns
+    table.style.borderCollapse = "separate";
+    table.style.borderSpacing = "0";
     table.style.borderRadius = "8px";
     table.style.overflow = "hidden";
     table.style.tableLayout = "auto";
@@ -121,12 +123,20 @@ App.goalValue = {
     
     const thPlayer = document.createElement("th");
     thPlayer.textContent = "Spieler";
-    thPlayer.className = "gv-name-header sticky-col";  // STICKY KLASSE HINZUGEFÜGT
-    thPlayer.style.textAlign = "center";
-    thPlayer.style.padding = "8px 6px";
+    thPlayer.className = "gv-name-header sticky-col";
+    thPlayer.style.textAlign = "left"; // Links ausgerichtet
+    thPlayer.style.padding = "8px 12px";
     thPlayer.style.borderBottom = "2px solid #333";
+    thPlayer.style.borderRight = "1px solid #444"; // Trennlinie
     thPlayer.style.minWidth = "160px";
+    thPlayer.style.maxWidth = "200px";
     thPlayer.style.whiteSpace = "nowrap";
+    // STICKY EIGENSCHAFTEN DIREKT SETZEN
+    thPlayer.style.position = "sticky";
+    thPlayer.style.left = "0";
+    thPlayer.style.zIndex = "35";
+    thPlayer.style.backgroundColor = "var(--header-bg)";
+    thPlayer.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.15)";
     headerRow.appendChild(thPlayer);
     
     opponents.forEach((op, idx) => {
@@ -174,14 +184,27 @@ App.goalValue = {
       
       const tdName = document.createElement("td");
       tdName.textContent = name;
-      tdName.className = "gv-name-cell sticky-col";  // STICKY KLASSE HINZUGEFÜGT
+      tdName.className = "gv-name-cell sticky-col";
       tdName.style.textAlign = "left";
-      tdName.style.padding = "6px";
+      tdName.style.padding = "6px 12px";
       tdName.style.fontWeight = "700";
       tdName.style.minWidth = "160px";
+      tdName.style.maxWidth = "200px";
       tdName.style.whiteSpace = "nowrap";
-      tdName.style.overflow = "visible";
-      tdName.style.textOverflow = "clip";
+      tdName.style.overflow = "hidden";
+      tdName.style.textOverflow = "ellipsis";
+      tdName.style.borderRight = "1px solid #444"; // Trennlinie
+      // STICKY EIGENSCHAFTEN DIREKT SETZEN
+      tdName.style.position = "sticky";
+      tdName.style.left = "0";
+      tdName.style.zIndex = "20";
+      tdName.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.1)";
+      // Hintergrund basierend auf Zeile setzen
+      if (rowIdx % 2 === 0) {
+        tdName.style.backgroundColor = "var(--row-even)";
+      } else {
+        tdName.style.backgroundColor = "var(--row-odd)";
+      }
       row.appendChild(tdName);
       
       const vals = (gData[name] && Array.isArray(gData[name])) ? gData[name].slice() : opponents.map(() => 0);
@@ -268,11 +291,18 @@ App.goalValue = {
     
     const labelTd = document.createElement("td");
     labelTd.textContent = "";
-    labelTd.className = "sticky-col";  // STICKY KLASSE HINZUGEFÜGT
-    labelTd.style.padding = "6px";
+    labelTd.className = "sticky-col";
+    labelTd.style.padding = "6px 12px";
     labelTd.style.fontWeight = "700";
     labelTd.style.textAlign = "center";
     labelTd.style.background = "rgba(0,0,0,0.03)";
+    labelTd.style.borderRight = "1px solid #444";
+    labelTd.style.borderTop = "2px solid #333";
+    // STICKY EIGENSCHAFTEN DIREKT SETZEN
+    labelTd.style.position = "sticky";
+    labelTd.style.left = "0";
+    labelTd.style.zIndex = "20";
+    labelTd.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.1)";
     bottomRow.appendChild(labelTd);
     
     const scaleOptions = [];
@@ -287,6 +317,7 @@ App.goalValue = {
       const td = document.createElement("td");
       td.style.padding = "6px";
       td.style.textAlign = "center";
+      td.style.borderTop = "2px solid #333";
       
       const select = document.createElement("select");
       select.className = "gv-scale-dropdown";
@@ -324,6 +355,7 @@ App.goalValue = {
     const emptyTd = document.createElement("td");
     emptyTd.textContent = "";
     emptyTd.style.padding = "6px";
+    emptyTd.style.borderTop = "2px solid #333";
     bottomRow.appendChild(emptyTd);
     
     tbody.appendChild(bottomRow);
@@ -341,7 +373,7 @@ App.goalValue = {
     
     this.container.appendChild(wrapper);
     
-    console.log('Goal Value Table rendered with scroll wrapper and sticky columns');
+    console.log('Goal Value Table rendered with scroll wrapper and WORKING sticky columns');
   },
   
   updateValueCell(playerName, valueCellMap) {
