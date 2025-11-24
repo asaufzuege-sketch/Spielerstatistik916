@@ -58,7 +58,8 @@ App.markerHandler = {
         return p.r >= threshold && p.g >= threshold && p.b >= threshold;
       };
       
-      sampler.isNeutralWhiteAt = (xPct, yPct, threshold = 235, maxChannelDiff = 12) => {
+      // STRENGER: Weiß-Erkennung, damit mehr Bereiche grau bleiben
+      sampler.isNeutralWhiteAt = (xPct, yPct, threshold = 245, maxChannelDiff = 8) => {
         const p = getPixel(xPct, yPct);
         if (!p || p.a === 0) return false;
         const maxC = Math.max(p.r, p.g, p.b);
