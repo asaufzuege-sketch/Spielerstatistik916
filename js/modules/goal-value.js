@@ -121,7 +121,7 @@ App.goalValue = {
     
     const thPlayer = document.createElement("th");
     thPlayer.textContent = "Spieler";
-    thPlayer.className = "gv-name-header sticky-col";
+    thPlayer.className = "gv-name-header sticky-col";  // STICKY KLASSE HINZUGEFÜGT
     thPlayer.style.textAlign = "center";
     thPlayer.style.padding = "8px 6px";
     thPlayer.style.borderBottom = "2px solid #333";
@@ -174,7 +174,7 @@ App.goalValue = {
       
       const tdName = document.createElement("td");
       tdName.textContent = name;
-      tdName.className = "gv-name-cell sticky-col";
+      tdName.className = "gv-name-cell sticky-col";  // STICKY KLASSE HINZUGEFÜGT
       tdName.style.textAlign = "left";
       tdName.style.padding = "6px";
       tdName.style.fontWeight = "700";
@@ -268,7 +268,7 @@ App.goalValue = {
     
     const labelTd = document.createElement("td");
     labelTd.textContent = "";
-    labelTd.className = "sticky-col";
+    labelTd.className = "sticky-col";  // STICKY KLASSE HINZUGEFÜGT
     labelTd.style.padding = "6px";
     labelTd.style.fontWeight = "700";
     labelTd.style.textAlign = "center";
