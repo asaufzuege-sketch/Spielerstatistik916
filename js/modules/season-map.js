@@ -378,10 +378,14 @@ App.seasonMap = {
   reset() {
     if (!confirm("⚠️ Season Map zurücksetzen (Marker + Timeboxen)?")) return;
     
+    // Marker und Buttons nur auf Season Map zurücksetzen
     document.querySelectorAll("#seasonMapPage .marker-dot").forEach(d => d.remove());
     document.querySelectorAll("#seasonMapPage .time-btn").forEach(btn => btn.textContent = "0");
+    
+    // Alle Season-Map-spezifischen Storage-Keys löschen
     localStorage.removeItem("seasonMapMarkers");
     localStorage.removeItem("seasonMapTimeData");
+    localStorage.removeItem("seasonMapTimeDataWithPlayers");
     
     alert("Season Map zurückgesetzt.");
   }
