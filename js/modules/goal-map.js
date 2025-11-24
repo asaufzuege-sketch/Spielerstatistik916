@@ -1,4 +1,4 @@
-// Goal Map Modul – Basis: Verhalten aus Repo 912, erweitert um Goal/Shot-Workflow + Spieler-Filter
+// Goal Map Modul – Verhalten wie in Repo 912, erweitert um Goal/Shot-Workflow + Spieler-Filter
 App.goalMap = {
   timeTrackingBox: null,
   playerFilter: null,
@@ -19,7 +19,7 @@ App.goalMap = {
     // Marker Handler für Goal Map Boxen – Logik wie in 912, aber mit Workflow & Player-Tagging
     this.attachMarkerHandlers();
     
-    // Time Tracking initialisieren (erweiterte 916‑Logik mit Spielerzuordnung)
+    // Time Tracking initialisieren (916‑Logik mit Spielerzuordnung)
     this.initTimeTracking();
     
     // Player Filter initialisieren
@@ -92,18 +92,24 @@ App.goalMap = {
           const sampler = App.markerHandler.createImageSampler(img);
           let color = null;
           
-          // Longpress oder forceGrey → grauer Punkt (wie früher Doppelklick / langer Klick für „neutral“)
           if (long || forceGrey) {
+            // Longpress / Doppelklick → neutral grau
             color = "#444444";
           } else if (sampler && sampler.valid) {
-            const isGreen = sampler.isGreenAt(pos.xPctImage, pos.yPctImage, 110, 30);
-            const isRed = sampler.isRedAt(pos.xPctImage, pos.yPctImage, 95, 22);
+            // SCHWELLEN GELockert + Fallback, damit immer grün/rot rauskommt
+            const isGreen = sampler.isGreenAt(pos.xPctImage, pos.yPctImage, 80, 15);
+            const isRed   = sampler.isRedAt  (pos.xPctImage, pos.yPctImage, 80, 15);
             
-            if (isGreen) color = "#00ff66";
-            else if (isRed) color = "#ff0000";
-            else return; // Nichts setzen, wenn weder grün noch rot
+            if (isGreen) {
+              color = "#00ff66";
+            } else if (isRed) {
+              color = "#ff0000";
+            } else {
+              // Fallback: obere Hälfte grün, untere rot
+              color = pos.yPctImage > 50 ? "#ff0000" : "#00ff66";
+            }
           } else {
-            // Fallback ohne Sampler: obere Hälfte grün, untere rot
+            // Sampler ungültig → ebenfalls Fallback
             color = pos.yPctImage > 50 ? "#ff0000" : "#00ff66";
           }
           
@@ -140,11 +146,10 @@ App.goalMap = {
           const sampler = App.markerHandler.createImageSampler(img);
           if (!sampler || !sampler.valid) return;
           
-          // Standard-Farbe für Tore: grau (wie 912)
+          // Standard-Farbe für Tore: grau
           let color = "#444444";
           
           if (box.id === "goalGreenBox") {
-            // Nur auf weißen Bereichen markieren
             if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
           } else if (box.id === "goalRedBox") {
             if (!sampler.isNeutralWhiteAt(pos.xPctContainer, pos.yPctContainer, 235, 12)) return;
@@ -161,7 +166,6 @@ App.goalMap = {
             pointPlayer
           );
           
-          // Workflow-Integration: Tor-Punkt hinzufügen (nur sinnvoll bei eventType === 'goal')
           if (workflowActive) {
             App.addGoalMapPoint(
               "goal",
@@ -195,7 +199,7 @@ App.goalMap = {
         const now = Date.now();
         const pos = getPosFromEvent(ev);
         
-        // Schneller Doppelklick = Long-Effekt + forceGrey (wie 912)
+        // Schneller Doppelklick = Long-Effekt + forceGrey
         if (now - lastMouseUp < 300) {
           placeMarker(pos, true, true);
           lastMouseUp = 0;
@@ -226,7 +230,6 @@ App.goalMap = {
           const pos = getPosFromEvent(touch);
           placeMarker(pos, true);
           
-          // Haptik bei Longpress
           if (navigator.vibrate) navigator.vibrate(50);
         }, App.markerHandler.LONG_MARK_MS);
       }, { passive: true });
@@ -260,11 +263,10 @@ App.goalMap = {
     });
   },
   
-  // Time Tracking mit Spielerzuordnung (916-Logik, leicht gestrafft)
+  // Time Tracking mit Spielerzuordnung
   initTimeTracking() {
     if (!this.timeTrackingBox) return;
     
-    // Alte (spielerlose) Daten & neue spielerbezogene Daten laden
     let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
     let timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     
@@ -291,7 +293,6 @@ App.goalMap = {
         let clickTimeout = null;
         
         const updateValue = (delta) => {
-          // Spieler: erst Filter, dann Workflow-Spieler, sonst '_anonymous'
           const playerName =
             this.playerFilter ||
             (App.goalMapWorkflow?.active ? App.goalMapWorkflow.playerName : '_anonymous');
@@ -303,10 +304,8 @@ App.goalMap = {
           const newVal = Math.max(0, current + delta);
           timeDataWithPlayers[key][playerName] = newVal;
           
-          // Speichern
           localStorage.setItem("timeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
           
-          // Anzeige: gefilterter Spieler oder Summe
           let displayVal = 0;
           if (this.playerFilter) {
             displayVal = timeDataWithPlayers[key][this.playerFilter] || 0;
@@ -316,12 +315,10 @@ App.goalMap = {
           }
           btn.textContent = displayVal;
           
-          // Legacy timeData für Kompatibilität
           if (!timeData[periodNum]) timeData[periodNum] = {};
           timeData[periodNum][idx] = displayVal;
           localStorage.setItem("timeData", JSON.stringify(timeData));
           
-          // Workflow-Zeitpunkt (als 3. Punkt bei Goals) nur bei +1
           if (delta > 0 && App.goalMapWorkflow?.active) {
             const btnRect = btn.getBoundingClientRect();
             const boxRect = this.timeTrackingBox.getBoundingClientRect();
@@ -332,7 +329,6 @@ App.goalMap = {
           }
         };
         
-        // Click / Double-Click: +1 / -1
         btn.addEventListener("click", () => {
           const now = Date.now();
           const diff = now - lastTap;
@@ -354,7 +350,6 @@ App.goalMap = {
       });
     });
     
-    // Falls beim Laden ein Filter aktiv ist
     if (this.playerFilter) {
       this.applyTimeTrackingFilter();
     }
@@ -393,7 +388,6 @@ App.goalMap = {
       localStorage.removeItem("goalMapPlayerFilter");
     }
     
-    // Marker filtern
     const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
     boxes.forEach(box => {
       const markers = box.querySelectorAll(".marker-dot");
@@ -406,7 +400,6 @@ App.goalMap = {
       });
     });
     
-    // Timeboxen an Filter anpassen
     this.applyTimeTrackingFilter();
   },
   
@@ -440,7 +433,7 @@ App.goalMap = {
     });
   },
   
-  // Workflow-Indikator – HTML in index.html hat ids workflowStatusIndicator/workflowStatusText
+  // Workflow-Indikator – IDs aus index.html verwenden
   updateWorkflowIndicator() {
     const indicator = document.getElementById("workflowStatusIndicator");
     const textEl = document.getElementById("workflowStatusText");
@@ -465,7 +458,6 @@ App.goalMap = {
   },
   
   exportGoalMap() {
-    // Marker exportieren (inkl. Spielername)
     const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
     const allMarkers = boxes.map(box => {
       const markers = [];
@@ -483,7 +475,6 @@ App.goalMap = {
     
     localStorage.setItem("goalMapMarkers", JSON.stringify(allMarkers));
     
-    // Time Data (Aggregiert) exportieren
     const timeData = this.readTimeTrackingFromBox();
     localStorage.setItem("timeData", JSON.stringify(timeData));
     
