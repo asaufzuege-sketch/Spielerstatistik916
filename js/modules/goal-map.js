@@ -15,148 +15,51 @@ App.goalMap = {
       this.reset();
     });
     
-    // Initialize interactive boxes (Feld + Tore)
-    this.initBoxes();
+    // Marker Handler für Goal Map Boxen - EXAKT WIE IN 912
+    this.attachMarkerHandlers();
     
-    // Initialize time tracking
+    // Time Tracking initialisieren
     this.initTimeTracking();
     
     // Initialize player filter
     this.initPlayerFilter();
   },
   
-  initBoxes() {
-    const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
+  attachMarkerHandlers() {
+    const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
     
-    boxes.forEach((box) => {
+    boxes.forEach(box => {
       const img = box.querySelector("img");
       if (!img) return;
       
       box.style.position = box.style.position || "relative";
-      App.markerHandler.createImageSampler(img);
       
       let mouseHoldTimer = null;
       let isLong = false;
-      let lastMouseUp = 0;
-      let lastTouchEnd = 0;
       
-      const getPosFromEvent = (e) => {
-        const boxRect = img.getBoundingClientRect();
-        const clientX = e.clientX !== undefined ? e.clientX : (e.touches?.[0]?.clientX);
-        const clientY = e.clientY !== undefined ? e.clientY : (e.touches?.[0]?.clientY);
-        
-        const xPctContainer = Math.max(0, Math.min(1, (clientX - boxRect.left) / (boxRect.width || 1))) * 100;
-        const yPctContainer = Math.max(0, Math.min(1, (clientY - boxRect.top) / (boxRect.height || 1))) * 100;
-        
-        const rendered = App.markerHandler.computeRenderedImageRect(img);
-        let insideImage = false;
-        let xPctImage = 0;
-        let yPctImage = 0;
-        
-        if (rendered) {
-          insideImage = (clientX >= rendered.x && clientX <= rendered.x + rendered.width && 
-                        clientY >= rendered.y && clientY <= rendered.y + rendered.height);
-          if (insideImage) {
-            xPctImage = Math.max(0, Math.min(1, (clientX - rendered.x) / (rendered.width || 1))) * 100;
-            yPctImage = Math.max(0, Math.min(1, (clientY - rendered.y) / (rendered.height || 1))) * 100;
-          }
-        } else {
-          insideImage = true;
-          xPctImage = xPctContainer;
-          yPctContainer = yPctContainer;
-        }
-        
-        return { xPctContainer, yPctContainer, xPctImage, yPctImage, insideImage };
-      };
-      
-      const placeMarker = (pos, long, forceGrey = false) => {
-        // Spielername aus Filter oder Workflow
-        const playerName = this.playerFilter || (App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : null);
-        
-        if (box.classList.contains("field-box")) {
-          if (!pos.insideImage) return;
-          
-          const sampler = App.markerHandler.createImageSampler(img);
-          
-          // Langer Klick oder Doppelklick = GRAUER PUNKT (Tor)
-          if (long || forceGrey) {
-            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
-            
-            // Add workflow point if active
-            if (App.goalMapWorkflow.active) {
-              App.addGoalMapPoint('field', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
-            }
-            return;
-          }
-          
-          // Normaler Klick = GRÜNER PUNKT (Schuss)
-          // Mit intelligenter Farberkennung basierend auf Bildbereich
-          if (sampler && sampler.valid) {
-            const isGreen = sampler.isGreenAt(pos.xPctImage, pos.yPctImage, 110, 30);
-            const isRed = sampler.isRedAt(pos.xPctImage, pos.yPctImage, 95, 22);
-            
-            let color = "#00ff00"; // Standard: Grün für Schuss
-            
-            // Optional: Farbe anpassen basierend auf Spielfeld-Bereich
-            if (isGreen) {
-              color = "#00ff66";  // Helleres Grün auf grünem Bereich
-            } else if (isRed) {
-              color = "#ff0000";  // Rot auf rotem Bereich (defensive Zone)
-            }
-            
-            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, color, box, true, playerName);
-            
-            // Add workflow point if active
-            if (App.goalMapWorkflow.active) {
-              App.addGoalMapPoint('field', pos.xPctContainer, pos.yPctContainer, color, box.id);
-            }
-          } else {
-            // Fallback wenn keine Bilderkennung möglich
-            const color = "#00ff00"; // Grün für Schuss
-            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, color, box, true, playerName);
-            
-            if (App.goalMapWorkflow.active) {
-              App.addGoalMapPoint('field', pos.xPctContainer, pos.yPctContainer, color, box.id);
-            }
-          }
-        } else if (box.classList.contains("goal-img-box") || box.id === "goalGreenBox" || box.id === "goalRedBox") {
-          // Tor-Boxen: Nur auf weißem Bereich platzieren
-          const sampler = App.markerHandler.createImageSampler(img);
-          if (!sampler || !sampler.valid) return;
-          
-          if (box.id === "goalGreenBox") {
-            if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
-            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
-            
-            if (App.goalMapWorkflow.active) {
-              App.addGoalMapPoint('goal', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
-            }
-          } else if (box.id === "goalRedBox") {
-            if (!sampler.isNeutralWhiteAt(pos.xPctContainer, pos.yPctContainer, 235, 12)) return;
-            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
-            
-            if (App.goalMapWorkflow.active) {
-              App.addGoalMapPoint('goal', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
-            }
-          } else {
-            if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
-            App.markerHandler.createMarkerPercent(pos.xPctContainer, pos.yPctContainer, "#808080", box, true, playerName);
-            
-            if (App.goalMapWorkflow.active) {
-              App.addGoalMapPoint('goal', pos.xPctContainer, pos.yPctContainer, '#808080', box.id);
-            }
-          }
-        }
-      };
-      
-      // MOUSE EVENTS
+      // MOUSE EVENTS - DIREKT AUF IMG WIE IN 912
       img.addEventListener("mousedown", (ev) => {
         isLong = false;
         if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
         mouseHoldTimer = setTimeout(() => {
           isLong = true;
-          placeMarker(getPosFromEvent(ev), true);  // Langer Klick = grauer Punkt
-        }, 600); // 600ms für langen Klick
+          
+          // LANGER KLICK = GRAUER PUNKT
+          const rect = img.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          const xPct = (x / rect.width) * 100;
+          const yPct = (y / rect.height) * 100;
+          
+          const playerName = this.playerFilter || (App.goalMapWorkflow?.active ? App.goalMapWorkflow.playerName : null);
+          App.markerHandler.createMarkerPercent(xPct, yPct, "#808080", box, true, playerName);
+          
+          // Workflow integration
+          if (App.goalMapWorkflow?.active) {
+            const boxType = box.classList.contains('goal-img-box') ? 'goal' : 'field';
+            App.addGoalMapPoint(boxType, xPct, yPct, '#808080', box.id);
+          }
+        }, 600); // 600ms wie in 912
       });
       
       img.addEventListener("mouseup", (ev) => {
@@ -164,16 +67,23 @@ App.goalMap = {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
         }
-        const now = Date.now();
-        const pos = getPosFromEvent(ev);
         
-        // Doppelklick-Erkennung
-        if (now - lastMouseUp < 300) {
-          placeMarker(pos, true, true);  // Doppelklick = grauer Punkt
-          lastMouseUp = 0;
-        } else {
-          if (!isLong) placeMarker(pos, false);  // Normaler Klick = grüner Punkt
-          lastMouseUp = now;
+        if (!isLong) {
+          // NORMALER KLICK = GRÜNER PUNKT
+          const rect = img.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          const xPct = (x / rect.width) * 100;
+          const yPct = (y / rect.height) * 100;
+          
+          const playerName = this.playerFilter || (App.goalMapWorkflow?.active ? App.goalMapWorkflow.playerName : null);
+          App.markerHandler.createMarkerPercent(xPct, yPct, "#00ff00", box, true, playerName);
+          
+          // Workflow integration
+          if (App.goalMapWorkflow?.active) {
+            const boxType = box.classList.contains('goal-img-box') ? 'goal' : 'field';
+            App.addGoalMapPoint(boxType, xPct, yPct, '#00ff00', box.id);
+          }
         }
         isLong = false;
       });
@@ -186,18 +96,32 @@ App.goalMap = {
         isLong = false;
       });
       
-      // TOUCH EVENTS
+      // TOUCH EVENTS - DIREKT AUF IMG WIE IN 912
       img.addEventListener("touchstart", (ev) => {
         isLong = false;
         if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
         mouseHoldTimer = setTimeout(() => {
           isLong = true;
-          placeMarker(getPosFromEvent(ev.touches[0]), true);  // Langer Touch = grauer Punkt
           
-          // Haptic feedback für langen Touch
-          if (navigator.vibrate) {
-            navigator.vibrate(50);
+          // LANGER TOUCH = GRAUER PUNKT
+          const touch = ev.touches[0];
+          const rect = img.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+          const xPct = (x / rect.width) * 100;
+          const yPct = (y / rect.height) * 100;
+          
+          const playerName = this.playerFilter || (App.goalMapWorkflow?.active ? App.goalMapWorkflow.playerName : null);
+          App.markerHandler.createMarkerPercent(xPct, yPct, "#808080", box, true, playerName);
+          
+          // Workflow integration
+          if (App.goalMapWorkflow?.active) {
+            const boxType = box.classList.contains('goal-img-box') ? 'goal' : 'field';
+            App.addGoalMapPoint(boxType, xPct, yPct, '#808080', box.id);
           }
+          
+          // Haptic feedback
+          if (navigator.vibrate) navigator.vibrate(50);
         }, 600);
       }, { passive: true });
       
@@ -206,16 +130,24 @@ App.goalMap = {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
         }
-        const now = Date.now();
-        const pos = getPosFromEvent(ev.changedTouches[0]);
         
-        // Doppel-Touch-Erkennung
-        if (now - lastTouchEnd < 300) {
-          placeMarker(pos, true, true);  // Doppel-Touch = grauer Punkt
-          lastTouchEnd = 0;
-        } else {
-          if (!isLong) placeMarker(pos, false);  // Normaler Touch = grüner Punkt
-          lastTouchEnd = now;
+        if (!isLong && ev.changedTouches.length > 0) {
+          // NORMALER TOUCH = GRÜNER PUNKT
+          const touch = ev.changedTouches[0];
+          const rect = img.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+          const xPct = (x / rect.width) * 100;
+          const yPct = (y / rect.height) * 100;
+          
+          const playerName = this.playerFilter || (App.goalMapWorkflow?.active ? App.goalMapWorkflow.playerName : null);
+          App.markerHandler.createMarkerPercent(xPct, yPct, "#00ff00", box, true, playerName);
+          
+          // Workflow integration
+          if (App.goalMapWorkflow?.active) {
+            const boxType = box.classList.contains('goal-img-box') ? 'goal' : 'field';
+            App.addGoalMapPoint(boxType, xPct, yPct, '#00ff00', box.id);
+          }
         }
         isLong = false;
       }, { passive: true });
@@ -231,194 +163,101 @@ App.goalMap = {
   },
   
   initTimeTracking() {
-    // 0. Grundcheck: Box vorhanden?
-    this.timeTrackingBox = this.timeTrackingBox || document.getElementById("timeTrackingBox");
-    if (!this.timeTrackingBox) {
-      console.warn("[Goal Map] timeTrackingBox not found – no time tracking initialized");
-      return;
-    }
+    if (!this.timeTrackingBox) return;
     
-    console.log("[Goal Map] Initializing time tracking...");
+    // TIME DATA AUS 912 ÜBERNEHMEN
+    let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
+    let timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     
-    // 1. Bestehende Daten defensiv laden
-    let timeDataWithPlayers = {};
-    try {
-      const stored = localStorage.getItem("timeDataWithPlayers");
-      if (stored) {
-        timeDataWithPlayers = JSON.parse(stored);
-        if (typeof timeDataWithPlayers !== "object" || timeDataWithPlayers === null) {
-          console.warn("[Goal Map] timeDataWithPlayers is not an object, resetting");
-          timeDataWithPlayers = {};
-        }
-      }
-    } catch (e) {
-      console.warn("[Goal Map] Failed to load timeDataWithPlayers, resetting:", e);
-      timeDataWithPlayers = {};
-    }
-    
-    const periods = this.timeTrackingBox.querySelectorAll(".period");
-    if (!periods.length) {
-      console.warn("[Goal Map] No .period elements found inside timeTrackingBox");
-    }
-    
-    periods.forEach((period, pIdx) => {
-      const periodNum = period.dataset.period || `p${pIdx}`;
+    this.timeTrackingBox.querySelectorAll(".period").forEach(period => {
+      const periodNum = period.dataset.period || Math.random().toString(36).slice(2, 6);
       const buttons = period.querySelectorAll(".time-btn");
       
-      console.log(`[Goal Map] Processing period ${periodNum} with ${buttons.length} buttons`);
-      
-      if (!buttons.length) {
-        console.warn(`[Goal Map] No .time-btn found in period ${periodNum}`);
-      }
-      
       buttons.forEach((btn, idx) => {
+        // Initialisierung aus timeDataWithPlayers oder timeData
         const key = `${periodNum}_${idx}`;
+        let displayValue = 0;
         
-        // Falls ein geklonter Button mit altem data-listener-attached da ist: entfernen
-        if (!btn._goalMapClickBound && btn.hasAttribute('data-listener-attached') && !btn.onclick) {
-          btn.removeAttribute('data-listener-attached');
+        if (timeDataWithPlayers[key]) {
+          // Summe aller Spieler
+          displayValue = Object.values(timeDataWithPlayers[key]).reduce((sum, val) => sum + Number(val), 0);
+        } else if (timeData[periodNum] && typeof timeData[periodNum][idx] !== "undefined") {
+          displayValue = Number(timeData[periodNum][idx]);
+        } else {
+          displayValue = Number(btn.textContent) || 0;
         }
         
-        // 2. INITIALEN WERT SETZEN
-        const playerData = timeDataWithPlayers[key] || {};
-        let total = 0;
-        Object.values(playerData).forEach(count => total += Number(count) || 0);
-        btn.textContent = total;
+        btn.textContent = displayValue;
         
-        console.log(`[Goal Map] Button ${key} initial value: ${total}`);
-        
-        // 3. EVENT LISTENER NUR EINMAL HINZUFÜGEN
-        if (btn._goalMapClickBound) {
-          console.log(`[Goal Map] Button ${key} already has click handler, skipping`);
-          return;
-        }
-        btn._goalMapClickBound = true;
-        btn.setAttribute('data-listener-attached', 'true');
-        
-        // Click / Double-Click Unterscheidung wie in 912
+        // KLICK-HANDLER WIE IN 912
         let lastTap = 0;
         let clickTimeout = null;
-        let touchStart = 0;
         
         const updateValue = (delta) => {
-          try {
-            console.log(`[Goal Map] Button ${key} update, delta=${delta}`);
-            
-            // Daten IMMER frisch laden
-            let currentData = {};
-            try {
-              const stored = localStorage.getItem("timeDataWithPlayers");
-              if (stored) {
-                currentData = JSON.parse(stored);
-                if (typeof currentData !== "object" || currentData === null) {
-                  currentData = {};
-                }
-              }
-            } catch (e2) {
-              currentData = {};
-            }
-            
-            if (!currentData[key]) currentData[key] = {};
-            
-            // SPIELER-LOGIK:
-            const playerName =
-              this.playerFilter || (App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous');
-            
-            if (!currentData[key][playerName]) currentData[key][playerName] = 0;
-            
-            const oldValue = Number(currentData[key][playerName]) || 0;
-            const newValue = Math.max(0, oldValue + delta);
-            currentData[key][playerName] = newValue;
-            
-            console.log(`[Goal Map] Updated ${playerName} for ${key}: ${oldValue} -> ${newValue}`);
-            
-            // Speichern
-            localStorage.setItem("timeDataWithPlayers", JSON.stringify(currentData));
-            
-            // Anzeige Update
-            const currentPlayerMap = currentData[key] || {};
-            let displayVal = 0;
-            
-            if (this.playerFilter) {
-              displayVal = Number(currentPlayerMap[this.playerFilter]) || 0;
-            } else {
-              displayVal = Object.values(currentPlayerMap).reduce((a, b) => a + (Number(b) || 0), 0);
-            }
-            
-            btn.textContent = displayVal;
-            
-            // Workflow Point nur bei +1 und aktivem Workflow
-            if (delta > 0 && App.goalMapWorkflow && App.goalMapWorkflow.active) {
-              try {
-                const btnRect = btn.getBoundingClientRect();
-                const boxRect = this.timeTrackingBox.getBoundingClientRect();
-                const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
-                const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
-                
-                App.addGoalMapPoint('time', xPct, yPct, '#888888', 'timeTrackingBox');
-                console.log(`[Goal Map] Workflow point added at ${xPct.toFixed(1)}%, ${yPct.toFixed(1)}%`);
-              } catch (e4) {
-                console.warn("[Goal Map] Failed to add workflow point:", e4);
-              }
-            }
-          } catch (err) {
-            console.error("[Goal Map] updateValue failed for key", key, err);
+          // Player-spezifisches Update
+          const playerName = this.playerFilter || (App.goalMapWorkflow?.active ? App.goalMapWorkflow.playerName : '_anonymous');
+          
+          if (!timeDataWithPlayers[key]) timeDataWithPlayers[key] = {};
+          if (!timeDataWithPlayers[key][playerName]) timeDataWithPlayers[key][playerName] = 0;
+          
+          const current = Number(timeDataWithPlayers[key][playerName]);
+          const newVal = Math.max(0, current + delta);
+          timeDataWithPlayers[key][playerName] = newVal;
+          
+          // Speichern
+          localStorage.setItem("timeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
+          
+          // Display update
+          let displayVal = 0;
+          if (this.playerFilter) {
+            displayVal = timeDataWithPlayers[key][this.playerFilter] || 0;
+          } else {
+            displayVal = Object.values(timeDataWithPlayers[key]).reduce((sum, val) => sum + Number(val), 0);
+          }
+          btn.textContent = displayVal;
+          
+          // Legacy timeData update für Kompatibilität
+          if (!timeData[periodNum]) timeData[periodNum] = {};
+          timeData[periodNum][idx] = displayVal;
+          localStorage.setItem("timeData", JSON.stringify(timeData));
+          
+          // Workflow point
+          if (delta > 0 && App.goalMapWorkflow?.active) {
+            const btnRect = btn.getBoundingClientRect();
+            const boxRect = this.timeTrackingBox.getBoundingClientRect();
+            const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
+            const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
+            App.addGoalMapPoint('time', xPct, yPct, '#888888', 'timeTrackingBox');
           }
         };
         
-        // MOUSE CLICK
         btn.addEventListener("click", () => {
           const now = Date.now();
           const diff = now - lastTap;
           if (diff < 300) {
+            // Doppelklick
             if (clickTimeout) {
               clearTimeout(clickTimeout);
               clickTimeout = null;
             }
-            updateValue(-1);  // Doppelklick: -1
+            updateValue(-1);
             lastTap = 0;
           } else {
+            // Einzelklick
             clickTimeout = setTimeout(() => {
-              updateValue(+1);  // Einzelklick: +1
+              updateValue(+1);
               clickTimeout = null;
             }, 300);
             lastTap = now;
           }
         });
-        
-        // TOUCH (für mobile Geräte)
-        btn.addEventListener("touchstart", (e) => {
-          const now = Date.now();
-          const diff = now - touchStart;
-          if (diff < 300) {
-            e.preventDefault();
-            if (clickTimeout) {
-              clearTimeout(clickTimeout);
-              clickTimeout = null;
-            }
-            updateValue(-1);  // Doppel-Touch: -1
-            touchStart = 0;
-          } else {
-            touchStart = now;
-            setTimeout(() => {
-              if (touchStart !== 0) {
-                updateValue(+1);  // Single-Touch: +1
-                touchStart = 0;
-              }
-            }, 300);
-          }
-        }, { passive: true });
-        
-        console.log(`[Goal Map] Click/touch listener attached to button ${key}`);
       });
     });
     
-    // Filter anwenden, falls einer aktiv ist
+    // Filter anwenden falls aktiv
     if (this.playerFilter) {
       this.applyTimeTrackingFilter();
     }
-    
-    console.log("[Goal Map] Time tracking initialization complete");
   },
   
   initPlayerFilter() {
@@ -482,9 +321,6 @@ App.goalMap = {
     let timeDataWithPlayers = {};
     try {
       timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
-      if (typeof timeDataWithPlayers !== "object" || timeDataWithPlayers === null) {
-        timeDataWithPlayers = {};
-      }
     } catch {
       timeDataWithPlayers = {};
     }
@@ -513,7 +349,7 @@ App.goalMap = {
     const indicator = document.getElementById("goalMapWorkflowIndicator");
     if (!indicator) return;
     
-    if (App.goalMapWorkflow.active) {
+    if (App.goalMapWorkflow?.active) {
       const collected = App.goalMapWorkflow.collectedPoints.length;
       const required = App.goalMapWorkflow.requiredPoints;
       const eventType = App.goalMapWorkflow.eventType;
@@ -551,7 +387,7 @@ App.goalMap = {
     
     localStorage.setItem("goalMapMarkers", JSON.stringify(allMarkers));
     
-    // Export time data
+    // Export time data  
     const timeData = this.readTimeTrackingFromBox();
     localStorage.setItem("timeData", JSON.stringify(timeData));
     
@@ -573,13 +409,10 @@ App.goalMap = {
   },
   
   reset() {
-    if (!confirm("⚠️ Goal Map zurücksetzen (Marker + Timeboxen)?")) return;
+    if (!confirm("Goal Map zurücksetzen?")) return;
     
-    // Nur Goal-Map-Marker & -Timeboxen zurücksetzen
     document.querySelectorAll("#torbildPage .marker-dot").forEach(d => d.remove());
-    document.querySelectorAll("#torbildPage .time-btn").forEach(btn => btn.textContent = "0");
-    
-    // Nur Goal-Map-Keys löschen, Season-Map-Keys bleiben unberührt
+    document.querySelectorAll("#torbildPage .time-btn").forEach(b => b.textContent = "0");
     localStorage.removeItem("timeData");
     localStorage.removeItem("timeDataWithPlayers");
     localStorage.removeItem("goalMapMarkers");
