@@ -58,7 +58,6 @@ App.markerHandler = {
         return p.r >= threshold && p.g >= threshold && p.b >= threshold;
       };
       
-      // Strengere Weiß-Erkennung, damit mehr Bereiche grau bleiben
       sampler.isNeutralWhiteAt = (xPct, yPct, threshold = 245, maxChannelDiff = 8) => {
         const p = getPixel(xPct, yPct);
         if (!p || p.a === 0) return false;
