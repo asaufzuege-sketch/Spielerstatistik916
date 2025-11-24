@@ -15,7 +15,7 @@ App.goalMap = {
       this.reset();
     });
     
-    // Initialize interactive boxes
+    // Initialize interactive boxes (Feld + Tore)
     this.initBoxes();
     
     // Initialize time tracking
@@ -29,12 +29,8 @@ App.goalMap = {
     const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
     
     boxes.forEach((box) => {
-      let longPressTimer = null;
-      let longPressActive = false;
-      
+      // KEIN Long-Press-Reset mehr – nur normaler Klick / Tap setzt Marker
       const handleInteraction = (e) => {
-        if (longPressActive) return;
-        
         const rect = App.markerHandler.computeRenderedImageRect(box.querySelector('img'));
         if (!rect) return;
         
@@ -69,42 +65,13 @@ App.goalMap = {
         }
       };
       
-      const startLongPress = () => {
-        longPressActive = false;
-        longPressTimer = setTimeout(() => {
-          longPressActive = true;
-          // Long press action - clear markers
-          box.querySelectorAll('.marker-dot').forEach(dot => dot.remove());
-          
-          // Haptic feedback
-          if (navigator.vibrate) {
-            navigator.vibrate(200);
-          }
-        }, 800);
-      };
-      
-      const cancelLongPress = () => {
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
-      };
-      
       // Mouse events
-      box.addEventListener("mousedown", startLongPress);
-      box.addEventListener("mouseup", cancelLongPress);
-      box.addEventListener("mouseleave", cancelLongPress);
       box.addEventListener("click", handleInteraction);
       
       // Touch events
-      box.addEventListener("touchstart", startLongPress, { passive: true });
       box.addEventListener("touchend", (e) => {
-        cancelLongPress();
-        if (!longPressActive) {
-          handleInteraction(e);
-        }
+        handleInteraction(e);
       }, { passive: true });
-      box.addEventListener("touchcancel", cancelLongPress, { passive: true });
     });
   },
   
@@ -334,11 +301,7 @@ App.goalMap = {
       const markers = box.querySelectorAll(".marker-dot");
       markers.forEach(marker => {
         if (this.playerFilter) {
-          if (marker.dataset.player === this.playerFilter) {
-            marker.style.display = '';
-          } else {
-            marker.style.display = 'none';
-          }
+          marker.style.display = (marker.dataset.player === this.playerFilter) ? '' : 'none';
         } else {
           marker.style.display = '';
         }
@@ -408,6 +371,7 @@ App.goalMap = {
   },
   
   exportGoalMap() {
+    // Export markers
     const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
     const allMarkers = boxes.map(box => {
       const markers = [];
@@ -425,6 +389,7 @@ App.goalMap = {
     
     localStorage.setItem("goalMapMarkers", JSON.stringify(allMarkers));
     
+    // Export time data
     const timeData = this.readTimeTrackingFromBox();
     localStorage.setItem("timeData", JSON.stringify(timeData));
     
@@ -448,9 +413,11 @@ App.goalMap = {
   reset() {
     if (!confirm("⚠️ Goal Map zurücksetzen (Marker + Timeboxen)?")) return;
     
+    // Nur Goal-Map-Marker & -Timeboxen zurücksetzen
     document.querySelectorAll("#torbildPage .marker-dot").forEach(d => d.remove());
-    
     document.querySelectorAll("#torbildPage .time-btn").forEach(btn => btn.textContent = "0");
+    
+    // Nur Goal-Map-Keys löschen, Season-Map-Keys bleiben unberührt
     localStorage.removeItem("timeData");
     localStorage.removeItem("timeDataWithPlayers");
     localStorage.removeItem("goalMapMarkers");
