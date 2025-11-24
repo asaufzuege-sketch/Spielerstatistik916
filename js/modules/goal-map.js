@@ -81,7 +81,6 @@ App.goalMap = {
        */
       const placeMarker = (pos, long, forceGrey = false) => {
         const workflowActive = App.goalMapWorkflow?.active;
-        const eventType = App.goalMapWorkflow?.eventType; // 'goal' oder 'shot'
         const pointPlayer =
           this.playerFilter ||
           (workflowActive ? App.goalMapWorkflow.playerName : null);
@@ -361,7 +360,7 @@ App.goalMap = {
     }
   },
   
-  // Player Filter Dropdown (wie 916)
+  // Player Filter Dropdown
   initPlayerFilter() {
     const filterSelect = document.getElementById("goalMapPlayerFilter");
     if (!filterSelect) return;
@@ -441,10 +440,11 @@ App.goalMap = {
     });
   },
   
-  // Workflow-Indikator (wie 916)
+  // Workflow-Indikator – HTML in index.html hat ids workflowStatusIndicator/workflowStatusText
   updateWorkflowIndicator() {
-    const indicator = document.getElementById("goalMapWorkflowIndicator");
-    if (!indicator) return;
+    const indicator = document.getElementById("workflowStatusIndicator");
+    const textEl = document.getElementById("workflowStatusText");
+    if (!indicator || !textEl) return;
     
     if (App.goalMapWorkflow?.active) {
       const collected = App.goalMapWorkflow.collectedPoints.length;
@@ -453,15 +453,14 @@ App.goalMap = {
       const playerName = App.goalMapWorkflow.playerName;
       
       indicator.style.display = 'block';
-      indicator.innerHTML = `
-        <div class="workflow-info">
-          <strong>${eventType.toUpperCase()} - ${playerName}</strong><br>
-          Punkte: ${collected}/${required}
-          ${eventType === 'goal' ? '<br>1. Feld, 2. Tor, 3. Zeit' : '<br>1. Feld klicken'}
-        </div>
+      textEl.innerHTML = `
+        <strong>${eventType.toUpperCase()} - ${playerName}</strong> •
+        Punkte: ${collected}/${required}
+        ${eventType === 'goal' ? ' • 1. Feld, 2. Tor, 3. Zeit' : ' • 1. Feld klicken'}
       `;
     } else {
       indicator.style.display = 'none';
+      textEl.textContent = "";
     }
   },
   
