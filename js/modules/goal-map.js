@@ -28,7 +28,7 @@ App.goalMap = {
   initBoxes() {
     const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
     
-    boxes.forEach((box, boxIndex) => {
+    boxes.forEach((box) => {
       let longPressTimer = null;
       let longPressActive = false;
       
@@ -69,7 +69,7 @@ App.goalMap = {
         }
       };
       
-      const startLongPress = (e) => {
+      const startLongPress = () => {
         longPressActive = false;
         longPressTimer = setTimeout(() => {
           longPressActive = true;
@@ -153,9 +153,7 @@ App.goalMap = {
         const key = `${periodNum}_${idx}`;
         
         // Falls ein geklonter Button mit altem data-listener-attached da ist: entfernen
-        // (ansonsten blockieren wir uns selbst)
         if (!btn._goalMapClickBound && btn.hasAttribute('data-listener-attached') && !btn.onclick) {
-          // Entferne altes Attribut, das evtl. mitkopiert wurde
           btn.removeAttribute('data-listener-attached');
         }
         
@@ -200,7 +198,12 @@ App.goalMap = {
             
             if (!currentData[key]) currentData[key] = {};
             
-            const playerName = App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous';
+            // SPIELER-LOGIK:
+            // 1. Wenn Filter aktiv → Klick zählt für gefilterten Spieler
+            // 2. sonst, wenn Workflow aktiv → Spieler aus Workflow
+            // 3. sonst '_anonymous'
+            const playerName =
+              this.playerFilter || (App.goalMapWorkflow.active ? App.goalMapWorkflow.playerName : '_anonymous');
             
             if (!currentData[key][playerName]) currentData[key][playerName] = 0;
             
@@ -221,8 +224,10 @@ App.goalMap = {
             let displayVal = 0;
             
             if (this.playerFilter) {
+              // Nur der aktuell gefilterte Spieler
               displayVal = Number(currentPlayerMap[this.playerFilter]) || 0;
             } else {
+              // Summe über alle Spieler (inkl. _anonymous)
               displayVal = Object.values(currentPlayerMap).reduce((a, b) => a + (Number(b) || 0), 0);
             }
             
