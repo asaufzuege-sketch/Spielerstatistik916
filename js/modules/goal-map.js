@@ -173,12 +173,10 @@ App.goalMap = {
         btn._goalMapClickBound = true;
         btn.setAttribute('data-listener-attached', 'true');
         
-        const handleIncrement = (e) => {
+        // Gemeinsame Logik für +1 / -1
+        const handleIncrement = (delta = 1) => {
           try {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            console.log(`[Goal Map] Button ${key} clicked`);
+            console.log(`[Goal Map] Button ${key} clicked, delta=${delta}`);
             
             // Daten IMMER frisch laden
             let currentData = {};
@@ -208,9 +206,11 @@ App.goalMap = {
             if (!currentData[key][playerName]) currentData[key][playerName] = 0;
             
             const oldValue = Number(currentData[key][playerName]) || 0;
-            currentData[key][playerName] = oldValue + 1;
+            const newValue = oldValue + delta;
+            // Untergrenze 0, damit nicht ins Negative läuft
+            currentData[key][playerName] = newValue < 0 ? 0 : newValue;
             
-            console.log(`[Goal Map] Incremented ${playerName} for ${key}: ${oldValue} -> ${currentData[key][playerName]}`);
+            console.log(`[Goal Map] Updated ${playerName} for ${key}: ${oldValue} -> ${currentData[key][playerName]}`);
             
             // Speichern
             try {
@@ -234,8 +234,8 @@ App.goalMap = {
             btn.textContent = displayVal;
             console.log(`[Goal Map] Display value updated to: ${displayVal}`);
             
-            // Workflow Point
-            if (App.goalMapWorkflow && App.goalMapWorkflow.active) {
+            // Workflow Point nur bei +1 und aktivem Workflow
+            if (delta > 0 && App.goalMapWorkflow && App.goalMapWorkflow.active) {
               try {
                 const btnRect = btn.getBoundingClientRect();
                 const boxRect = this.timeTrackingBox.getBoundingClientRect();
@@ -253,8 +253,34 @@ App.goalMap = {
           }
         };
         
-        btn.addEventListener("click", handleIncrement);
-        console.log(`[Goal Map] Click listener attached to button ${key}`);
+        // Click / Double-Click Unterscheidung
+        let clickTimeout = null;
+        
+        // Einzelklick: +1
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (clickTimeout) clearTimeout(clickTimeout);
+          clickTimeout = setTimeout(() => {
+            handleIncrement(+1);
+            clickTimeout = null;
+          }, 220);
+        });
+        
+        // Doppelklick: -1
+        btn.addEventListener("dblclick", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          if (clickTimeout) {
+            clearTimeout(clickTimeout);
+            clickTimeout = null;
+          }
+          handleIncrement(-1);
+        });
+        
+        console.log(`[Goal Map] Click/dblclick listener attached to button ${key}`);
       });
     });
     
