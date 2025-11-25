@@ -872,7 +872,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   text-align: center;
   position: sticky;
   left: 0;
-  z-index: 21;
+  z-index: 20;
   background: var(--header-bg);
 }
 
@@ -896,7 +896,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   min-width: 140px;
   position: sticky;
   left: 60px;
-  z-index: 20;
+  z-index: 21;
   background: var(--header-bg);
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.15);
 }
