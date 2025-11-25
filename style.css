@@ -872,7 +872,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   text-align: center;
   position: sticky;
   left: 0;
-  z-index: 20;
+  z-index: 21;
   background: var(--header-bg);
 }
 
@@ -898,6 +898,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   left: 60px;
   z-index: 20;
   background: var(--header-bg);
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.15);
 }
 
 .season-table tbody td:nth-child(2) {
@@ -910,6 +911,12 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 
 .season-table tbody tr:nth-child(even) td:nth-child(2) {
   background: var(--row-even);
+}
+
+/* Dark mode box-shadow for Season table sticky columns */
+[data-theme="dark"] .season-table thead th:nth-child(2),
+[data-theme="dark"] .season-table tbody td:nth-child(2) {
+  box-shadow: 2px 0 4px rgba(255, 255, 255, 0.1);
 }
 
 .season-table thead th:last-child,

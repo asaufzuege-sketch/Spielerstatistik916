@@ -75,7 +75,7 @@
       dot.style.width = '14px';
       dot.style.height = '14px';
       dot.style.borderRadius = '50%';
-      dot.style.backgroundColor = '#808080'; // GRAU statt weiß
+      dot.style.backgroundColor = '#444444'; // Dunkelgrau wie Goal Workflow
       dot.style.border = '2px solid rgba(255, 255, 255, 0.3)';
       dot.style.transform = 'translate(-50%, -50%)';
       dot.style.cursor = 'pointer';
@@ -435,7 +435,7 @@
       c.setAttribute('cx', p.x.toFixed(2));
       c.setAttribute('cy', valueToY(p.v, maxScale).toFixed(2));
       c.setAttribute('r', '3');
-      c.setAttribute('fill', '#808080'); // GRAU für alle Punkte
+      c.setAttribute('fill', '#444444'); // Dunkelgrau wie Goal Workflow
       c.setAttribute('opacity', '0.95');
       svg.appendChild(c);
     });
