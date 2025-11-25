@@ -3,6 +3,7 @@
 App.goalMap = {
   timeTrackingBox: null,
   playerFilter: null,
+  handlersAttached: false, // NEU: Flag um mehrfaches Anhängen zu verhindern
   
   init() {
     this.timeTrackingBox = document.getElementById("timeTrackingBox");
@@ -17,8 +18,11 @@ App.goalMap = {
       this.reset();
     });
     
-    // Marker Handler für Goal Map Boxen
-    this.attachMarkerHandlers();
+    // Marker Handler für Goal Map Boxen - NUR EINMAL anhängen
+    if (!this.handlersAttached) {
+      this.attachMarkerHandlers();
+      this.handlersAttached = true;
+    }
     
     // Time Tracking initialisieren (916‑Logik mit Spielerzuordnung)
     this.initTimeTracking();
@@ -31,6 +35,13 @@ App.goalMap = {
     const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
     
     boxes.forEach(box => {
+      // WICHTIG: Prüfen ob bereits initialisiert
+      if (box.dataset.handlersAttached === 'true') {
+        console.log('[Goal Map] Handlers already attached to', box.id);
+        return;
+      }
+      box.dataset.handlersAttached = 'true';
+      
       const img = box.querySelector("img");
       if (!img) return;
       
@@ -77,7 +88,7 @@ App.goalMap = {
       
       const placeMarker = (pos, long, forceGrey = false) => {
         const workflowActive = App.goalMapWorkflow?.active;
-        const eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
+        const eventType = App.goalMapWorkflow?.eventType;
         const isGoalWorkflow = workflowActive && eventType === 'goal';
         const neutralGrey = "#444444";
         
@@ -169,44 +180,32 @@ App.goalMap = {
         }
       };
       
-      // ----------------
-      // MOUSE EVENTS – mit sauberer Long-Press-Logik
-      // ----------------
+      // Mouse Events
       img.addEventListener("mousedown", (ev) => {
         isLong = false;
         if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
-        
-        const startPos = getPosFromEvent(ev); // Position beim Drücken merken
-        
         mouseHoldTimer = setTimeout(() => {
           isLong = true;
-          placeMarker(startPos, true);        // Long-Press-Marker
-          mouseHoldTimer = null;             // Timer als ausgeführt markieren
+          const pos = getPosFromEvent(ev);
+          placeMarker(pos, true);
         }, App.markerHandler.LONG_MARK_MS);
       });
       
       img.addEventListener("mouseup", (ev) => {
-        const now = Date.now();
-        const pos = getPosFromEvent(ev);
-        
-        // Timer immer sofort stoppen, damit er nicht mehr feuert
         if (mouseHoldTimer) {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
         }
+        const now = Date.now();
+        const pos = getPosFromEvent(ev);
         
         if (now - lastMouseUp < 300) {
-          // Doppelklick → grauer Feldpunkt
           placeMarker(pos, true, true);
           lastMouseUp = 0;
         } else {
-          // Nur wenn KEIN Long-Press ausgelöst wurde
-          if (!isLong) {
-            placeMarker(pos, false);
-          }
+          if (!isLong) placeMarker(pos, false);
           lastMouseUp = now;
         }
-        
         isLong = false;
       });
       
@@ -218,46 +217,35 @@ App.goalMap = {
         isLong = false;
       });
       
-      // ----------------
-      // TOUCH EVENTS – gleiches Prinzip wie Maus
-      // ----------------
+      // Touch Events
       img.addEventListener("touchstart", (ev) => {
         isLong = false;
         if (mouseHoldTimer) clearTimeout(mouseHoldTimer);
-        
-        const touch = ev.touches[0];
-        const startPos = getPosFromEvent(touch);
-        
         mouseHoldTimer = setTimeout(() => {
           isLong = true;
-          placeMarker(startPos, true);
-          mouseHoldTimer = null;
+          const touch = ev.touches[0];
+          const pos = getPosFromEvent(touch);
+          placeMarker(pos, true);
           if (navigator.vibrate) navigator.vibrate(50);
         }, App.markerHandler.LONG_MARK_MS);
       }, { passive: true });
       
       img.addEventListener("touchend", (ev) => {
-        const now = Date.now();
-        const touch = ev.changedTouches[0];
-        const pos = getPosFromEvent(touch);
-        
-        // Timer stoppen
         if (mouseHoldTimer) {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
         }
+        const now = Date.now();
+        const touch = ev.changedTouches[0];
+        const pos = getPosFromEvent(touch);
         
         if (now - lastTouchEnd < 300) {
-          // Doppeltap → grauer Feldpunkt
           placeMarker(pos, true, true);
           lastTouchEnd = 0;
         } else {
-          if (!isLong) {
-            placeMarker(pos, false);
-          }
+          if (!isLong) placeMarker(pos, false);
           lastTouchEnd = now;
         }
-        
         isLong = false;
       }, { passive: true });
       
@@ -271,7 +259,7 @@ App.goalMap = {
     });
   },
   
-  // Time Tracking mit Spielerzuordnung (Graupunkt bei Time = #444444)
+  // Rest des Codes bleibt unverändert...
   initTimeTracking() {
     if (!this.timeTrackingBox) return;
     
@@ -363,7 +351,6 @@ App.goalMap = {
     }
   },
   
-  // Player Filter Dropdown
   initPlayerFilter() {
     const filterSelect = document.getElementById("goalMapPlayerFilter");
     if (!filterSelect) return;
