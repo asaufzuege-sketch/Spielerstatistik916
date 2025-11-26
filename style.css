@@ -1029,3 +1029,15 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   left: 0 !important;
   z-index: 90 !important;
 }
+/* SUPER-HARDCODE: Goal Value Namensspalte kleben, alles andere ignorieren */
+#goalValuePage table.goalvalue-table {
+  position: relative !important;
+}
+
+#goalValuePage table.goalvalue-table thead th:nth-child(1),
+#goalValuePage table.goalvalue-table tbody td:nth-child(1) {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 999 !important;
+  background: var(--header-bg) !important;
+}
