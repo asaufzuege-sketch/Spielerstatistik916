@@ -21,7 +21,7 @@ App.goalValue = {
   },
   
   setOpponents(arr) {
-    localStorage.setItem("goalValueOpponents", JSON.stringify(arr));
+    localStorage.setItem("goalValueOpponents", JSON. stringify(arr));
   },
   
   getData() {
@@ -60,7 +60,7 @@ App.goalValue = {
   },
   
   formatValueNumber(v) {
-    return Math.abs(v - Math.round(v)) < 1e-4 ? String(Math.round(v)) : String(Number(v.toFixed(1))); 
+    return Math.abs(v - Math.round(v)) < 1e-4 ? String(Math.round(v)) : String(Number(v. toFixed(1))); 
   },
   
   ensureDataForSeason() {
@@ -75,7 +75,7 @@ App.goalValue = {
       const opponents = this.getOpponents();
       const all = this.getData();
       
-      Object.keys(App.data.seasonData).forEach(name => {
+      Object.keys(App.data. seasonData).forEach(name => {
         if (!all[name] || !Array.isArray(all[name])) {
           all[name] = opponents.map(() => 0);
         } else {
@@ -94,6 +94,7 @@ App.goalValue = {
   render() {
     if (!this.container) return;
     
+    // Container leer, Scroll liegt auf #goalValueContainer (wie bei Season)
     this.container.innerHTML = "";
     
     const opponents = this.getOpponents();
@@ -104,15 +105,12 @@ App.goalValue = {
       ? Object.keys(App.data.seasonData).sort() 
       : App.data.selectedPlayers.map(p => p.name);
     
-    // Wrapper für horizontales Scrollen (Scroll-Logik wie bei Season)
+    // WICHTIG: Wrapper OHNE position:relative - das blockiert sticky! 
     const wrapper = document.createElement('div');
     wrapper.className = 'table-scroll';
     wrapper.style.width = '100%';
     wrapper.style.boxSizing = 'border-box';
-    wrapper.style.overflowX = 'auto';
-    wrapper.style.overflowY = 'hidden';
-    wrapper.style.WebkitOverflowScrolling = 'touch';
-    wrapper.style.position = 'relative';
+    // ENTFERNT: wrapper.style.position = 'relative'; - blockiert sticky columns! 
     
     const table = document.createElement("table");
     table.className = "goalvalue-table gv-no-patch";
@@ -121,7 +119,7 @@ App.goalValue = {
     table.style.borderCollapse = "separate";
     table.style.borderSpacing = "0";
     table.style.borderRadius = "8px";
-    table.style.overflow = "hidden";
+    // ENTFERNT: table.style.overflow = "hidden"; - kann sticky beeinflussen
     table.style.tableLayout = "auto";
     
     // Header
@@ -131,48 +129,28 @@ App.goalValue = {
     const thPlayer = document.createElement("th");
     thPlayer.textContent = "Spieler";
     thPlayer.className = "gv-name-header sticky-col";
-    thPlayer.style.textAlign = "left";
-    thPlayer.style.padding = "8px 12px";
-    thPlayer.style.borderBottom = "2px solid #333";
-    thPlayer.style.borderRight = "1px solid #444";
-    thPlayer.style.minWidth = "160px";
-    thPlayer.style.maxWidth = "200px";
-    thPlayer.style.whiteSpace = "nowrap";
-    thPlayer.style.position = "sticky";
-    thPlayer.style.left = "0";
-    thPlayer.style.zIndex = "35";
-    thPlayer.style.backgroundColor = "var(--header-bg)";
-    thPlayer.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.15)";
+    thPlayer.style. minWidth = "120px";
     headerRow.appendChild(thPlayer);
     
     opponents.forEach((op, idx) => {
       const th = document.createElement("th");
-      th.style.padding = "6px";
-      th.style.borderBottom = "2px solid #333";
-      th.style.textAlign = "center";
       const input = document.createElement("input");
       input.type = "text";
       input.value = op || "";
       input.placeholder = `Gegner ${idx+1}`;
       input.className = "goalvalue-title-input";
-      input.style.width = "100%";
-      input.style.boxSizing = "border-box";
-      input.style.textAlign = "center";
       input.addEventListener("change", () => {
         const arr = this.getOpponents();
         arr[idx] = input.value || "";
         this.setOpponents(arr);
         this.render();
       });
-      th.appendChild(input);
+      th. appendChild(input);
       headerRow.appendChild(th);
     });
     
     const thValue = document.createElement("th");
     thValue.textContent = "Value";
-    thValue.style.padding = "6px";
-    thValue.style.borderBottom = "2px solid #333";
-    thValue.style.textAlign = "center";
     headerRow.appendChild(thValue);
     
     thead.appendChild(headerRow);
@@ -191,37 +169,14 @@ App.goalValue = {
       const tdName = document.createElement("td");
       tdName.textContent = name;
       tdName.className = "gv-name-cell sticky-col";
-      tdName.style.textAlign = "left";
-      tdName.style.padding = "6px 12px";
-      tdName.style.fontWeight = "700";
-      tdName.style.minWidth = "160px";
-      tdName.style.maxWidth = "200px";
-      tdName.style.whiteSpace = "nowrap";
-      tdName.style.overflow = "hidden";
-      tdName.style.textOverflow = "ellipsis";
-      tdName.style.borderRight = "1px solid #444";
-      tdName.style.position = "sticky";
-      tdName.style.left = "0";
-      tdName.style.zIndex = "20";
-      tdName.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.1)";
+      tdName.style.minWidth = "120px";
+      row. appendChild(tdName);
       
-      // Hintergrund basierend auf Zeile setzen
-      if (rowIdx % 2 === 0) {
-        tdName.style.backgroundColor = "var(--row-even)";
-      } else {
-        tdName.style.backgroundColor = "var(--row-odd)";
-      }
-      
-      row.appendChild(tdName);
-      
-      const vals = (gData[name] && Array.isArray(gData[name])) ? gData[name].slice() : opponents.map(() => 0);
+      const vals = (gData[name] && Array.isArray(gData[name])) ? gData[name]. slice() : opponents.map(() => 0);
       while (vals.length < opponents.length) vals.push(0);
       
       opponents.forEach((_, i) => {
         const td = document.createElement("td");
-        td.style.padding = "6px";
-        td.style.textAlign = "center";
-        td.style.cursor = "pointer";
         td.dataset.player = name;
         td.dataset.oppIdx = String(i);
         td.className = "gv-data-cell";
@@ -239,28 +194,28 @@ App.goalValue = {
           const oppIdx = Number(td.dataset.oppIdx);
           
           if (this.clickTimers[cellId]) {
-            clearTimeout(this.clickTimers[cellId]);
+            clearTimeout(this. clickTimers[cellId]);
             delete this.clickTimers[cellId];
             
             // DOPPELKLICK: -1
             const d = this.getData();
-            if (!d[playerName]) d[playerName] = opponents.map(() => 0);
+            if (! d[playerName]) d[playerName] = opponents.map(() => 0);
             d[playerName][oppIdx] = Math.max(0, Number(d[playerName][oppIdx] || 0) - 1);
             this.setData(d, true);
             
             const nv = d[playerName][oppIdx];
             td.textContent = String(nv);
-            td.style.color = nv > 0 ? colors.pos : nv < 0 ? colors.neg : colors.zero;
+            td.style.color = nv > 0 ?  colors.pos : nv < 0 ? colors.neg : colors.zero;
             td.style.fontWeight = nv !== 0 ? "700" : "400";
             
-            this.updateValueCell(playerName, valueCellMap);
+            this. updateValueCell(playerName, valueCellMap);
             
           } else {
             this.clickTimers[cellId] = setTimeout(() => {
               delete this.clickTimers[cellId];
               
               // EINZELKLICK: +1
-              const d = this.getData();
+              const d = this. getData();
               if (!d[playerName]) d[playerName] = opponents.map(() => 0);
               d[playerName][oppIdx] = Number(d[playerName][oppIdx] || 0) + 1;
               this.setData(d, true);
@@ -279,12 +234,11 @@ App.goalValue = {
       });
       
       const valueTd = document.createElement("td");
-      valueTd.style.padding = "6px";
-      valueTd.style.textAlign = "center";
       const val = this.computeValueForPlayer(name);
       valueTd.textContent = this.formatValueNumber(val);
-      valueTd.style.color = val > 0 ? colors.pos : val < 0 ? colors.neg : colors.zero;
-      valueTd.style.fontWeight = val !== 0 ? "700" : "400";
+      valueTd.className = "gv-value-cell";
+      valueTd.style. color = val > 0 ? colors.pos : val < 0 ? colors.neg : colors.zero;
+      valueTd.style.fontWeight = val !== 0 ?  "700" : "400";
       row.appendChild(valueTd);
       
       valueCellMap[name] = valueTd;
@@ -292,23 +246,14 @@ App.goalValue = {
     });
     
     // Bottom Scale Row
-    const bottomRow = document.createElement("tr");
-    bottomRow.className = (playersList.length % 2 === 0 ? "even-row" : "odd-row");
+    const bottomRow = document. createElement("tr");
+    bottomRow.className = (playersList.length % 2 === 0 ?  "even-row" : "odd-row");
     bottomRow.style.background = "rgba(0,0,0,0.03)";
     
     const labelTd = document.createElement("td");
     labelTd.textContent = "";
     labelTd.className = "sticky-col";
-    labelTd.style.padding = "6px 12px";
-    labelTd.style.fontWeight = "700";
-    labelTd.style.textAlign = "center";
-    labelTd.style.background = "rgba(0,0,0,0.03)";
-    labelTd.style.borderRight = "1px solid #444";
-    labelTd.style.borderTop = "2px solid #333";
-    labelTd.style.position = "sticky";
-    labelTd.style.left = "0";
-    labelTd.style.zIndex = "20";
-    labelTd.style.boxShadow = "2px 0 4px rgba(0, 0, 0, 0.1)";
+    labelTd.style.minWidth = "120px";
     bottomRow.appendChild(labelTd);
     
     const scaleOptions = [];
@@ -316,18 +261,13 @@ App.goalValue = {
     
     const storedBottom = this.getBottom();
     while (storedBottom.length < opponents.length) storedBottom.push(0);
-    if (storedBottom.length > opponents.length) storedBottom.length = opponents.length;
+    if (storedBottom.length > opponents.length) storedBottom. length = opponents.length;
     this.setBottom(storedBottom);
     
     opponents.forEach((_, i) => {
       const td = document.createElement("td");
-      td.style.padding = "6px";
-      td.style.textAlign = "center";
-      td.style.borderTop = "2px solid #333";
-      
       const select = document.createElement("select");
       select.className = "gv-scale-dropdown";
-      select.style.width = "80px";
       
       scaleOptions.forEach(opt => {
         const option = document.createElement('option');
@@ -338,8 +278,6 @@ App.goalValue = {
       
       const b = this.getBottom();
       const currentValue = b && typeof b[i] !== "undefined" ? b[i] : 0;
-      
-      td.appendChild(select);
       setTimeout(() => {
         select.value = String(currentValue);
       }, 0);
@@ -349,24 +287,22 @@ App.goalValue = {
         arr[i] = Number(select.value);
         this.setBottom(arr);
         
-        Object.keys(valueCellMap).forEach(pn => {
+        Object.keys(valueCellMap). forEach(pn => {
           this.updateValueCell(pn, valueCellMap);
         });
       });
       
+      td.appendChild(select);
       bottomRow.appendChild(td);
     });
     
     const emptyTd = document.createElement("td");
     emptyTd.textContent = "";
-    emptyTd.style.padding = "6px";
-    emptyTd.style.borderTop = "2px solid #333";
     bottomRow.appendChild(emptyTd);
     
     tbody.appendChild(bottomRow);
     table.appendChild(tbody);
     
-    // Tabelle in Wrapper einfügen
     wrapper.appendChild(table);
     this.container.appendChild(wrapper);
     
@@ -381,23 +317,23 @@ App.goalValue = {
     const val = this.computeValueForPlayer(playerName);
     vc.textContent = this.formatValueNumber(val);
     vc.style.color = val > 0 ? colors.pos : val < 0 ? colors.neg : colors.zero;
-    vc.style.fontWeight = val !== 0 ? "700" : "400";
+    vc. style.fontWeight = val !== 0 ? "700" : "400";
   },
   
   reset() {
-    if (!confirm("Goal Value zurücksetzen?")) return;
+    if (! confirm("Goal Value zurücksetzen?")) return;
     
     const opponents = this.getOpponents();
-    const playersList = Object.keys(App.data.seasonData).length 
-      ? Object.keys(App.data.seasonData) 
-      : App.data.selectedPlayers.map(p => p.name);
+    const playersList = Object.keys(App. data.seasonData).length 
+      ? Object.keys(App. data.seasonData) 
+      : App.data. selectedPlayers.map(p => p.name);
     
     const newData = {};
     playersList.forEach(n => newData[n] = opponents.map(() => 0));
     this.setData(newData);
     
     this.setBottom(opponents.map(() => 0));
-    this.setOpponents(opponents.map(() => ""));
+    this.setOpponents(opponents. map(() => ""));
     
     this.render();
     alert("Goal Value zurückgesetzt.");
