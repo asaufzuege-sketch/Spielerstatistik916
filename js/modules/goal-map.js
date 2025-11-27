@@ -104,12 +104,12 @@ App.goalMap = {
         if (isGoalWorkflow) {
           // Schritt 0: Nur Spielfeld erlaubt
           if (currentStep === 0 && !box.classList.contains("field-box")) {
-            console.log('[Goal Workflow] Schritt 1: Nur Spielfeld erlaubt');
+            console.log('[Goal Workflow] Schritt 0: Nur Spielfeld erlaubt');
             return;
           }
           // Schritt 1: Nur grünes Tor erlaubt
           if (currentStep === 1 && box.id !== "goalGreenBox") {
-            console.log('[Goal Workflow] Schritt 2: Nur grünes Tor erlaubt');
+            console.log('[Goal Workflow] Schritt 1: Nur grünes Tor erlaubt');
             return;
           }
           // Schritt 2: Zeit wird separat behandelt (in initTimeTracking)
@@ -341,7 +341,7 @@ App.goalMap = {
             if (currentStep === 2) {
               const isTopRow = btn.closest('.period-buttons')?.classList.contains('top-row');
               if (!isTopRow) {
-                console.log('[Goal Workflow] Schritt 3: Nur grüne Zeit-Buttons erlaubt');
+                console.log('[Goal Workflow] Schritt 2: Nur grüne Zeit-Buttons erlaubt');
                 return;
               }
             }
