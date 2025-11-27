@@ -87,6 +87,7 @@ App.goalMap = {
         const eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
         const isGoalWorkflow = workflowActive && eventType === 'goal';
         const neutralGrey = "#444444";
+        const currentStep = App.goalMapWorkflow?.collectedPoints?.length || 0;
         
         const pointPlayer =
           this.playerFilter ||
@@ -98,6 +99,21 @@ App.goalMap = {
           box.id === "goalRedBox";
         
         if (!pos.insideImage) return;
+        
+        // Im Goal-Workflow: Schritte erzwingen
+        if (isGoalWorkflow) {
+          // Schritt 0: Nur Spielfeld erlaubt
+          if (currentStep === 0 && !box.classList.contains("field-box")) {
+            console.log('[Goal Workflow] Schritt 1: Nur Spielfeld erlaubt');
+            return;
+          }
+          // Schritt 1: Nur grünes Tor erlaubt
+          if (currentStep === 1 && box.id !== "goalGreenBox") {
+            console.log('[Goal Workflow] Schritt 2: Nur grünes Tor erlaubt');
+            return;
+          }
+          // Schritt 2: Zeit wird separat behandelt (in initTimeTracking)
+        }
         
         // TOR-BOXEN: immer Graupunkt
         if (isGoalBox) {
@@ -319,6 +335,18 @@ App.goalMap = {
         };
         
         btn.addEventListener("click", () => {
+          // Im Goal-Workflow Schritt 2: Nur grüne Buttons (top-row) erlauben
+          if (App.goalMapWorkflow?.active && App.goalMapWorkflow?.eventType === 'goal') {
+            const currentStep = App.goalMapWorkflow.collectedPoints?.length || 0;
+            if (currentStep === 2) {
+              const isTopRow = btn.closest('.period-buttons')?.classList.contains('top-row');
+              if (!isTopRow) {
+                console.log('[Goal Workflow] Schritt 3: Nur grüne Zeit-Buttons erlaubt');
+                return;
+              }
+            }
+          }
+          
           const now = Date.now();
           const diff = now - lastTap;
           if (diff < 300) {
