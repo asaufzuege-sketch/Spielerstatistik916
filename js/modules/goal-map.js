@@ -102,7 +102,7 @@ App.goalMap = {
         
         // TOR-BOXEN: immer Graupunkt
         if (isGoalBox) {
-          // Im Goal-Workflow Schritt 1: NUR grünes Tor erlaubt
+          // Im Goal-Workflow: Bei Schritt 2 (currentStep=1) NUR grünes Tor erlaubt
           if (isGoalWorkflow && currentStep === 1) {
             if (box.id !== "goalGreenBox") {
               console.log('[Goal Workflow] Nur grünes Tor erlaubt in Schritt 2');
@@ -110,7 +110,7 @@ App.goalMap = {
             }
           }
           
-          // Im Goal-Workflow: Tor nur in Schritt 1 erlaubt
+          // Im Goal-Workflow: Tor nur in Schritt 2 (currentStep=1) erlaubt
           if (isGoalWorkflow && currentStep !== 1) {
             console.log('[Goal Workflow] Tor nur in Schritt 2 erlaubt');
             return;
@@ -152,7 +152,7 @@ App.goalMap = {
         
         // FELD-BOX: grün/rot oder grau je nach Kontext
         if (box.classList.contains("field-box")) {
-          // Im Goal-Workflow: Nur Schritt 0 erlaubt Feldpunkt
+          // Im Goal-Workflow: Nur Schritt 1 (currentStep=0) erlaubt Feldpunkt
           if (isGoalWorkflow && currentStep !== 0) {
             console.log('[Goal Workflow] Feld nur in Schritt 1 erlaubt');
             return;
@@ -348,7 +348,7 @@ App.goalMap = {
               return; // Blockiere rote Buttons
             }
             
-            // Im Goal-Workflow: Zeit-Buttons nur in Schritt 2 erlaubt
+            // Im Goal-Workflow: Zeit-Buttons nur in Schritt 3 (currentStep=2) erlaubt
             const currentStep = App.goalMapWorkflow?.collectedPoints?.length || 0;
             if (currentStep !== 2) {
               console.log('[Goal Workflow] Zeit nur in Schritt 3 erlaubt');
