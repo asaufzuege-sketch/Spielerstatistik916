@@ -100,19 +100,30 @@ App.goalMap = {
         
         if (!pos.insideImage) return;
         
-        // Im Goal-Workflow: Schritte erzwingen
+        // Im Goal-Workflow: Strenge Schritt-Kontrolle
         if (isGoalWorkflow) {
-          // Schritt 0: Nur Spielfeld erlaubt
-          if (currentStep === 0 && !box.classList.contains("field-box")) {
-            console.log('[Goal Workflow] Schritt 0: Nur Spielfeld erlaubt');
-            return;
+          const isFieldBox = box.classList.contains("field-box");
+          const isGreenGoal = box.id === "goalGreenBox";
+          
+          // Schritt 0: NUR Spielfeld erlaubt
+          if (currentStep === 0) {
+            if (!isFieldBox) {
+              console.log('[Goal Workflow] Schritt 1: Bitte zuerst Punkt im Spielfeld setzen');
+              return; // Blockiere alle anderen Bereiche
+            }
           }
-          // Schritt 1: Nur grünes Tor erlaubt
-          if (currentStep === 1 && box.id !== "goalGreenBox") {
-            console.log('[Goal Workflow] Schritt 1: Nur grünes Tor erlaubt');
-            return;
+          // Schritt 1: NUR grünes Tor erlaubt
+          else if (currentStep === 1) {
+            if (!isGreenGoal) {
+              console.log('[Goal Workflow] Schritt 2: Bitte Punkt im grünen Tor setzen');
+              return; // Blockiere Spielfeld und rotes Tor
+            }
           }
-          // Schritt 2: Zeit wird separat behandelt (in initTimeTracking)
+          // Schritt 2: Timebox (wird separat in initTimeTracking behandelt)
+          else if (currentStep >= 2) {
+            console.log('[Goal Workflow] Schritt 3: Bitte Zeit-Button klicken');
+            return; // Blockiere Spielfeld und Tor komplett
+          }
         }
         
         // TOR-BOXEN: immer Graupunkt
@@ -335,15 +346,21 @@ App.goalMap = {
         };
         
         btn.addEventListener("click", () => {
-          // Im Goal-Workflow Schritt 2: Nur grüne Buttons (top-row) erlauben
+          // Im Goal-Workflow: Nur im Schritt 2 (nach Feld + Tor) erlaubt
           if (App.goalMapWorkflow?.active && App.goalMapWorkflow?.eventType === 'goal') {
             const currentStep = App.goalMapWorkflow.collectedPoints?.length || 0;
-            if (currentStep === 2) {
-              const isTopRow = btn.closest('.period-buttons')?.classList.contains('top-row');
-              if (!isTopRow) {
-                console.log('[Goal Workflow] Schritt 2: Nur grüne Zeit-Buttons erlaubt');
-                return;
-              }
+            
+            // Nur wenn genau 2 Punkte gesetzt sind (Feld + Tor)
+            if (currentStep !== 2) {
+              console.log('[Goal Workflow] Timebox erst nach Feld und Tor möglich');
+              return;
+            }
+            
+            // Nur grüne Buttons (top-row) erlaubt
+            const isTopRow = btn.closest('.period-buttons')?.classList.contains('top-row');
+            if (!isTopRow) {
+              console.log('[Goal Workflow] Nur grüne Zeit-Buttons erlaubt');
+              return;
             }
           }
           
@@ -491,6 +508,32 @@ App.goalMap = {
     
     localStorage.setItem("goalMapMarkers", JSON.stringify(allMarkers));
     
+    // Time Data für Momentum-Tabelle exportieren
+    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    
+    // Flaches Format für Momentum-Tabelle erstellen
+    const momentumData = {};
+    const periods = ['p1', 'p2', 'p3'];
+    
+    periods.forEach(periodNum => {
+      const periodValues = [];
+      // 8 Buttons pro Period (0-3 top-row/scored, 4-7 bottom-row/conceded)
+      for (let btnIdx = 0; btnIdx < 8; btnIdx++) {
+        const key = `${periodNum}_${btnIdx}`;
+        const playerData = timeDataWithPlayers[key] || {};
+        const total = Object.values(playerData).reduce((sum, val) => sum + Number(val || 0), 0);
+        periodValues.push(total);
+      }
+      momentumData[periodNum] = periodValues;
+    });
+    
+    // Speichere in seasonMapTimeData für Momentum-Graph
+    localStorage.setItem("seasonMapTimeData", JSON.stringify(momentumData));
+    
+    // Speichere auch die detaillierten Spieler-Daten
+    localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
+    
+    // Alte timeData ebenfalls aktualisieren
     const timeData = this.readTimeTrackingFromBox();
     localStorage.setItem("timeData", JSON.stringify(timeData));
     

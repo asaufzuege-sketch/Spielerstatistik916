@@ -200,9 +200,25 @@ App.seasonMap = {
     const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
     
-    // Flache Zeitdaten für Momentum-Graph
-    const timeData = this.readTimeTrackingFromBox();
-    localStorage.setItem("seasonMapTimeData", JSON.stringify(timeData));
+    // Flache Zeitdaten für Momentum-Graph aus timeDataWithPlayers berechnen
+    // Format: { "p1": [button0, button1, ..., button7], "p2": [...], "p3": [...] }
+    const momentumData = {};
+    const periods = ['p1', 'p2', 'p3'];
+    
+    periods.forEach(periodNum => {
+      const periodValues = [];
+      // 8 Buttons pro Period (0-3 top-row/scored, 4-7 bottom-row/conceded)
+      for (let btnIdx = 0; btnIdx < 8; btnIdx++) {
+        const key = `${periodNum}_${btnIdx}`;
+        const playerData = timeDataWithPlayers[key] || {};
+        const total = Object.values(playerData).reduce((sum, val) => sum + Number(val || 0), 0);
+        periodValues.push(total);
+      }
+      momentumData[periodNum] = periodValues;
+    });
+    
+    // Speichere für Momentum-Graph
+    localStorage.setItem("seasonMapTimeData", JSON.stringify(momentumData));
     
     const keep = confirm("Spiel wurde in Season Map exportiert. Daten in Goal Map beibehalten? (OK = Ja)");
     if (!keep) {
