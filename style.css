@@ -1265,3 +1265,121 @@ tr[data-player].dragging {
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   z-index: 1000;
 }
+
+/* ==================== */
+/* PLAYER SELECTION PAGE - Neues Layout */
+/* ==================== */
+
+#playerSelectionPage .player-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px auto;
+  max-width: 800px;
+}
+
+#playerSelectionPage .player-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin: 8px 0;
+}
+
+/* Checkbox */
+#playerSelectionPage .player-list input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #44bb91;
+  flex-shrink: 0;
+}
+
+/* Nr. Input (Trikotnummer) */
+#playerSelectionPage .player-list .num-input {
+  width: 70px;
+  background: #2a2a2a;
+  color: #888;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+#playerSelectionPage .player-list .num-input::placeholder {
+  color: #666;
+}
+
+/* Spielername Input */
+#playerSelectionPage .player-list .name-input {
+  flex: 1;
+  background: #3a3a3a;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 0.95rem;
+}
+
+#playerSelectionPage .player-list .name-input::placeholder {
+  color: #888;
+}
+
+/* Position Input */
+#playerSelectionPage .player-list .pos-input {
+  width: 60px;
+  background: #2a2a2a;
+  color: #44bb91;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+#playerSelectionPage .player-list .pos-input::placeholder {
+  color: #44bb91;
+}
+
+/* Top Bar Buttons */
+#playerSelectionPage .top-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+#playerSelectionPage .top-btn.back-btn {
+  background: #2b2b2b;
+  color: #fff;
+}
+
+#playerSelectionPage .top-btn.game-data-btn {
+  background: #44bb91;
+  color: #fff;
+}
+
+#playerSelectionPage .top-btn.lineup-btn {
+  background: #5a9a9a;
+  color: #fff;
+}
+
+/* Titel */
+#playerSelectionPage h1 {
+  text-align: center;
+  color: #44bb91;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+/* Untertitel */
+#playerSelectionPage .subtitle {
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+}

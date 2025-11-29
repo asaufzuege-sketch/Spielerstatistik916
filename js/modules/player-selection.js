@@ -14,144 +14,177 @@ App.playerSelection = {
     if (this.confirmBtn) {
       this.confirmBtn.addEventListener("click", () => this.handleConfirm());
     }
+    
+    // Event Listener für Game Data Button
+    document.getElementById("gameDataBtn")?.addEventListener("click", () => {
+      if (typeof App.showPage === 'function') {
+        App.showPage("stats");
+      }
+    });
+    
+    // Event Listener für Line Up Button (zeigt Stats-Seite oder zukünftige Lineup-Seite)
+    document.getElementById("lineupBtn")?.addEventListener("click", () => {
+      // Lineup-Seite existiert noch nicht, zeige Stats als Fallback
+      if (typeof App.showPage === 'function') {
+        App.showPage("stats");
+      }
+    });
+  },
+  
+  getPlayers() {
+    // Get current team info
+    const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const currentTeamId = currentTeamInfo?.id;
+    
+    // Lade gespeicherte Spielerdaten für das Team
+    const savedPlayersKey = `playerSelectionData_${currentTeamId}`;
+    let savedPlayers = [];
+    try {
+      savedPlayers = JSON.parse(localStorage.getItem(savedPlayersKey) || "[]");
+    } catch (e) {
+      savedPlayers = [];
+    }
+    
+    // Team 1 bekommt vordefinierte Spieler, andere Teams leere Slots
+    if (currentTeamId === 'team1') {
+      // Konvertiere bestehende Spielerdaten zum neuen Format
+      const players = App.data.players.map((p, idx) => {
+        const saved = savedPlayers.find(sp => sp.name === p.name);
+        const isSelected = App.data.selectedPlayers.some(sp => sp.name === p.name);
+        return {
+          number: saved?.number || (p.num !== "" && p.num !== null && p.num !== undefined ? String(p.num) : ""),
+          name: p.name,
+          position: saved?.position || "",
+          active: saved?.active !== undefined ? saved.active : isSelected
+        };
+      });
+      
+      // Füge 5 zusätzliche Slots hinzu
+      for (let i = 0; i < 5; i++) {
+        const saved = savedPlayers[App.data.players.length + i];
+        players.push({
+          number: saved?.number || "",
+          name: saved?.name || "",
+          position: saved?.position || "",
+          active: saved?.active || false
+        });
+      }
+      
+      return players;
+    } else {
+      // Team 2 und 3: 30 leere Slots oder gespeicherte Daten
+      const players = [];
+      for (let i = 0; i < 30; i++) {
+        const saved = savedPlayers[i];
+        players.push({
+          number: saved?.number || "",
+          name: saved?.name || "",
+          position: saved?.position || "",
+          active: saved?.active || false
+        });
+      }
+      return players;
+    }
   },
   
   render() {
     if (!this.container) return;
     
-    this.container.innerHTML = "";
+    const players = this.getPlayers();
     
-    // Get current team info
+    this.container.innerHTML = players.map((player, i) => `
+      <li>
+        <input type="checkbox" 
+               ${player.active ? 'checked' : ''} 
+               data-index="${i}" 
+               class="player-checkbox">
+        <input type="text" 
+               class="num-input" 
+               placeholder="Nr." 
+               value="${App.helpers.escapeHtml(player.number || '')}" 
+               data-index="${i}" 
+               data-field="number">
+        <input type="text" 
+               class="name-input" 
+               placeholder="Spielername eingeben" 
+               value="${App.helpers.escapeHtml(player.name || '')}" 
+               data-index="${i}" 
+               data-field="name">
+        <input type="text" 
+               class="pos-input" 
+               placeholder="Pos." 
+               value="${App.helpers.escapeHtml(player.position || '')}" 
+               data-index="${i}" 
+               data-field="position">
+      </li>
+    `).join('');
+    
+    // Event Listeners hinzufügen
+    this.attachEventListeners();
+  },
+  
+  attachEventListeners() {
+    if (!this.container) return;
+    
+    // Change-Event für alle Inputs
+    this.container.addEventListener("change", (e) => {
+      this.saveCurrentState();
+    });
+    
+    // Input-Event für Textfelder (live speichern)
+    this.container.addEventListener("input", (e) => {
+      if (e.target.matches(".num-input, .name-input, .pos-input")) {
+        this.saveCurrentState();
+      }
+    });
+  },
+  
+  saveCurrentState() {
     const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
     const currentTeamId = currentTeamInfo?.id;
+    const savedPlayersKey = `playerSelectionData_${currentTeamId}`;
     
-    // Team 1 gets the pre-filled player list, Teams 2 and 3 get 30 empty cells
-    if (currentTeamId === 'team1') {
-      // Show pre-filled players for Team 1
-      const sortedPlayers = App.data.players.slice().sort((a, b) => {
-        const na = Number(a.num) || 999;
-        const nb = Number(b.num) || 999;
-        return na - nb;
+    const players = [];
+    const items = this.container.querySelectorAll("li");
+    
+    items.forEach((li, idx) => {
+      const checkbox = li.querySelector(".player-checkbox");
+      const numInput = li.querySelector(".num-input");
+      const nameInput = li.querySelector(".name-input");
+      const posInput = li.querySelector(".pos-input");
+      
+      players.push({
+        number: numInput ? numInput.value.trim() : "",
+        name: nameInput ? nameInput.value.trim() : "",
+        position: posInput ? posInput.value.trim() : "",
+        active: checkbox ? checkbox.checked : false
       });
-      
-      sortedPlayers.forEach((p, idx) => {
-        const li = document.createElement("li");
-        const checkboxId = `player-chk-${idx}`;
-        const checked = App.data.selectedPlayers.find(sp => sp.name === p.name) ? "checked" : "";
-        
-        let numAreaHtml = "";
-        if (p.num !== "" && p.num !== null && p.num !== undefined && String(p.num).trim() !== "") {
-          numAreaHtml = `<div class="num" style="flex:0 0 48px;text-align:center;"><strong>${App.helpers.escapeHtml(p.num)}</strong></div>`;
-        } else {
-          numAreaHtml = `<div style="flex:0 0 64px;text-align:center;">
-                           <input class="num-input" type="text" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;padding:6px;border-radius:6px;border:1px solid #444;">
-                         </div>`;
-        }
-        
-        li.innerHTML = `
-          <label class="player-line" style="display:flex;align-items:center;gap:8px;width:100%;" for="${checkboxId}">
-            <input id="${checkboxId}" type="checkbox" value="${App.helpers.escapeHtml(p.name)}" ${checked} style="flex:0 0 auto">
-            ${numAreaHtml}
-            <div class="name" style="flex:1;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><strong>${App.helpers.escapeHtml(p.name)}</strong></div>
-          </label>`;
-        this.container.appendChild(li);
-      });
-      
-      // Add 5 custom player slots
-      const customSelected = App.data.selectedPlayers.filter(sp => 
-        !App.data.players.some(bp => bp.name === sp.name)
-      );
-      
-      for (let i = 0; i < 5; i++) {
-        const pre = customSelected[i];
-        const li = document.createElement("li");
-        const chkId = `custom-chk-${i}`;
-        
-        li.innerHTML = `
-          <label class="custom-line" style="display:flex;align-items:center;gap:8px;width:100%;" for="${chkId}">
-            <input id="${chkId}" type="checkbox" class="custom-checkbox" ${pre ? "checked" : ""} style="flex:0 0 auto">
-            <input type="text" class="custom-num" inputmode="numeric" maxlength="3" placeholder="Nr." value="${App.helpers.escapeHtml(pre?.num || "")}" style="width:56px;flex:0 0 auto;padding:6px;border-radius:6px;border:1px solid #444;">
-            <input type="text" class="custom-name" placeholder="Eigener Spielername" value="${App.helpers.escapeHtml(pre?.name || "")}" style="flex:1;min-width:0;border-radius:6px;border:1px solid #444;padding:6px;">
-          </label>`;
-        this.container.appendChild(li);
-      }
-    } else {
-      // Team 2 and Team 3: Show 30 empty cells for manual entry
-      for (let i = 0; i < 30; i++) {
-        const li = document.createElement("li");
-        const chkId = `empty-chk-${i}`;
-        
-        li.innerHTML = `
-          <label class="custom-line" style="display:flex;align-items:center;gap:8px;width:100%;" for="${chkId}">
-            <input id="${chkId}" type="checkbox" class="custom-checkbox" style="flex:0 0 auto">
-            <input type="text" class="custom-num" inputmode="numeric" maxlength="3" placeholder="Nr." value="" style="width:56px;flex:0 0 auto;padding:6px;border-radius:6px;border:1px solid #444;">
-            <input type="text" class="custom-name" placeholder="Spielername eingeben" value="" style="flex:1;min-width:0;border-radius:6px;border:1px solid #444;padding:6px;">
-          </label>`;
-        this.container.appendChild(li);
-      }
-    }
+    });
+    
+    localStorage.setItem(savedPlayersKey, JSON.stringify(players));
   },
   
   handleConfirm() {
     try {
       App.data.selectedPlayers = [];
       
-      const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
-      const currentTeamId = currentTeamInfo?.id;
+      const items = this.container.querySelectorAll("li");
       
-      if (currentTeamId === 'team1') {
-        // Handle Team 1 with pre-filled players
-        const checkedBoxes = Array.from(this.container.querySelectorAll("input[type='checkbox']:not(.custom-checkbox)"))
-          .filter(chk => chk.checked);
+      items.forEach((li) => {
+        const checkbox = li.querySelector(".player-checkbox");
+        const numInput = li.querySelector(".num-input");
+        const nameInput = li.querySelector(".name-input");
         
-        checkedBoxes.forEach(chk => {
-          const li = chk.closest("li");
-          const name = chk.value;
-          let num = "";
-          
-          if (li) {
-            const numInput = li.querySelector(".num-input");
-            if (numInput) {
-              num = numInput.value.trim();
-            } else {
-              const numDiv = li.querySelector(".num");
-              if (numDiv) num = numDiv.textContent.trim();
-            }
-          }
-          
-          App.data.selectedPlayers.push({ num: num || "", name: name });
-        });
-        
-        // Handle custom players
-        const customLis = Array.from(this.container.querySelectorAll("li")).slice(App.data.players.length);
-        customLis.forEach(li => {
-          const chk = li.querySelector(".custom-checkbox");
-          const numInput = li.querySelector(".custom-num");
-          const nameInput = li.querySelector(".custom-name");
-          
-          if (chk && chk.checked && nameInput && nameInput.value.trim() !== "") {
-            App.data.selectedPlayers.push({
-              num: numInput ? (numInput.value.trim() || "") : "",
-              name: nameInput.value.trim()
-            });
-          }
-        });
-      } else {
-        // Handle Team 2 and Team 3 with all custom entries
-        const allLis = Array.from(this.container.querySelectorAll("li"));
-        allLis.forEach(li => {
-          const chk = li.querySelector(".custom-checkbox");
-          const numInput = li.querySelector(".custom-num");
-          const nameInput = li.querySelector(".custom-name");
-          
-          if (chk && chk.checked && nameInput && nameInput.value.trim() !== "") {
-            App.data.selectedPlayers.push({
-              num: numInput ? (numInput.value.trim() || "") : "",
-              name: nameInput.value.trim()
-            });
-          }
-        });
-      }
+        if (checkbox && checkbox.checked && nameInput && nameInput.value.trim() !== "") {
+          App.data.selectedPlayers.push({
+            num: numInput ? numInput.value.trim() : "",
+            name: nameInput.value.trim()
+          });
+        }
+      });
+      
+      // Speichere den aktuellen Status
+      this.saveCurrentState();
       
       App.storage.saveSelectedPlayers();
       
