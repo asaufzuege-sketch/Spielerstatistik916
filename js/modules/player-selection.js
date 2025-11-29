@@ -2,6 +2,7 @@
 App.playerSelection = {
   container: null,
   confirmBtn: null,
+  saveTimeout: null,
   
   init() {
     this.container = document.getElementById("playerList");
@@ -15,20 +16,21 @@ App.playerSelection = {
       this.confirmBtn.addEventListener("click", () => this.handleConfirm());
     }
     
-    // Event Listener für Game Data Button
+    // Event Listener für Game Data Button - navigiert zur Stats-Seite
     document.getElementById("gameDataBtn")?.addEventListener("click", () => {
-      if (typeof App.showPage === 'function') {
-        App.showPage("stats");
-      }
+      this.navigateToStats();
     });
     
-    // Event Listener für Line Up Button (zeigt Stats-Seite oder zukünftige Lineup-Seite)
+    // Event Listener für Line Up Button - navigiert zur Stats-Seite (Lineup-Seite existiert noch nicht)
     document.getElementById("lineupBtn")?.addEventListener("click", () => {
-      // Lineup-Seite existiert noch nicht, zeige Stats als Fallback
-      if (typeof App.showPage === 'function') {
-        App.showPage("stats");
-      }
+      this.navigateToStats();
     });
+  },
+  
+  navigateToStats() {
+    if (typeof App.showPage === 'function') {
+      App.showPage("stats");
+    }
   },
   
   getPlayers() {
@@ -126,17 +128,27 @@ App.playerSelection = {
   attachEventListeners() {
     if (!this.container) return;
     
-    // Change-Event für alle Inputs
+    // Combined change/input event with debouncing for efficient localStorage writes
     this.container.addEventListener("change", (e) => {
-      this.saveCurrentState();
+      this.debouncedSave();
     });
     
-    // Input-Event für Textfelder (live speichern)
     this.container.addEventListener("input", (e) => {
       if (e.target.matches(".num-input, .name-input, .pos-input")) {
-        this.saveCurrentState();
+        this.debouncedSave();
       }
     });
+  },
+  
+  debouncedSave() {
+    // Cancel pending save
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+    // Debounce: save after 300ms of no input
+    this.saveTimeout = setTimeout(() => {
+      this.saveCurrentState();
+    }, 300);
   },
   
   saveCurrentState() {
