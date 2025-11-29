@@ -510,6 +510,7 @@ App.goalMap = {
     
     // Time Data für Momentum-Tabelle exportieren
     const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    console.log('[Goal Map Export] timeDataWithPlayers:', timeDataWithPlayers);
     
     // Flaches Format für Momentum-Tabelle erstellen
     const momentumData = {};
@@ -527,11 +528,16 @@ App.goalMap = {
       momentumData[periodNum] = periodValues;
     });
     
+    console.log('[Goal Map Export] momentumData:', momentumData);
+    
     // Speichere in seasonMapTimeData für Momentum-Graph
     localStorage.setItem("seasonMapTimeData", JSON.stringify(momentumData));
     
     // Speichere auch die detaillierten Spieler-Daten
     localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
+    
+    // Auch seasonMapMarkers setzen damit Season Map die Marker anzeigt
+    localStorage.setItem("seasonMapMarkers", JSON.stringify(allMarkers));
     
     // Alte timeData ebenfalls aktualisieren
     const timeData = this.readTimeTrackingFromBox();

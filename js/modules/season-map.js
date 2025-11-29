@@ -198,6 +198,7 @@ App.seasonMap = {
     
     // Player-bezogene Zeitdaten übernehmen
     const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    console.log('[Season Map Export] timeDataWithPlayers:', timeDataWithPlayers);
     localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
     
     // Flache Zeitdaten für Momentum-Graph aus timeDataWithPlayers berechnen
@@ -216,6 +217,8 @@ App.seasonMap = {
       }
       momentumData[periodNum] = periodValues;
     });
+    
+    console.log('[Season Map Export] momentumData:', momentumData);
     
     // Speichere für Momentum-Graph
     localStorage.setItem("seasonMapTimeData", JSON.stringify(momentumData));
@@ -359,8 +362,8 @@ App.seasonMap = {
     // Time Buttons zurücksetzen
     document.querySelectorAll("#seasonMapPage .time-btn").forEach(btn => btn.textContent = "0");
     
-    // Momentum Container leeren
-    const momentumContainer = document.getElementById("seasonMapMomentumContainer");
+    // Momentum Container leeren (korrekter ID: seasonMapMomentum)
+    const momentumContainer = document.getElementById("seasonMapMomentum");
     if (momentumContainer) {
       momentumContainer.innerHTML = "";
     }
@@ -374,6 +377,8 @@ App.seasonMap = {
     document.querySelectorAll("#seasonMapPage .goal-area-label").forEach(label => {
       label.textContent = "0";
     });
+    
+    console.log('[Season Map] Reset completed - Momentum container cleared');
     
     alert("Season Map zurückgesetzt.");
   }
