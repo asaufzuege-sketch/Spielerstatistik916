@@ -1296,26 +1296,29 @@ tr[data-player].dragging {
   flex-shrink: 0;
 }
 
-/* Nr. Input - ursprüngliche Breite */
+/* Nr. Input - minimal für 2-stellige Zahlen */
 #playerSelectionPage .player-list .num-input {
-  width: 70px;
+  width: 45px;
+  min-width: 45px;
+  max-width: 45px;
   background: #2a2a2a;
   color: #888;
   border: 1px solid #444;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 10px 6px;
   text-align: center;
   font-size: 0.95rem;
-  flex-shrink: 0;
+  flex: 0 0 45px;
 }
 
 #playerSelectionPage .player-list .num-input::placeholder {
   color: #666;
 }
 
-/* Spielername Input */
+/* Name Input - füllt den Rest */
 #playerSelectionPage .player-list .name-input {
   flex: 1;
+  min-width: 0;
   background: #3a3a3a;
   color: #fff;
   border: 1px solid #444;
@@ -1328,18 +1331,20 @@ tr[data-player].dragging {
   color: #888;
 }
 
-/* Position Select - gleiche Breite wie Nr. */
+/* Position Select - minimal für "Defense" */
 #playerSelectionPage .player-list .pos-select {
-  width: 70px;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
   background: #2a2a2a;
   color: #44bb91;
   border: 1px solid #444;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 10px 6px;
   text-align: center;
   font-size: 0.95rem;
   font-weight: bold;
-  flex-shrink: 0;
+  flex: 0 0 80px;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
