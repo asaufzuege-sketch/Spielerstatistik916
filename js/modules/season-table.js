@@ -46,7 +46,10 @@ App.seasonTable = {
     const rows = document.querySelectorAll('#seasonContainer .season-table tbody tr:not(.total-row)');
     rows.forEach(row => {
       const posCell = row.querySelector('.pos-cell');
-      if (!position || (posCell && posCell.textContent === position)) {
+      const cellText = posCell ? posCell.textContent : '';
+      // If no filter is selected, show all rows
+      // If filter is selected, show only rows with matching position (or empty position)
+      if (!position || cellText === position) {
         row.style.display = '';
       } else {
         row.style.display = 'none';
