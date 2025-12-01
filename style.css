@@ -1521,24 +1521,17 @@ tr[data-player].dragging {
   min-width: 120px;
 }
 
-.lineup-power-line-btn {
-  background: #00bcd4 !important;
+/* Change Line Button (merged Team Line + Power Line) - same color as Export Season */
+.lineup-change-line-btn {
+  background: #44bb91 !important;
   color: #fff;
 }
 
-.lineup-power-line-btn:hover {
-  background: #00acc1 !important;
+.lineup-change-line-btn:hover {
+  background: #3a9d7a !important;
 }
 
-.lineup-team-line-btn {
-  background: #4db6ac !important;
-  color: #fff;
-}
-
-.lineup-team-line-btn:hover {
-  background: #26a69a !important;
-}
-
+/* Player Out Button */
 .lineup-player-out-btn {
   background: #b00020 !important;
   color: #fff;
@@ -1557,6 +1550,70 @@ tr[data-player].dragging {
   border-radius: 50%;
   margin-left: 6px;
   vertical-align: middle;
+}
+
+/* Export PDF Button - same color as Export CSV */
+.lineup-export-pdf-btn {
+  background: #5a9a9a !important;
+  color: #fff;
+}
+
+.lineup-export-pdf-btn:hover {
+  background: #4a8a8a !important;
+}
+
+/* Player Out Dropdown Container */
+#lineUpPage .player-out-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Player Out Dropdown List */
+#lineUpPage .player-out-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  margin-top: 4px;
+}
+
+#lineUpPage .player-out-dropdown.open {
+  display: block;
+}
+
+/* Player Out Item */
+#lineUpPage .player-out-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #333;
+  color: #fff;
+}
+
+#lineUpPage .player-out-item:last-child {
+  border-bottom: none;
+}
+
+#lineUpPage .player-out-item:hover {
+  background: #3a3a3a;
+}
+
+/* OUT Status - RED background */
+#lineUpPage .player-out-item.is-out {
+  background: #cc3333;
+  color: #fff;
+  text-decoration: line-through;
+}
+
+#lineUpPage .player-out-item.is-out:hover {
+  background: #aa2222;
 }
 
 /* Title */

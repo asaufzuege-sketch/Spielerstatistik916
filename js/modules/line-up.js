@@ -4,6 +4,7 @@ App.lineUp = {
   modalOpen: false,
   currentPosition: null,
   lineUpData: {},
+  playersOut: [],
   
   init() {
     this.container = document.getElementById("lineUpContainer");
@@ -16,11 +17,18 @@ App.lineUp = {
     const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
     const currentTeamId = currentTeamInfo?.id || 'team1';
     const savedData = localStorage.getItem(`lineUpData_${currentTeamId}`);
+    const savedPlayersOut = localStorage.getItem(`playersOut_${currentTeamId}`);
     
     try {
       this.lineUpData = savedData ? JSON.parse(savedData) : {};
     } catch (e) {
       this.lineUpData = {};
+    }
+    
+    try {
+      this.playersOut = savedPlayersOut ? JSON.parse(savedPlayersOut) : [];
+    } catch (e) {
+      this.playersOut = [];
     }
   },
   
@@ -28,6 +36,12 @@ App.lineUp = {
     const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
     const currentTeamId = currentTeamInfo?.id || 'team1';
     localStorage.setItem(`lineUpData_${currentTeamId}`, JSON.stringify(this.lineUpData));
+  },
+  
+  savePlayersOut() {
+    const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const currentTeamId = currentTeamInfo?.id || 'team1';
+    localStorage.setItem(`playersOut_${currentTeamId}`, JSON.stringify(this.playersOut));
   },
   
   getAvailablePlayers() {
@@ -67,35 +81,34 @@ App.lineUp = {
       App.showPage("stats");
     });
     
-    // Power Line button (placeholder functionality)
-    document.getElementById("lineUpPowerLineBtn")?.addEventListener("click", () => {
-      console.log("Power Line clicked");
+    // Change Line button (merged Power Line + Team Line)
+    document.getElementById("lineUpChangeLineBtn")?.addEventListener("click", () => {
+      console.log("Change Line clicked");
     });
     
-    // Team Line button (placeholder functionality)
-    document.getElementById("lineUpTeamLineBtn")?.addEventListener("click", () => {
-      console.log("Team Line clicked");
+    // Export PDF button
+    document.getElementById("lineUpExportPdfBtn")?.addEventListener("click", () => {
+      console.log("Export PDF clicked");
     });
     
-    // Player Out button - show active players list
-    document.getElementById("lineUpPlayerOutBtn")?.addEventListener("click", () => {
-      this.showPlayerOutModal();
+    // Player Out button - toggle dropdown
+    document.getElementById("lineUpPlayerOutBtn")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.togglePlayerOutDropdown();
     });
     
-    // Close Player Out Modal button
-    document.getElementById("closePlayerOutModalBtn")?.addEventListener("click", () => {
-      this.closePlayerOutModal();
-    });
-    
-    // Player Out Modal overlay click to close
-    const playerOutModal = document.getElementById("playerOutModal");
-    if (playerOutModal) {
-      playerOutModal.addEventListener("click", (e) => {
-        if (e.target === playerOutModal) {
-          this.closePlayerOutModal();
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      const dropdown = document.getElementById("playerOutDropdown");
+      const playerOutBtn = document.getElementById("lineUpPlayerOutBtn");
+      const container = document.querySelector(".player-out-container");
+      
+      if (dropdown && dropdown.classList.contains("open")) {
+        if (!container.contains(e.target)) {
+          dropdown.classList.remove("open");
         }
-      });
-    }
+      }
+    });
     
     // Position buttons - delegate click events
     if (this.container) {
@@ -125,6 +138,68 @@ App.lineUp = {
         }
       });
     }
+  },
+  
+  togglePlayerOutDropdown() {
+    const dropdown = document.getElementById("playerOutDropdown");
+    if (!dropdown) return;
+    
+    dropdown.classList.toggle("open");
+    
+    if (dropdown.classList.contains("open")) {
+      this.renderPlayerOutList();
+    }
+  },
+  
+  renderPlayerOutList() {
+    const list = document.getElementById("playerOutList");
+    if (!list) return;
+    
+    const players = this.getAvailablePlayers();
+    
+    if (players.length === 0) {
+      list.innerHTML = '<div class="player-out-item" style="cursor: default; opacity: 0.7;">Keine aktiven Spieler</div>';
+      return;
+    }
+    
+    list.innerHTML = players.map(p => {
+      const isOut = this.playersOut.includes(p.name);
+      const number = p.number || '';
+      const displayText = number ? `${number} ${p.name}` : p.name;
+      
+      return `
+        <div class="player-out-item ${isOut ? 'is-out' : ''}" 
+             data-player="${App.helpers.escapeHtml(p.name)}">
+          ${App.helpers.escapeHtml(displayText)}
+        </div>
+      `;
+    }).join('');
+    
+    // Add click handlers
+    list.querySelectorAll(".player-out-item").forEach(item => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const playerName = item.dataset.player;
+        if (playerName) {
+          this.togglePlayerOut(playerName);
+        }
+      });
+    });
+  },
+  
+  togglePlayerOut(playerName) {
+    const index = this.playersOut.indexOf(playerName);
+    if (index > -1) {
+      // Reactivate player
+      this.playersOut.splice(index, 1);
+    } else {
+      // Mark as OUT
+      this.playersOut.push(playerName);
+    }
+    
+    this.savePlayersOut();
+    this.renderPlayerOutList();
+    this.render(); // Re-render LINE UP to update blocked players
   },
   
   generatePositionKey(posBtn) {
@@ -161,8 +236,9 @@ App.lineUp = {
       title.textContent = `Spieler für ${posLabel} auswählen`;
     }
     
-    // Get available players
-    const players = this.getAvailablePlayers();
+    // Get available players (excluding OUT players)
+    const allPlayers = this.getAvailablePlayers();
+    const players = allPlayers.filter(p => !this.playersOut.includes(p.name));
     
     // Get already assigned players
     const assignedPlayers = Object.values(this.lineUpData);
@@ -224,6 +300,12 @@ App.lineUp = {
   assignPlayer(playerName) {
     if (!this.currentPosition) return;
     
+    // Check if player is OUT
+    if (this.playersOut.includes(playerName)) {
+      alert('Dieser Spieler ist OUT und kann nicht aufgestellt werden.');
+      return;
+    }
+    
     // Remove player from any previous position
     Object.keys(this.lineUpData).forEach(key => {
       if (this.lineUpData[key] === playerName) {
@@ -256,48 +338,6 @@ App.lineUp = {
     }
     this.modalOpen = false;
     this.currentPosition = null;
-  },
-  
-  showPlayerOutModal() {
-    const modal = document.getElementById("playerOutModal");
-    const list = document.getElementById("playerOutList");
-    
-    if (!modal || !list) return;
-    
-    // Get active players from Player Selection
-    const players = this.getAvailablePlayers();
-    
-    if (players.length === 0) {
-      list.innerHTML = '<div class="lineup-player-option" style="cursor: default; opacity: 0.7;">Keine aktiven Spieler</div>';
-    } else {
-      // Render player list with "Nr. Name" format
-      list.innerHTML = players.map(player => {
-        const number = player.number || '';
-        const displayText = number ? `${number} ${player.name}` : player.name;
-        
-        return `
-          <div class="lineup-player-option player-out-item" data-player="${App.helpers.escapeHtml(player.name)}">
-            <span class="lineup-player-name">${App.helpers.escapeHtml(displayText)}</span>
-          </div>
-        `;
-      }).join('');
-      
-      // Add click handlers to player out items
-      list.querySelectorAll(".player-out-item").forEach(option => {
-        option.addEventListener("click", () => {
-          option.classList.toggle("selected");
-        });
-      });
-    }
-    
-    modal.style.display = "flex";
-  },
-  
-  closePlayerOutModal() {
-    const modal = document.getElementById("playerOutModal");
-    if (modal) {
-      modal.style.display = "none";
-    }
   },
   
   getPlayerDisplayName(key, defaultLabel) {

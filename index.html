@@ -237,9 +237,16 @@
     <div class="page-top">
       <div class="top-bar">
         <button id="lineUpPlayerSelectionBtn" class="top-btn back-btn">Player Selection</button>
-        <button id="lineUpPowerLineBtn" class="top-btn lineup-power-line-btn">Power Line</button>
-        <button id="lineUpTeamLineBtn" class="top-btn lineup-team-line-btn">Team Line</button>
-        <button id="lineUpPlayerOutBtn" class="top-btn lineup-player-out-btn">Player out <span class="player-out-dot"></span></button>
+        <button id="lineUpChangeLineBtn" class="top-btn lineup-change-line-btn">Change Line</button>
+        <div class="player-out-container">
+          <button id="lineUpPlayerOutBtn" class="top-btn lineup-player-out-btn">Player out <span class="player-out-dot"></span></button>
+          <div id="playerOutDropdown" class="player-out-dropdown">
+            <div id="playerOutList" class="player-out-list">
+              <!-- Dynamisch gefüllt -->
+            </div>
+          </div>
+        </div>
+        <button id="lineUpExportPdfBtn" class="top-btn lineup-export-pdf-btn">Export PDF</button>
         <button id="lineUpGameDataBtn" class="top-btn">Game Data</button>
       </div>
     </div>
@@ -369,16 +376,6 @@
       </div>
     </div>
     
-    <!-- Player Out Modal -->
-    <div id="playerOutModal" class="modal" style="display: none;">
-      <div class="modal-content lineup-player-modal">
-        <h3>Player Out</h3>
-        <div id="playerOutList" class="lineup-player-list"></div>
-        <div class="modal-buttons">
-          <button id="closePlayerOutModalBtn" class="cancel-btn">Schließen</button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Scripts -->
