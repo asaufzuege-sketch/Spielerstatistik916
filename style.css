@@ -1514,6 +1514,7 @@ tr[data-player].dragging {
   gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
+  overflow: visible !important;
 }
 
 /* Header Buttons */
@@ -1542,6 +1543,25 @@ tr[data-player].dragging {
   background: #9a001a !important;
 }
 
+/* Pulsier-Animation */
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba(204, 51, 51, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(204, 51, 51, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(204, 51, 51, 0);
+  }
+}
+
+/* Button wenn Spieler OUT sind */
+#lineUpPage .lineup-player-out-btn.has-players-out {
+  background: #cc3333 !important;
+  animation: pulse-red 1.5s infinite;
+}
+
 .player-out-dot {
   display: inline-block;
   width: 8px;
@@ -1566,22 +1586,23 @@ tr[data-player].dragging {
 #lineUpPage .player-out-container {
   position: relative;
   display: inline-block;
+  z-index: 100;
 }
 
 /* Player Out Dropdown List */
 #lineUpPage .player-out-dropdown {
   display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 5px);
   left: 0;
   background: #2a2a2a;
-  border: 1px solid #444;
-  border-radius: 8px;
-  min-width: 200px;
-  max-height: 300px;
+  border: 2px solid #444;
+  border-radius: 10px;
+  min-width: 220px;
+  max-height: 350px;
   overflow-y: auto;
-  z-index: 100;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
   margin-top: 4px;
 }
 
@@ -1627,6 +1648,17 @@ tr[data-player].dragging {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+#lineUpPage .lineup-mode-label {
+  text-align: center;
+  color: #44bb91;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-top: -10px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
 .lineup-stats {
@@ -1690,14 +1722,21 @@ tr[data-player].dragging {
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 12px 18px;
-  width: 150px;
-  min-width: 150px;
-  max-width: 150px;
-  font-size: 0.9rem;
+  padding: 8px 12px;
+  width: 180px;
+  min-width: 180px;
+  max-width: 180px;
+  height: 36px;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lineup-position:hover {
@@ -1722,6 +1761,12 @@ tr[data-player].dragging {
 .lineup-position.lineup-center.assigned {
   background: #2a5a4a !important;
   border: 1px solid #44bb91 !important;
+}
+
+/* Spieler-Name in der Zelle */
+#lineUpPage .position-slot .player-name {
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 /* Defense Section */

@@ -5,12 +5,15 @@ App.lineUp = {
   currentPosition: null,
   lineUpData: {},
   playersOut: [],
+  currentMode: 'normal', // 'normal', 'power', 'manuell'
+  modes: ['normal', 'power', 'manuell'],
   
   init() {
     this.container = document.getElementById("lineUpContainer");
     this.loadData();
     this.attachEventListeners();
     this.render();
+    this.updatePlayerOutButton();
   },
   
   loadData() {
@@ -83,7 +86,7 @@ App.lineUp = {
     
     // Change Line button (merged Power Line + Team Line)
     document.getElementById("lineUpChangeLineBtn")?.addEventListener("click", () => {
-      console.log("Change Line clicked");
+      this.changeLineMode();
     });
     
     // Export PDF button
@@ -199,6 +202,7 @@ App.lineUp = {
     
     this.savePlayersOut();
     this.renderPlayerOutList();
+    this.updatePlayerOutButton();
     this.render(); // Re-render LINE UP to update blocked players
   },
   
@@ -468,5 +472,44 @@ App.lineUp = {
     });
     
     return { goals, plusMinus, shots };
+  },
+  
+  changeLineMode() {
+    const currentIndex = this.modes.indexOf(this.currentMode);
+    const nextIndex = (currentIndex + 1) % this.modes.length;
+    this.currentMode = this.modes[nextIndex];
+    
+    // Modus-Anzeige unter Titel aktualisieren
+    this.updateModeDisplay();
+    
+    // Optional: Aufstellung basierend auf Modus anpassen
+    this.render();
+  },
+  
+  updateModeDisplay() {
+    const modeLabel = document.getElementById('lineupModeLabel');
+    if (modeLabel) {
+      const modeNames = {
+        'normal': 'NORMAL',
+        'power': 'POWER',
+        'manuell': 'MANUELL'
+      };
+      modeLabel.textContent = modeNames[this.currentMode];
+    }
+  },
+  
+  updatePlayerOutButton() {
+    const btn = document.querySelector('#lineUpPage .lineup-player-out-btn');
+    if (!btn) return;
+    
+    const outCount = this.playersOut.length;
+    
+    if (outCount > 0) {
+      btn.textContent = `Player out (${outCount})`;
+      btn.classList.add('has-players-out');
+    } else {
+      btn.innerHTML = 'Player out <span class="player-out-dot"></span>';
+      btn.classList.remove('has-players-out');
+    }
   }
 };
