@@ -401,8 +401,8 @@ App.lineUp = {
     for (let line = 1; line <= 4; line++) {
       const lineEl = this.container?.querySelector(`.lineup-line[data-line="${line}"] .lineup-line-stats`);
       if (lineEl) {
-        const stats = this.calculateLineStats(line);
-        lineEl.textContent = `${stats.goals}G / +- ${stats.plusMinus} / ${stats.shots} Sh`;
+        const stats = this.calculateForwardLineStats(line);
+        lineEl.textContent = this.formatForwardStats(stats);
       }
     }
     
@@ -410,69 +410,108 @@ App.lineUp = {
     for (let pair = 1; pair <= 3; pair++) {
       const pairEl = this.container?.querySelector(`.lineup-defense-pair[data-pair="${pair}"] .lineup-pair-stats`);
       if (pairEl) {
-        const stats = this.calculatePairStats(pair);
-        pairEl.textContent = `${stats.goals}G / +- ${stats.plusMinus} / ${stats.shots} Sh`;
+        const stats = this.calculateDefenseStats(pair);
+        pairEl.textContent = this.formatDefenseStats(stats);
       }
     }
   },
   
-  calculateTotalStats() {
-    let goals = 0;
-    let plusMinus = 0;
-    let shots = 0;
+  // Get player season stats from App.data.seasonData
+  getPlayerSeasonStats(playerName) {
+    const seasonData = App.data.seasonData?.[playerName];
+    if (!seasonData) {
+      return { goalsPerGame: 0, assistsPerGame: 0, plusMinusPerGame: 0, shotsPerGame: 0 };
+    }
     
-    Object.values(this.lineUpData).forEach(playerName => {
-      const playerStats = App.data.statsData?.[playerName];
-      if (playerStats) {
-        goals += playerStats["Goals"] || 0;
-        plusMinus += playerStats["+/-"] || 0;
-        shots += playerStats["Shot"] || 0;
-      }
-    });
+    const games = seasonData.games || 1; // Prevent division by 0
     
-    return { goals, plusMinus, shots };
+    return {
+      goalsPerGame: (seasonData.goals || 0) / games,
+      assistsPerGame: (seasonData.assists || 0) / games,
+      plusMinusPerGame: (seasonData.plusMinus || 0) / games,
+      shotsPerGame: (seasonData.shots || 0) / games
+    };
   },
   
-  calculateLineStats(lineNum) {
-    let goals = 0;
-    let plusMinus = 0;
-    let shots = 0;
+  // Calculate stats for forward line (LW, C, RW)
+  calculateForwardLineStats(lineNum) {
+    const positions = ['LW', 'C', 'RW'];
+    let totalGoalsPerGame = 0;
+    let totalPlusMinus = 0;
+    let totalShotsPerGame = 0;
+    let playerCount = 0;
     
-    ["LW", "C", "RW"].forEach(pos => {
+    positions.forEach(pos => {
       const key = `${pos}_line${lineNum}`;
       const playerName = this.lineUpData[key];
       if (playerName) {
-        const playerStats = App.data.statsData?.[playerName];
-        if (playerStats) {
-          goals += playerStats["Goals"] || 0;
-          plusMinus += playerStats["+/-"] || 0;
-          shots += playerStats["Shot"] || 0;
-        }
+        const stats = this.getPlayerSeasonStats(playerName);
+        totalGoalsPerGame += stats.goalsPerGame || 0;
+        totalPlusMinus += stats.plusMinusPerGame || 0;
+        totalShotsPerGame += stats.shotsPerGame || 0;
+        playerCount++;
       }
     });
     
-    return { goals, plusMinus, shots };
+    return {
+      // SUM of goals per game
+      goalsPerGame: totalGoalsPerGame,
+      // AVERAGE +/-
+      plusMinusPerGame: playerCount > 0 ? totalPlusMinus / playerCount : 0,
+      // AVERAGE shots
+      shotsPerGame: playerCount > 0 ? totalShotsPerGame / playerCount : 0
+    };
   },
   
-  calculatePairStats(pairNum) {
-    let goals = 0;
-    let plusMinus = 0;
-    let shots = 0;
+  // Calculate stats for defense pair (DL, DR)
+  calculateDefenseStats(pairNum) {
+    const positions = ['DL', 'DR'];
+    let totalPointsPerGame = 0; // POINTS instead of goals!
+    let totalPlusMinus = 0;
+    let totalShotsPerGame = 0;
+    let playerCount = 0;
     
-    ["DL", "DR"].forEach(pos => {
+    positions.forEach(pos => {
       const key = `${pos}_pair${pairNum}`;
       const playerName = this.lineUpData[key];
       if (playerName) {
-        const playerStats = App.data.statsData?.[playerName];
-        if (playerStats) {
-          goals += playerStats["Goals"] || 0;
-          plusMinus += playerStats["+/-"] || 0;
-          shots += playerStats["Shot"] || 0;
-        }
+        const stats = this.getPlayerSeasonStats(playerName);
+        // Points = Goals + Assists
+        totalPointsPerGame += (stats.goalsPerGame || 0) + (stats.assistsPerGame || 0);
+        totalPlusMinus += stats.plusMinusPerGame || 0;
+        totalShotsPerGame += stats.shotsPerGame || 0;
+        playerCount++;
       }
     });
     
-    return { goals, plusMinus, shots };
+    return {
+      // SUM of points per game
+      pointsPerGame: totalPointsPerGame,
+      // AVERAGE +/-
+      plusMinusPerGame: playerCount > 0 ? totalPlusMinus / playerCount : 0,
+      // AVERAGE shots
+      shotsPerGame: playerCount > 0 ? totalShotsPerGame / playerCount : 0
+    };
+  },
+  
+  // Format for forward line: "1.6G / +- 0.1 / 2.4 Sh"
+  formatForwardStats(stats) {
+    const g = stats.goalsPerGame.toFixed(1);
+    const pm = stats.plusMinusPerGame >= 0 
+      ? `+${stats.plusMinusPerGame.toFixed(1)}` 
+      : stats.plusMinusPerGame.toFixed(1);
+    const sh = stats.shotsPerGame.toFixed(1);
+    return `${g}G / ${pm} / ${sh} Sh`;
+  },
+  
+  // Format for defense pair: "0.7P / +- 0.4 / 1.4 Sh"
+  formatDefenseStats(stats) {
+    const p = stats.pointsPerGame.toFixed(1);
+    const pm = stats.plusMinusPerGame >= 0 
+      ? `+${stats.plusMinusPerGame.toFixed(1)}` 
+      : stats.plusMinusPerGame.toFixed(1);
+    const sh = stats.shotsPerGame.toFixed(1);
+    return `${p}P / ${pm} / ${sh} Sh`;
   },
   
   changeLineMode() {
