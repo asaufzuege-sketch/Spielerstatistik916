@@ -1494,3 +1494,305 @@ tr[data-player].dragging {
   font-size: 0.95rem;
   margin-bottom: 20px;
 }
+
+/* ==================== */
+/* LINE UP PAGE STYLES  */
+/* ==================== */
+
+#lineUpPage {
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 20px;
+}
+
+#lineUpPage .page-top {
+  margin-bottom: 10px;
+}
+
+#lineUpPage .top-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Header Buttons */
+#lineUpPage .top-btn {
+  min-width: 120px;
+}
+
+.lineup-power-line-btn {
+  background: #00bcd4 !important;
+  color: #fff;
+}
+
+.lineup-power-line-btn:hover {
+  background: #00acc1 !important;
+}
+
+.lineup-team-line-btn {
+  background: #4db6ac !important;
+  color: #fff;
+}
+
+.lineup-team-line-btn:hover {
+  background: #26a69a !important;
+}
+
+.lineup-player-out-btn {
+  background: #b00020 !important;
+  color: #fff;
+  position: relative;
+}
+
+.lineup-player-out-btn:hover {
+  background: #9a001a !important;
+}
+
+.player-out-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #ff5252;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Title */
+.lineup-title {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #44bb91;
+  margin: 10px 0 5px 0;
+  background: linear-gradient(135deg, #44bb91 0%, #00bcd4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lineup-stats {
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+}
+
+/* Container */
+#lineUpContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Sections */
+.lineup-section {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.lineup-section-title {
+  color: #00bcd4;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+/* Forward Lines */
+.lineup-forwards {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.lineup-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.lineup-line-row {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.lineup-line-stats {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+/* Position Buttons */
+.lineup-position {
+  background: #4a4a4a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  min-width: 80px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lineup-position:hover {
+  background: #5a5a5a;
+  transform: translateY(-2px);
+}
+
+.lineup-position.assigned {
+  background: #2a5a4a;
+  border: 1px solid #44bb91;
+}
+
+.lineup-position.lineup-center {
+  background: #1a5a5a;
+  border: 1px solid #00bcd4;
+}
+
+.lineup-position.lineup-center:hover {
+  background: #2a6a6a;
+}
+
+.lineup-position.lineup-center.assigned {
+  background: #1a5a5a;
+  border: 2px solid #00bcd4;
+}
+
+/* Defense Section */
+.lineup-defense {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lineup-defense-pair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.lineup-pair-stats {
+  color: #888;
+  font-size: 0.85rem;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* Special Teams */
+.lineup-special-teams {
+  display: flex;
+  gap: 20px;
+}
+
+.lineup-boxplay,
+.lineup-powerplay {
+  flex: 1;
+}
+
+.lineup-formation {
+  margin-bottom: 15px;
+}
+
+.lineup-formation-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.lineup-pp-defense {
+  justify-content: center;
+  gap: 30px;
+}
+
+/* Player Selection Modal */
+.lineup-player-modal {
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.lineup-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 15px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.lineup-player-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lineup-player-option:hover {
+  background: #3a3a3a;
+  border-color: #44bb91;
+}
+
+.lineup-player-option.selected {
+  background: #1a5a4a;
+  border-color: #44bb91;
+}
+
+.lineup-player-option.assigned {
+  opacity: 0.6;
+}
+
+.lineup-player-number {
+  color: #888;
+  font-weight: 600;
+  min-width: 30px;
+}
+
+.lineup-player-name {
+  color: #fff;
+  flex: 1;
+}
+
+.lineup-player-assigned {
+  color: #44bb91;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .lineup-special-teams {
+    flex-direction: column;
+  }
+  
+  .lineup-line-row {
+    gap: 8px;
+  }
+  
+  .lineup-position {
+    min-width: 60px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .lineup-defense-pair {
+    gap: 10px;
+  }
+  
+  .lineup-pair-stats {
+    min-width: 90px;
+    font-size: 0.75rem;
+  }
+}

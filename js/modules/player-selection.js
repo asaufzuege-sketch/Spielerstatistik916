@@ -15,15 +15,53 @@ App.playerSelection = {
       this.handleConfirmAndNavigate();
     });
     
-    // Event Listener für Line Up Button - navigiert zur Stats-Seite (Lineup-Seite existiert noch nicht)
+    // Event Listener für Line Up Button - navigiert zur Line Up Seite
     document.getElementById("lineupBtn")?.addEventListener("click", () => {
-      this.handleConfirmAndNavigate();
+      this.handleConfirmAndNavigateToLineUp();
     });
   },
   
   handleConfirmAndNavigate() {
     // Spielerdaten speichern (wie bisher der Bestätigen-Button)
     this.handleConfirm();
+  },
+  
+  handleConfirmAndNavigateToLineUp() {
+    // Spielerdaten speichern und zur Line Up Seite navigieren
+    this.saveCurrentState();
+    
+    // Update selectedPlayers
+    App.data.selectedPlayers = [];
+    const items = this.container.querySelectorAll("li");
+    
+    items.forEach((li) => {
+      const checkbox = li.querySelector(".player-checkbox");
+      const numInput = li.querySelector(".num-input");
+      const nameInput = li.querySelector(".name-input");
+      
+      if (checkbox && checkbox.checked && nameInput && nameInput.value.trim() !== "") {
+        App.data.selectedPlayers.push({
+          num: numInput ? numInput.value.trim() : "",
+          name: nameInput.value.trim()
+        });
+      }
+    });
+    
+    App.storage.saveSelectedPlayers();
+    
+    // Navigate to Line Up page
+    if (typeof App.showPage === 'function') {
+      App.showPage("lineUp");
+    } else {
+      document.getElementById("playerSelectionPage").style.display = "none";
+      document.getElementById("lineUpPage").style.display = "block";
+    }
+    
+    // Render Line Up if available
+    if (App.lineUp && typeof App.lineUp.render === 'function') {
+      App.lineUp.loadData();
+      App.lineUp.render();
+    }
   },
   
   getPlayers() {
