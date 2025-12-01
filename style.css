@@ -1634,7 +1634,9 @@ tr[data-player].dragging {
   border: none;
   border-radius: 8px;
   padding: 12px 18px;
-  min-width: 80px;
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -1652,17 +1654,17 @@ tr[data-player].dragging {
 }
 
 .lineup-position.lineup-center {
-  background: #1a5a5a;
-  border: 1px solid #00bcd4;
+  background: #4a4a4a !important;
+  border: none !important;
 }
 
 .lineup-position.lineup-center:hover {
-  background: #2a6a6a;
+  background: #5a5a5a !important;
 }
 
 .lineup-position.lineup-center.assigned {
-  background: #1a5a5a;
-  border: 2px solid #00bcd4;
+  background: #2a5a4a !important;
+  border: 1px solid #44bb91 !important;
 }
 
 /* Defense Section */
@@ -1771,6 +1773,29 @@ tr[data-player].dragging {
   font-size: 0.9rem;
 }
 
+/* Player Out Modal Styles */
+.player-out-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.player-out-item:hover {
+  background: #3a3a3a;
+  border-color: #b00020;
+}
+
+.player-out-item.selected {
+  background: #4a1a1a;
+  border-color: #b00020;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .lineup-special-teams {
@@ -1782,7 +1807,9 @@ tr[data-player].dragging {
   }
   
   .lineup-position {
-    min-width: 60px;
+    width: 120px;
+    min-width: 120px;
+    max-width: 120px;
     padding: 10px 12px;
     font-size: 0.8rem;
   }

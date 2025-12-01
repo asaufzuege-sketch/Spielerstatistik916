@@ -77,10 +77,25 @@ App.lineUp = {
       console.log("Team Line clicked");
     });
     
-    // Player Out button (placeholder functionality)
+    // Player Out button - show active players list
     document.getElementById("lineUpPlayerOutBtn")?.addEventListener("click", () => {
-      console.log("Player Out clicked");
+      this.showPlayerOutModal();
     });
+    
+    // Close Player Out Modal button
+    document.getElementById("closePlayerOutModalBtn")?.addEventListener("click", () => {
+      this.closePlayerOutModal();
+    });
+    
+    // Player Out Modal overlay click to close
+    const playerOutModal = document.getElementById("playerOutModal");
+    if (playerOutModal) {
+      playerOutModal.addEventListener("click", (e) => {
+        if (e.target === playerOutModal) {
+          this.closePlayerOutModal();
+        }
+      });
+    }
     
     // Position buttons - delegate click events
     if (this.container) {
@@ -243,6 +258,48 @@ App.lineUp = {
     this.currentPosition = null;
   },
   
+  showPlayerOutModal() {
+    const modal = document.getElementById("playerOutModal");
+    const list = document.getElementById("playerOutList");
+    
+    if (!modal || !list) return;
+    
+    // Get active players from Player Selection
+    const players = this.getAvailablePlayers();
+    
+    if (players.length === 0) {
+      list.innerHTML = '<div class="lineup-player-option" style="cursor: default; opacity: 0.7;">Keine aktiven Spieler</div>';
+    } else {
+      // Render player list with "Nr. Name" format
+      list.innerHTML = players.map(player => {
+        const number = player.number || '';
+        const displayText = `${number} ${player.name}`.trim();
+        
+        return `
+          <div class="lineup-player-option player-out-item" data-player="${App.helpers.escapeHtml(player.name)}">
+            <span class="lineup-player-name">${App.helpers.escapeHtml(displayText)}</span>
+          </div>
+        `;
+      }).join('');
+      
+      // Add click handlers to player out items
+      list.querySelectorAll(".player-out-item").forEach(option => {
+        option.addEventListener("click", () => {
+          option.classList.toggle("selected");
+        });
+      });
+    }
+    
+    modal.style.display = "flex";
+  },
+  
+  closePlayerOutModal() {
+    const modal = document.getElementById("playerOutModal");
+    if (modal) {
+      modal.style.display = "none";
+    }
+  },
+  
   getPlayerDisplayName(key, defaultLabel) {
     const playerName = this.lineUpData[key];
     if (!playerName) return defaultLabel;
@@ -251,17 +308,13 @@ App.lineUp = {
     const players = this.getAvailablePlayers();
     const player = players.find(p => p.name === playerName);
     
-    if (player && player.number) {
-      return `#${player.number}`;
+    // Display format: "Nr. Name" (e.g., "8 Diego Warth")
+    if (player) {
+      const number = player.number || '';
+      return `${number} ${player.name}`.trim();
     }
     
-    // Abbreviate name: first name initial + last name
-    const parts = playerName.split(" ");
-    if (parts.length >= 2) {
-      return `${parts[0][0]}. ${parts[parts.length - 1]}`;
-    }
-    
-    return playerName.substring(0, 8);
+    return playerName;
   },
   
   render() {
@@ -299,14 +352,6 @@ App.lineUp = {
   },
   
   updateStats() {
-    // This would calculate actual stats based on assigned players
-    // For now, just show placeholder values
-    const totalStats = document.querySelector(".lineup-stats");
-    if (totalStats) {
-      const stats = this.calculateTotalStats();
-      totalStats.textContent = `${stats.goals}G / +- ${stats.plusMinus} / ${stats.shots} Sh`;
-    }
-    
     // Update line stats
     for (let line = 1; line <= 4; line++) {
       const lineEl = this.container?.querySelector(`.lineup-line[data-line="${line}"] .lineup-line-stats`);
