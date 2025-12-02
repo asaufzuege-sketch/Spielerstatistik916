@@ -308,10 +308,10 @@ App.lineUp = {
     }
     
     const avgGames = totalGames / playerCount;
-    const goalsPerGame = avgGames > 0 ? (totalGoals / totalGames * avgGames) : 0;
-    const pointsPerGame = avgGames > 0 ? (totalPoints / totalGames * avgGames) : 0;
+    const goalsPerGame = avgGames > 0 ? (totalGoals / avgGames) : 0;
+    const pointsPerGame = avgGames > 0 ? (totalPoints / avgGames) : 0;
     const avgPlusMinus = totalPlusMinus / playerCount;
-    const shotsPerGame = avgGames > 0 ? (totalShots / totalGames * avgGames) : 0;
+    const shotsPerGame = avgGames > 0 ? (totalShots / avgGames) : 0;
     
     if (type === 'forward') {
       return `${goalsPerGame.toFixed(1)}G / ${avgPlusMinus >= 0 ? '+' : ''}${avgPlusMinus.toFixed(1)} / ${shotsPerGame.toFixed(1)} Sh`;
@@ -332,6 +332,10 @@ App.lineUp = {
   
   generatePowerLineup() {
     console.log("[LINE UP] Generating POWER lineup...");
+    
+    // Constants for player classification
+    const ASSIST_TO_GOAL_RATIO_THRESHOLD = 1.5;
+    const CENTER_POSITION_FREQUENCY = 3; // Every 3rd forward is a center
     
     // Get active players with season data
     const players = App.data.selectedPlayers.map(p => {
@@ -366,8 +370,8 @@ App.lineUp = {
       const avgAssists = games > 0 ? assists / games : 0;
       const avgPlusMinus = games > 0 ? plusMinus / games : 0;
       
-      // Simple heuristic: if assists > goals * 1.5 and good +/-, likely defense
-      const isLikelyDefense = (avgAssists > avgGoals * 1.5 && avgPlusMinus > 0);
+      // Simple heuristic: if assists > goals * ASSIST_TO_GOAL_RATIO_THRESHOLD and good +/-, likely defense
+      const isLikelyDefense = (avgAssists > avgGoals * ASSIST_TO_GOAL_RATIO_THRESHOLD && avgPlusMinus > 0);
       
       if (isLikelyDefense) {
         // Defense MVP: Tore×1 + Assists×1.5 + +/-×2 + Schüsse×0.3
@@ -385,13 +389,14 @@ App.lineUp = {
     wings.sort((a, b) => b.mvpScore - a.mvpScore);
     defense.sort((a, b) => b.mvpScore - a.mvpScore);
     
-    // Distribute forwards to centers and wings (every 3rd to center, others to wings)
+    // Distribute forwards to centers and wings (every CENTER_POSITION_FREQUENCY player to center, others to wings)
     const forwardPool = wings.slice();
     wings.length = 0;
     centers.length = 0;
     
     forwardPool.forEach((p, idx) => {
-      if (idx % 3 === 1) {
+      // Every 3rd forward (index 1, 4, 7, ...) becomes a center
+      if ((idx + 1) % CENTER_POSITION_FREQUENCY === 2) {
         centers.push(p);
       } else {
         wings.push(p);
