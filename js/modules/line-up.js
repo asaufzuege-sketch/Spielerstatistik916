@@ -708,6 +708,12 @@ App.lineUp = {
       this.autoFillPowerMode();
     }
     
+    // Alle Positionen leeren wenn in MANUELL Modus gewechselt wird
+    if (this.currentMode === 'manuell') {
+      this.lineUpData = {};
+      this.saveData();
+    }
+    
     // Optional: Aufstellung basierend auf Modus anpassen
     this.render();
   },
