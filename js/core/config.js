@@ -54,7 +54,7 @@ const App = {
   // Theme Setup
   initTheme() {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document. documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.setAttribute('data-theme', 'light');
     }
@@ -66,7 +66,7 @@ const App = {
     if (existing) existing.remove();
     
     const style = document.createElement('style');
-    style. id = 'season-goalvalue-left-align';
+    style.id = 'season-goalvalue-left-align';
     style.textContent = `
       #seasonContainer, #goalValueContainer {
         display: flex ! important;
@@ -147,31 +147,27 @@ const App = {
   showPage(page) {
     try {
       // Lazy-initialize pages wenn noch nicht geschehen
-      if (! this.pages || Object.keys(this. pages).length === 0) {
+      if (!this.pages || Object.keys(this.pages).length === 0) {
         this.pages = {
           teamSelection: document.getElementById("teamSelectionPage"),
           selection: document.getElementById("playerSelectionPage"),
-          stats: document. getElementById("statsPage"),
-          torbild: document. getElementById("torbildPage"),
+          stats: document.getElementById("statsPage"),
+          torbild: document.getElementById("torbildPage"),
           goalValue: document.getElementById("goalValuePage"),
-copilot/restore-original-designs-and-features
           season: document.getElementById("seasonPage"),
-          season: document. getElementById("seasonPage"),
-            copilot/add-automatic-goal-map-navigation
-copilot/add-automatic-goal-map-navigation
           seasonMap: document.getElementById("seasonMapPage"),
           lineUp: document.getElementById("lineUpPage")
         };
       }
       
       // Alle Seiten verstecken
-      Object.values(this.pages). forEach(p => {
-        if (p) p. style.display = "none";
+      Object.values(this.pages).forEach(p => {
+        if (p) p.style.display = "none";
       });
       
       // Target-Seite anzeigen
       if (this.pages[page]) {
-        this. pages[page].style.display = "block";
+        this.pages[page].style.display = "block";
       }
       
       // Page in LocalStorage speichern
@@ -232,12 +228,6 @@ copilot/add-automatic-goal-map-navigation
         if (page === "selection" && this. playerSelection && typeof this.playerSelection.render === 'function') {
           this. playerSelection.render();
         }
-        if (page === "lineUp" && this. lineUp && typeof this.lineUp.render === 'function') {
-          this. lineUp.render();
-        }
-        if (page === "lineUp" && this.lineUp && typeof this.lineUp.render === 'function') {
-          this.lineUp.render();
-        }
         if (page === "lineUp" && this.lineUp && typeof this.lineUp.render === 'function') {
           this.lineUp.render();
         }
@@ -259,14 +249,14 @@ copilot/add-automatic-goal-map-navigation
     
     if (eventType === 'goal') {
       this.goalMapWorkflow.requiredPoints = 3;
-      this. goalMapWorkflow. pointTypes = ['field', 'goal', 'time'];
+      this.goalMapWorkflow.pointTypes = ['field', 'goal', 'time'];
     } else if (eventType === 'shot') {
       this.goalMapWorkflow.requiredPoints = 1;
       this.goalMapWorkflow.pointTypes = ['field'];
     }
     
     console.log(`Starting Goal Map workflow for ${playerName} - ${eventType}`);
-    this. showPage('torbild');
+    this.showPage('torbild');
   },
   
   addGoalMapPoint(pointType, xPct, yPct, color, boxId) {
@@ -282,7 +272,7 @@ copilot/add-automatic-goal-map-navigation
     };
     
     this.goalMapWorkflow.collectedPoints.push(point);
-    console. log(`Point ${this.goalMapWorkflow.collectedPoints. length}/${this. goalMapWorkflow. requiredPoints} collected:`, point);
+    console.log(`Point ${this.goalMapWorkflow.collectedPoints.length}/${this.goalMapWorkflow.requiredPoints} collected:`, point);
     
     // Update workflow indicator
     if (this.goalMap && typeof this.goalMap.updateWorkflowIndicator === 'function') {
@@ -307,14 +297,14 @@ copilot/add-automatic-goal-map-navigation
       this.data.goalMapData = {};
     }
     
-    if (!this. data.goalMapData[playerName]) {
+    if (!this.data.goalMapData[playerName]) {
       this.data.goalMapData[playerName] = [];
     }
     
     this.data.goalMapData[playerName].push({
       eventType: eventType,
       points: points,
-      timestamp: Date. now()
+      timestamp: Date.now()
     });
     
     // Update the stats counter for Goals or Shot
@@ -322,20 +312,20 @@ copilot/add-automatic-goal-map-navigation
       this.data.statsData[playerName] = {};
     }
     
-    const category = eventType === 'goal' ?  'Goals' : 'Shot';
-    this.data. statsData[playerName][category] = (this.data.statsData[playerName][category] || 0) + 1;
+    const category = eventType === 'goal' ? 'Goals' : 'Shot';
+    this.data.statsData[playerName][category] = (this.data.statsData[playerName][category] || 0) + 1;
     
     // Save to localStorage
     const teamId = this.teamSelection ? this.teamSelection.getCurrentTeamInfo().id : 'team1';
     localStorage. setItem(`goalMapData_${teamId}`, JSON.stringify(this.data. goalMapData));
-    localStorage.setItem(`statsData_${teamId}`, JSON.stringify(this. data.statsData));
+    localStorage.setItem(`statsData_${teamId}`, JSON.stringify(this.data.statsData));
     
     console.log(`Goal Map workflow completed for ${playerName}:`, points);
     
     // Reset workflow state
     this.goalMapWorkflow.active = false;
     this.goalMapWorkflow.playerName = null;
-    this. goalMapWorkflow. eventType = null;
+    this.goalMapWorkflow.eventType = null;
     this.goalMapWorkflow.collectedPoints = [];
     this.goalMapWorkflow.requiredPoints = 0;
     this.goalMapWorkflow.pointTypes = [];
