@@ -204,6 +204,12 @@ App.lineUp = {
     this.savePlayersOut();
     this.renderPlayerOutList();
     this.updatePlayerOutButton();
+    
+    // NEU: Im POWER Modus sofort Aufstellung neu generieren
+    if (this.currentMode === 'power') {
+      this.autoFillPowerMode();
+    }
+    
     this.render(); // Re-render LINE UP to update blocked players
   },
   
@@ -524,21 +530,19 @@ App.lineUp = {
       this.lineUpData['BP-W_form1'] = wings[0].name;
       this.lineUpData['PP-LW_form1'] = wings[0].name;
     }
-    // Rang 2: RW 1, BP-W 2, PP-RW 1
+    // Rang 2: RW 1, BP-W 2
     if (wings[1]) {
       this.lineUpData['RW_line1'] = wings[1].name;
       this.lineUpData['BP-W_form2'] = wings[1].name;
-      this.lineUpData['PP-RW_form1'] = wings[1].name;
     }
     // Rang 3: LW 2, PP-LW 2
     if (wings[2]) {
       this.lineUpData['LW_line2'] = wings[2].name;
       this.lineUpData['PP-LW_form2'] = wings[2].name;
     }
-    // Rang 4: RW 2, PP-RW 2
+    // Rang 4: RW 2
     if (wings[3]) {
       this.lineUpData['RW_line2'] = wings[3].name;
-      this.lineUpData['PP-RW_form2'] = wings[3].name;
     }
     // Rang 5: LW 3
     if (wings[4]) {
@@ -589,6 +593,36 @@ App.lineUp = {
     // Rang 6: DR 3
     if (defense[5]) {
       this.lineUpData['DR_pair3'] = defense[5].name;
+    }
+    
+    // NEU: PP-RW Positionen mit besten verfügbaren Stürmern (C oder W) besetzen
+    // Kombinierte Liste aller Stürmer erstellen
+    const allForwards = [...centers, ...wings];
+    // Nach MVP Points sortieren (höchste zuerst)
+    allForwards.sort((a, b) => b.mvpPoints - a.mvpPoints);
+    
+    // Bereits auf PP-Positionen zugewiesene Spieler sammeln
+    const ppAssigned = new Set([
+      this.lineUpData['PP-C_form1'],
+      this.lineUpData['PP-C_form2'],
+      this.lineUpData['PP-LW_form1'],
+      this.lineUpData['PP-LW_form2'],
+      this.lineUpData['PP-DL_form1'],
+      this.lineUpData['PP-DL_form2'],
+      this.lineUpData['PP-DR_form1'],
+      this.lineUpData['PP-DR_form2']
+    ].filter(name => name)); // Filter out undefined/null
+    
+    // Beste verfügbare Stürmer für PP-RW finden
+    const availableForPPRW = allForwards.filter(player => !ppAssigned.has(player.name));
+    
+    // PP-RW 1 besetzen
+    if (availableForPPRW[0]) {
+      this.lineUpData['PP-RW_form1'] = availableForPPRW[0].name;
+    }
+    // PP-RW 2 besetzen
+    if (availableForPPRW[1]) {
+      this.lineUpData['PP-RW_form2'] = availableForPPRW[1].name;
     }
     
     // Save the updated lineup
