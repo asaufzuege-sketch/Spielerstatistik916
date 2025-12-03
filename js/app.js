@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   
   document.getElementById("backToStatsFromSeasonBtn")?.addEventListener("click", () => {
-    App.showPage("stats");
+    App. showPage("stats");
   });
   
   document. getElementById("backToStatsFromSeasonMapBtn")?. addEventListener("click", () => {
@@ -139,12 +139,12 @@ document.addEventListener("DOMContentLoaded", () => {
       App. storage.saveAll();
       // saveTeams ist optional – nur aufrufen, wenn vorhanden
       if (App.teamSelection.saveTeams) {
-        App.teamSelection.saveTeams();
+        App. teamSelection.saveTeams();
       }
       App.saveActiveTimersState(); // Timer State speichern
-      localStorage.setItem("timerSeconds", String(App.timer.seconds));
+      localStorage.setItem("timerSeconds", String(App.timer. seconds));
       if (App.goalValue) {
-        localStorage. setItem("goalValueOpponents", JSON. stringify(App.goalValue.getOpponents()));
+        localStorage.setItem("goalValueOpponents", JSON. stringify(App.goalValue.getOpponents()));
         localStorage. setItem("goalValueData", JSON.stringify(App.goalValue.getData()));
         localStorage.setItem("goalValueBottom", JSON.stringify(App. goalValue.getBottom()));
       }
@@ -153,8 +153,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  // 10.  Page Visibility API - Timer bei Tab-Wechsel beibehalten
-  document.addEventListener("visibilitychange", () => {
+  // 10. Page Visibility API - Timer bei Tab-Wechsel beibehalten
+  document. addEventListener("visibilitychange", () => {
     if (document.hidden) {
       App.saveActiveTimersState();
     } else {
@@ -178,10 +178,10 @@ App.saveActiveTimersState = function() {
 
 App.restoreActiveTimers = function() {
   try {
-    const activeTimerNames = JSON.parse(localStorage. getItem("activeTimerPlayers") || "[]");
+    const activeTimerNames = JSON.parse(localStorage.getItem("activeTimerPlayers") || "[]");
     
     // Alle bestehenden Timer stoppen
-    Object. values(App.data.activeTimers). forEach(timer => {
+    Object.values(App.data.activeTimers). forEach(timer => {
       if (timer) clearInterval(timer);
     });
     App.data. activeTimers = {};
@@ -232,7 +232,7 @@ App.updateTimerVisuals = function() {
     
     if (row && nameTd) {
       row.style. background = "#005c2f";
-      nameTd.style. background = "#005c2f";
+      nameTd.style.background = "#005c2f";
     }
   });
 };

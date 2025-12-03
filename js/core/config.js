@@ -158,6 +158,7 @@ copilot/restore-original-designs-and-features
           season: document.getElementById("seasonPage"),
           season: document. getElementById("seasonPage"),
             copilot/add-automatic-goal-map-navigation
+copilot/add-automatic-goal-map-navigation
           seasonMap: document.getElementById("seasonMapPage"),
           lineUp: document.getElementById("lineUpPage")
         };
@@ -233,6 +234,9 @@ copilot/restore-original-designs-and-features
         }
         if (page === "lineUp" && this. lineUp && typeof this.lineUp.render === 'function') {
           this. lineUp.render();
+        }
+        if (page === "lineUp" && this.lineUp && typeof this.lineUp.render === 'function') {
+          this.lineUp.render();
         }
         if (page === "lineUp" && this.lineUp && typeof this.lineUp.render === 'function') {
           this.lineUp.render();
