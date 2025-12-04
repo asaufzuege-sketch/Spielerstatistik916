@@ -291,7 +291,6 @@ App.seasonTable = {
         if (cellIdx === 19) {
           td.className = "season-time-cell";
           td.dataset.player = r.name;
-          td.dataset.timeSeconds = r.raw.timeSeconds;
           this.attachLongPressHandler(td, r.name, r.raw.timeSeconds);
         }
         tr.appendChild(td);
@@ -699,11 +698,6 @@ App.seasonTable = {
       pressTimer = setTimeout(() => {
         isLongPress = true;
         this.openAddTimeDialog(playerName, currentTimeSeconds);
-        
-        // Haptic feedback if available
-        if (navigator.vibrate) {
-          navigator.vibrate(100);
-        }
       }, 500); // 500ms for long press
     });
     
@@ -727,11 +721,6 @@ App.seasonTable = {
       pressTimer = setTimeout(() => {
         isLongPress = true;
         this.openAddTimeDialog(playerName, currentTimeSeconds);
-        
-        // Haptic feedback if available
-        if (navigator.vibrate) {
-          navigator.vibrate(100);
-        }
       }, 500); // 500ms for long press
     }, { passive: true });
     
@@ -764,10 +753,13 @@ App.seasonTable = {
     
     modal.style.display = "flex";
     
-    // Focus on input field
-    setTimeout(() => {
-      document.getElementById("addTimeInput")?.focus();
-    }, 100);
+    // Focus on input field after modal is displayed
+    requestAnimationFrame(() => {
+      const input = document.getElementById("addTimeInput");
+      if (input) {
+        input.focus();
+      }
+    });
   },
   
   closeAddTimeDialog() {
