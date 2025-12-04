@@ -36,6 +36,17 @@ App.seasonTable = {
         this.closeAddTimeDialog();
       }
     });
+    
+    // Add Enter key support for time input
+    document.getElementById("addTimeInput")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this.handleAddTime();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        this.closeAddTimeDialog();
+      }
+    });
   },
 
   // NEU: Position des Spielers aus Player Selection holen
