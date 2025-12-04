@@ -560,6 +560,16 @@ App.lineUp = {
     return { goals, plusMinus, shots };
   },
   
+  /**
+   * Get active players sorted by MVP points for lineup assignment.
+   * Filters out players marked as "OUT" and sorts by position and MVP score.
+   * 
+   * @returns {Object} Object containing sorted arrays:
+   *   - centers: Centers sorted by MVP points (descending)
+   *   - wings: Wings sorted by MVP points (descending)
+   *   - defense: Defense players sorted by MVP points (descending)
+   *   - allForwards: All forwards (C+W) sorted by MVP points (descending)
+   */
   getActiveSortedPlayers() {
     const playersWithStats = this.getPlayersWithMVPPoints();
     const activePlayers = playersWithStats.filter(p => !this.playersOut.includes(p.name));
@@ -573,6 +583,22 @@ App.lineUp = {
     return { centers, wings, defense, allForwards };
   },
   
+  /**
+   * Calculate and assign PowerPlay (PP) and Box Play (BP) positions.
+   * Uses MVP-based logic to select the best players for special teams:
+   * 
+   * PowerPlay Logic:
+   * - PP1: Best Center, Best Wing, Next best Forward
+   * - PP2: Next best Center, Wing, Forward (not already in PP1)
+   * - PP Defense: Best 4 defense players
+   * 
+   * Box Play Logic:
+   * - BP Centers: Best 2 centers
+   * - BP Wings: Best 2 wings  
+   * - BP Defense: Best 4 defense players
+   * 
+   * This function modifies this.lineUpData and calls saveData().
+   */
   calculateSpecialTeams() {
     const { centers, wings, defense, allForwards } = this.getActiveSortedPlayers();
     
@@ -769,7 +795,12 @@ App.lineUp = {
       this.autoFillPowerMode(); // Immer neu generieren
     } else if (this.currentMode === 'normal') {
       this.loadDataForMode(this.currentMode); // Gespeicherte laden
-      this.calculateSpecialTeams(); // PP und BP neu berechnen
+      
+      // PP und BP nur berechnen wenn sie leer sind (keine manuellen Zuweisungen überschreiben)
+      const hasSpecialTeams = this.lineUpData['PP-C_form1'] || this.lineUpData['BP-C_form1'];
+      if (!hasSpecialTeams) {
+        this.calculateSpecialTeams();
+      }
     } else {
       this.loadDataForMode(this.currentMode); // Gespeicherte laden
     }
