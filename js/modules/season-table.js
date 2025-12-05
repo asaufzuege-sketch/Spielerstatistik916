@@ -4,6 +4,7 @@ App.seasonTable = {
   sortState: { index: null, asc: true },
   isRendering: false, // NEU: Flag um Rekursion zu verhindern
   positionFilter: '', // NEU: Aktueller Positionsfilter
+  clickTimers: new WeakMap(), // Store click timers per cell to avoid race conditions
 
   init() {
     this.container = document.getElementById("seasonContainer");
@@ -716,16 +717,15 @@ App.seasonTable = {
   
   // Klick-Handler für Statistik-Zellen hinzufügen
   attachStatClickHandlers(statCell, playerName, statKey) {
-    let clickTimer = null;
-    
     // Cursor-Style für klickbare Zellen
     statCell.style.cursor = 'pointer';
     
     statCell.addEventListener('click', (e) => {
+      const clickTimer = this.clickTimers.get(statCell);
       if (clickTimer) return;
       
-      clickTimer = setTimeout(() => {
-        clickTimer = null;
+      const timer = setTimeout(() => {
+        this.clickTimers.delete(statCell);
         
         // +1 zum Wert
         const currentValue = Number(App.data.seasonData[playerName]?.[statKey] || 0);
@@ -741,12 +741,17 @@ App.seasonTable = {
         App.storage.saveSeasonData();
         this.render();
       }, 250);
+      
+      this.clickTimers.set(statCell, timer);
     });
     
     statCell.addEventListener('dblclick', (e) => {
       e.preventDefault();
-      clearTimeout(clickTimer);
-      clickTimer = null;
+      const clickTimer = this.clickTimers.get(statCell);
+      if (clickTimer) {
+        clearTimeout(clickTimer);
+        this.clickTimers.delete(statCell);
+      }
       
       // -1 vom Wert (bei +/- auch negativ erlaubt)
       const currentValue = Number(App.data.seasonData[playerName]?.[statKey] || 0);
