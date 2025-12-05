@@ -287,30 +287,27 @@ App.goalMap = {
     let timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     
     this.timeTrackingBox.querySelectorAll(".period").forEach(period => {
-      const periodNum = period.dataset.period || Math.random().toString(36).slice(2, 6);
+      const periodNum = period.dataset.period || `p${Array.from(this.timeTrackingBox.querySelectorAll('.period')).indexOf(period)}`;
       const buttons = period.querySelectorAll(".time-btn");
       
       buttons.forEach((btn, idx) => {
         const key = `${periodNum}_${idx}`;
-        let displayValue = 0;
         
+        // Display-Value berechnen
+        let displayValue = 0;
         if (timeDataWithPlayers[key]) {
           displayValue = Object.values(timeDataWithPlayers[key])
             .reduce((sum, val) => sum + Number(val), 0);
         } else if (timeData[periodNum] && typeof timeData[periodNum][idx] !== "undefined") {
           displayValue = Number(timeData[periodNum][idx]);
-        } else {
-          displayValue = Number(btn.textContent) || 0;
         }
         
-        btn.textContent = displayValue;
+        // KRITISCH: Button komplett ersetzen um ALLE alten Listener zu entfernen
+        const newBtn = btn.cloneNode(true);
+        newBtn.textContent = displayValue;
+        btn.parentNode.replaceChild(newBtn, btn);
         
-        // NEU: Prüfen ob Event-Listener bereits angehängt wurden
-        if (btn.dataset.timeHandlerAttached === 'true') {
-          return; // Überspringe Event-Listener Registrierung
-        }
-        btn.dataset.timeHandlerAttached = 'true'; // Markiere als initialisiert
-        
+        // Jetzt neuen Listener auf den NEUEN Button
         let lastTap = 0;
         let clickTimeout = null;
         
@@ -335,14 +332,14 @@ App.goalMap = {
             displayVal = Object.values(timeDataWithPlayers[key])
               .reduce((sum, val) => sum + Number(val), 0);
           }
-          btn.textContent = displayVal;
+          newBtn.textContent = displayVal;
           
           if (!timeData[periodNum]) timeData[periodNum] = {};
           timeData[periodNum][idx] = displayVal;
           localStorage.setItem("timeData", JSON.stringify(timeData));
           
           if (delta > 0 && App.goalMapWorkflow?.active) {
-            const btnRect = btn.getBoundingClientRect();
+            const btnRect = newBtn.getBoundingClientRect();
             const boxRect = this.timeTrackingBox.getBoundingClientRect();
             const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
             const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
@@ -351,19 +348,17 @@ App.goalMap = {
           }
         };
         
-        btn.addEventListener("click", () => {
+        newBtn.addEventListener("click", () => {
           // Im Goal-Workflow: Nur im Schritt 2 (nach Feld + Tor) erlaubt
           if (App.goalMapWorkflow?.active && App.goalMapWorkflow?.eventType === 'goal') {
             const currentStep = App.goalMapWorkflow.collectedPoints?.length || 0;
             
-            // Nur wenn genau 2 Punkte gesetzt sind (Feld + Tor)
             if (currentStep !== 2) {
               console.log('[Goal Workflow] Timebox erst nach Feld und Tor möglich');
               return;
             }
             
-            // Nur grüne Buttons (top-row) erlaubt
-            const isTopRow = btn.closest('.period-buttons')?.classList.contains('top-row');
+            const isTopRow = newBtn.closest('.period-buttons')?.classList.contains('top-row');
             if (!isTopRow) {
               console.log('[Goal Workflow] Nur grüne Zeit-Buttons erlaubt');
               return;
