@@ -571,6 +571,9 @@ App.goalMap = {
     localStorage.removeItem("timeDataWithPlayers");
     localStorage.removeItem("goalMapMarkers");
     
+    // KRITISCH: Buttons neu initialisieren damit Closures neue leere Daten haben!
+    this.initTimeTracking();
+    
     alert("Goal Map zurückgesetzt.");
   }
 };
