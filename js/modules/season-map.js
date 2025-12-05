@@ -96,41 +96,11 @@ App.seasonMap = {
     const boxes = Array.from(document.querySelectorAll(App.selectors.seasonMapBoxes));
     boxes.forEach(box => box.querySelectorAll(".marker-dot").forEach(d => d.remove()));
     
-    // Layout der Bilder an Goal Map anlehnen (optional)
-    try {
-      const torBoxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
-      boxes.forEach((seasonBox, idx) => {
-        const seasonImg = seasonBox.querySelector('img');
-        const torBox = torBoxes[idx];
-        
-        if (seasonImg && torBox) {
-          const torImg = torBox.querySelector('img');
-          if (torImg) {
-            try {
-              // Kopiere die tatsächliche gerenderte Größe
-              const torRect = torImg.getBoundingClientRect();
-              
-              if (torRect && torRect.width && torRect.height) {
-                // Setze EXAKT die gleiche Größe
-                seasonImg.style.width = `${torRect.width}px`;
-                seasonImg.style.height = `${torRect.height}px`;
-                seasonImg.style.objectFit = 'contain';
-                
-                // Box auch anpassen
-                seasonBox.style.width = `${torRect.width}px`;
-                seasonBox.style.height = `${torRect.height}px`;
-                seasonBox.style.position = 'relative';
-                seasonBox.style.overflow = 'visible';
-              }
-            } catch (e) {
-              seasonImg.style.objectFit = 'contain';
-            }
-          }
-        }
-      });
-    } catch (e) {
-      console.warn("Season Map: Layout copy failed:", e);
-    }
+    // CSS steuert die Bildgröße - kein JavaScript-Override mehr nötig
+    // Stelle sicher dass die Boxen relativ positioniert sind für Marker
+    boxes.forEach(box => {
+      box.style.position = 'relative';
+    });
     
     // Marker laden (werden NICHT neu gesetzt, nur angezeigt)
     const raw = localStorage.getItem("seasonMapMarkers");
