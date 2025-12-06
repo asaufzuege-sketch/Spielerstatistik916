@@ -92,7 +92,7 @@ App.playerSelection = {
         };
       });
       
-      // Füge 13 zusätzliche Slots hinzu (insgesamt 40 Spieler)
+      // Add 13 additional slots (40 players total)
       for (let i = 0; i < 13; i++) {
         const saved = savedPlayers[App.data.players.length + i];
         players.push({
@@ -105,7 +105,7 @@ App.playerSelection = {
       
       return players;
     } else {
-      // Team 2 und 3: 40 leere Slots oder gespeicherte Daten
+      // Team 2 and 3: 40 empty slots or saved data
       const players = [];
       for (let i = 0; i < 40; i++) {
         const saved = savedPlayers[i];
