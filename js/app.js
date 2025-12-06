@@ -1,6 +1,6 @@
 // Haupt-App Initialisierung
 document.addEventListener("DOMContentLoaded", () => {
-  console.log(`Spielerstatistik App v${App.version} loading...`);
+  console.log(`Player Statistics App v${App.version} loading...`);
   
   // 1. Theme & Styles initialisieren
   App.initTheme();

@@ -129,7 +129,7 @@ App.goalValue = {
     const thPlayer = document.createElement("th");
     thPlayer.textContent = "Player";
     thPlayer.className = "gv-name-header sticky-col";
-    thPlayer.style. minWidth = "120px";
+    thPlayer.style.minWidth = "120px";
     headerRow.appendChild(thPlayer);
     
     opponents.forEach((op, idx) => {
