@@ -13,7 +13,7 @@
   <!-- TEAMAUSWAHL SEITE (NEUE ERSTE SEITE) -->
   <div id="teamSelectionPage" class="page">
     <h1>TEAM SELECTION</h1>
-    <p class="center-text">Wähle ein Team aus oder erstelle ein neues Team</p>
+    <p class="center-text">Select a team or create a new team</p>
     
     <!-- HIER: Dynamischer Container für Team-Buttons -->
     <div id="teamSelectionContainer"></div>
@@ -24,24 +24,24 @@
         <h3>Teamname bearbeiten</h3>
         <input type="text" id="teamNameInput" placeholder="Teamname eingeben" maxlength="30" />
         <div class="modal-buttons">
-          <button id="saveTeamNameBtn" class="confirm-btn">Speichern</button>
-          <button id="cancelTeamEditBtn" class="cancel-btn">Abbrechen</button>
+          <button id="saveTeamNameBtn" class="confirm-btn">Save</button>
+          <button id="cancelTeamEditBtn" class="cancel-btn">Cancel</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SPIELERAUSWAHL -->
+  <!-- PLAYER SELECTION -->
   <div id="playerSelectionPage" class="page" style="display:none;">
     <div class="page-top">
       <div class="top-bar">
-        <button id="backToTeamSelectionBtn" class="top-btn back-btn">← Zur Teamauswahl</button>
+        <button id="backToTeamSelectionBtn" class="top-btn back-btn">← Back to Team Selection</button>
         <button id="gameDataBtn" class="top-btn game-data-btn">Game Data</button>
         <button id="lineupBtn" class="top-btn lineup-btn">Line Up</button>
       </div>
     </div>
     <h1>PLAYER SELECTION</h1>
-    <p class="subtitle">Wähle die Spieler, die in der Tabelle angezeigt werden sollen</p>
+    <p class="subtitle">Select the players to display in the table</p>
     <div class="current-team-info">
       <!-- Text 'Aktuelles Team:' entfernt, nur noch der Teamname -->
       <span id="currentTeamDisplay"></span>
@@ -54,7 +54,7 @@
     <div class="page-top">
       <div class="top-bar">
         <button id="timerBtn" class="top-btn timer timer-left reset" aria-label="Spieluhr">00:00</button>
-        <button id="selectPlayersBtn" class="top-btn">Spieler wählen</button>
+        <button id="selectPlayersBtn" class="top-btn">Select Players</button>
         <button id="torbildBtn" class="top-btn">Goal Map</button>
         <button id="goalValueBtn" class="top-btn">Goal Value</button>
         <button id="exportSeasonFromStatsBtn" class="top-btn export-season">Export Season</button>
@@ -79,10 +79,10 @@
   <div id="torbildPage" class="page" style="display:none;">
     <div class="page-top">
       <div class="top-bar">
-        <button id="backToStatsBtn" class="top-btn back-btn">← Zurück</button>
+        <button id="backToStatsBtn" class="top-btn back-btn">← Back</button>
         <button id="exportSeasonMapBtn" class="top-btn export-season">Export Season Map</button>
         <select id="goalMapPlayerFilter" class="top-btn player-filter-btn">
-          <option value="">Alle Spieler</option>
+          <option value="">All Players</option>
         </select>
         <button id="resetTorbildBtn" class="top-btn danger-btn reset-btn">Reset</button>
       </div>
@@ -159,7 +159,7 @@
   <div id="goalValuePage" class="page" style="display:none;">
     <div class="page-top">
       <div class="top-bar">
-        <button id="backFromGoalValueBtn" class="top-btn back-btn">← Zurück</button>
+        <button id="backFromGoalValueBtn" class="top-btn back-btn">← Back</button>
         <button id="resetGoalValueBtn" class="top-btn danger-btn reset-btn">Reset</button>
       </div>
     </div>
@@ -173,10 +173,10 @@
   <div id="seasonMapPage" class="page" style="display:none;">
     <div class="page-top">
       <div class="top-bar">
-        <button id="backToStatsFromSeasonMapBtn" class="top-btn back-btn">← Zurück</button>
+        <button id="backToStatsFromSeasonMapBtn" class="top-btn back-btn">← Back</button>
         <button id="exportSeasonMapPageBtn" class="top-btn export-csv">Export</button>
         <select id="seasonMapPlayerFilter" class="top-btn player-filter-btn">
-          <option value="">Alle Spieler</option>
+          <option value="">All Players</option>
         </select>
         <button id="resetSeasonMapBtn" class="top-btn danger-btn reset-btn">Reset</button>
       </div>
@@ -220,7 +220,7 @@
   <div id="seasonPage" class="page" style="display:none;">
     <div class="page-top">
       <div class="top-bar">
-        <button id="backToStatsFromSeasonBtn" class="top-btn back-btn">← Zurück</button>
+        <button id="backToStatsFromSeasonBtn" class="top-btn back-btn">← Back</button>
         <button id="exportSeasonBtn" class="top-btn export-csv">Export CSV</button>
         <button id="importCsvSeasonBtn" class="top-btn import-csv-btn">Import CSV</button>
         <button id="resetSeasonBtn" class="top-btn danger-btn reset-btn">Reset</button>
@@ -232,18 +232,18 @@
     <!-- Add Time Modal -->
     <div id="addTimeModal" class="modal" style="display: none;">
       <div class="modal-content">
-        <h3>Zeit hinzufügen</h3>
-        <p>Spieler: <span id="addTimePlayerName"></span></p>
-        <p>Aktuelle Zeit: <span id="addTimeCurrentTime"></span></p>
+        <h3>Add Time</h3>
+        <p>Player: <span id="addTimePlayerName"></span></p>
+        <p>Current Time: <span id="addTimeCurrentTime"></span></p>
         
         <div class="time-input-group">
-          <label>Zeit addieren (MM:SS):</label>
+          <label>Add time (MM:SS):</label>
           <input type="text" id="addTimeInput" placeholder="00:00" pattern="[0-9]{1,2}:[0-9]{2}">
         </div>
         
         <div class="modal-buttons">
-          <button id="addTimeCancelBtn">Abbrechen</button>
-          <button id="addTimeConfirmBtn">Hinzufügen</button>
+          <button id="addTimeCancelBtn">Cancel</button>
+          <button id="addTimeConfirmBtn">Add</button>
         </div>
       </div>
     </div>
@@ -385,11 +385,11 @@
     <!-- Player Selection Modal -->
     <div id="lineUpPlayerModal" class="modal" style="display: none;">
       <div class="modal-content lineup-player-modal">
-        <h3 id="lineUpModalTitle">Spieler auswählen</h3>
+        <h3 id="lineUpModalTitle">Select Player</h3>
         <div id="lineUpPlayerList" class="lineup-player-list"></div>
         <div class="modal-buttons">
-          <button id="lineUpClearPositionBtn" class="cancel-btn">Position leeren</button>
-          <button id="lineUpCancelModalBtn" class="cancel-btn">Abbrechen</button>
+          <button id="lineUpClearPositionBtn" class="cancel-btn">Clear Position</button>
+          <button id="lineUpCancelModalBtn" class="cancel-btn">Cancel</button>
         </div>
       </div>
     </div>

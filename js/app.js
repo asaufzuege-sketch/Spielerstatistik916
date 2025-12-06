@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  console.log("✅ App erfolgreich geladen!");
+  console.log("✅ App loaded successfully!");
 });
 
 // Timer Persistenz Funktionen

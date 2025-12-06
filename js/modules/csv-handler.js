@@ -72,7 +72,7 @@ App.csvHandler = {
     const data = [];
     
     // Header exakt wie in der Season-Tabelle
-    const headers = ["#", "Spieler", ...App.data.categories, "Time"];
+    const headers = ["#", "Player", ...App.data.categories, "Time"];
     data.push(headers);
     
     // Spieler Daten - exakte Formatierung wie in der Tabelle
@@ -134,7 +134,7 @@ App.csvHandler = {
     const data = [];
     
     // Header exakt wie Season-Tabelle
-    const headers = ["#", "Spieler", ...App.data.categories, "MVP Points"];
+    const headers = ["#", "Player", ...App.data.categories, "MVP Points"];
     data.push(headers);
     
     App.data.selectedPlayers.forEach(player => {

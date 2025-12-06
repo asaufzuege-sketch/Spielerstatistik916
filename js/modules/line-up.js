@@ -323,7 +323,7 @@ App.lineUp = {
     // Set modal title
     const posLabel = this.getPositionLabel(this.currentPosition);
     if (title) {
-      title.textContent = `Spieler für ${posLabel} auswählen`;
+      title.textContent = `Select player for ${posLabel}`;
     }
     
     // Get available players (excluding OUT players)
