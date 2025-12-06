@@ -361,14 +361,28 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 .field-box img, .img-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
 .goal-column { flex: 1; display: flex; flex-direction: column; gap: 15px; }
 
+/* Season Map - Layout Höhe wie Goal Map */
+#seasonMapPage .torbild-layout {
+  height: calc(100vh - 180px);  /* Etwas weniger wegen extra margin-top div */
+}
+
+#seasonMapPage .goal-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 100%;  /* Volle Höhe des Parent */
+}
+
 /* Season Map - Bilder EXAKT wie Goal Map */
 #seasonMapPage .img-box {
   position: relative;
-  flex: 1 !important;  /* KRITISCH: Füllt verfügbaren Platz */
+  flex: 1 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: 200px;
+  min-height: 150px;
+  height: 100%;  /* Volle Höhe nutzen */
 }
 
 #seasonMapPage .img-box img {
@@ -473,6 +487,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 #seasonContainer {
   width: 100% !important;
   max-width: 100% !important;
+  margin: 0 auto;  /* Zentrieren */
   overflow-x: auto !important;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch !important;
@@ -503,13 +518,11 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 }
 
 #seasonPage table {
-  width: auto !important;
+  width: 100%;
+  margin: 6px auto 10px auto;  /* Tabelle zentrieren */
   min-width: max-content !important;
   border-collapse: collapse !important;
   font-size: 0.95rem !important;
-  margin: 0 !important;
-  margin-top: 6px !important;
-  margin-bottom: 10px !important;
   display: table !important;
 }
 
@@ -850,12 +863,12 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 }
 
 .season-table {
-  width: auto;
+  width: 100%;
+  margin: 6px auto 10px auto;  /* Tabelle zentrieren */
   min-width: max-content;
   max-width: none;
   border-collapse: collapse;
   font-size: 0.95rem;
-  margin: 6px 0 10px 0;
   table-layout: auto;
   display: table;
 }
