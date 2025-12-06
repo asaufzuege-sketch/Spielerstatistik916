@@ -108,7 +108,7 @@ App.statsTable = {
     totalTr.appendChild(emptyTd);
     
     const labelTd = document.createElement("td");
-    labelTd.textContent = `Total (${App.data.selectedPlayers.length})`;
+    labelTd.textContent = `Total (${playersToRender.length})`;
     labelTd.style.textAlign = "left";
     labelTd.style.fontWeight = "700";
     totalTr.appendChild(labelTd);
