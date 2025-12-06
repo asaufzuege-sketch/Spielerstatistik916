@@ -127,9 +127,9 @@ App.goalValue = {
     const headerRow = document.createElement("tr");
     
     const thPlayer = document.createElement("th");
-    thPlayer.textContent = "Spieler";
+    thPlayer.textContent = "Player";
     thPlayer.className = "gv-name-header sticky-col";
-    thPlayer.style. minWidth = "120px";
+    thPlayer.style.minWidth = "120px";
     headerRow.appendChild(thPlayer);
     
     opponents.forEach((op, idx) => {
@@ -334,6 +334,6 @@ App.goalValue = {
     this.setOpponents(opponents. map(() => ""));
     
     this.render();
-    alert("Goal Value zurückgesetzt.");
+    alert("Goal Value reset.");
   }
 };

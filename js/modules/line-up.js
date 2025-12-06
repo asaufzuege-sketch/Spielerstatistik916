@@ -189,7 +189,7 @@ App.lineUp = {
     const players = this.getAvailablePlayers();
     
     if (players.length === 0) {
-      list.innerHTML = '<div class="player-out-item" style="cursor: default; opacity: 0.7;">Keine aktiven Spieler</div>';
+      list.innerHTML = '<div class="player-out-item" style="cursor: default; opacity: 0.7;">No active players</div>';
       return;
     }
     
@@ -323,7 +323,7 @@ App.lineUp = {
     // Set modal title
     const posLabel = this.getPositionLabel(this.currentPosition);
     if (title) {
-      title.textContent = `Spieler für ${posLabel} auswählen`;
+      title.textContent = `Select player for ${posLabel}`;
     }
     
     // Get available players (excluding OUT players)
@@ -392,7 +392,7 @@ App.lineUp = {
     
     // Check if player is OUT
     if (this.playersOut.includes(playerName)) {
-      alert('Dieser Spieler ist OUT und kann nicht aufgestellt werden.');
+      alert('This player is OUT and cannot be assigned.');
       return;
     }
     

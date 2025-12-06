@@ -1,6 +1,6 @@
 // Haupt-App Initialisierung
 document.addEventListener("DOMContentLoaded", () => {
-  console.log(`Spielerstatistik App v${App.version} wird geladen...`);
+  console.log(`Player Statistics App v${App.version} loading...`);
   
   // 1. Theme & Styles initialisieren
   App.initTheme();
@@ -153,7 +153,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  console.log("✅ App erfolgreich geladen!");
+  console.log("✅ App loaded successfully!");
 });
 
 // Timer Persistenz Funktionen
