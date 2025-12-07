@@ -42,11 +42,13 @@ App.statsTable = {
     thead.appendChild(headerRow);
     table.appendChild(thead);
     
-    // Body
+    // Body - Filter out goalies (players with position = "G")
     const tbody = document.createElement("tbody");
     tbody.id = "stats-tbody";
     
-    App.data.selectedPlayers.forEach((p, idx) => {
+    const playersToRender = App.data.selectedPlayers.filter(p => p.position !== "G");
+    
+    playersToRender.forEach((p, idx) => {
       const tr = document.createElement("tr");
       tr.className = (idx % 2 === 0 ? "even-row" : "odd-row");
       tr.dataset.player = p.name;
@@ -106,7 +108,7 @@ App.statsTable = {
     totalTr.appendChild(emptyTd);
     
     const labelTd = document.createElement("td");
-    labelTd.textContent = `Total (${App.data.selectedPlayers.length})`;
+    labelTd.textContent = `Total (${playersToRender.length})`;
     labelTd.style.textAlign = "left";
     labelTd.style.fontWeight = "700";
     totalTr.appendChild(labelTd);
