@@ -101,10 +101,11 @@ App.goalMap = {
           box.id === "goalGreenBox" ||
           box.id === "goalRedBox";
         
+        const isFieldBox = box.classList.contains("field-box");
+        
         if (!pos.insideImage) return;
         
         // Check if we should start a RED workflow (conceded goal) directly on Goal Map
-        const isFieldBox = box.classList.contains("field-box");
         if (!workflowActive && isFieldBox && pos.xPctImage >= 50) {
           // Start RED workflow for conceded goal
           App.goalMapWorkflow.active = true;
@@ -115,6 +116,11 @@ App.goalMap = {
           App.goalMapWorkflow.pointTypes = ['field', 'goal', 'time'];
           App.goalMapWorkflow.collectedPoints = [];
           console.log('[Goal Map] Starting RED workflow (conceded goal) from right half click');
+          
+          // Update workflow indicator
+          if (this.updateWorkflowIndicator) {
+            this.updateWorkflowIndicator();
+          }
           
           // Re-read variables after starting workflow
           workflowActive = true;
@@ -144,11 +150,16 @@ App.goalMap = {
               return; // Blockiere alle anderen Bereiche
             }
             // Detect which half was clicked and set workflow type (if not already set)
-            if (isFieldBox && !workflowType) {
+            // This handles GREEN workflow started from Game Data page
+            if (!workflowType) {
               // Left half (x < 50%) = scored (green), Right half (x >= 50%) = conceded (red)
               const isRightHalf = pos.xPctImage >= 50;
               App.goalMapWorkflow.workflowType = isRightHalf ? 'conceded' : 'scored';
               console.log(`[Goal Workflow] Detected ${App.goalMapWorkflow.workflowType} workflow`);
+              // Update local variables
+              workflowType = App.goalMapWorkflow.workflowType;
+              isScoredWorkflow = workflowType === 'scored';
+              isConcededWorkflow = workflowType === 'conceded';
             }
           }
           // Schritt 1: Nur entsprechendes Tor erlaubt
