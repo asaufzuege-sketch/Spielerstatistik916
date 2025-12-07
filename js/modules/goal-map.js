@@ -616,11 +616,25 @@ App.goalMap = {
       }
       
       indicator.style.display = 'block';
-      textEl.innerHTML = `
-        <strong>${eventType.toUpperCase()} ${workflowDesc ? '- ' + workflowDesc : ''} - ${playerName}</strong> •
-        Punkte: ${collected}/${required}
-        ${eventType === 'goal' ? ' • 1. Feld, 2. Tor, 3. Zeit' : ' • 1. Feld klicken'}
-      `;
+      
+      // Build text safely using textContent to prevent XSS
+      textEl.textContent = '';
+      
+      const strong = document.createElement('strong');
+      const eventTypeText = eventType ? eventType.toUpperCase() : '';
+      const workflowText = workflowDesc ? ' - ' + workflowDesc : '';
+      const playerText = playerName ? ' - ' + playerName : '';
+      strong.textContent = eventTypeText + workflowText + playerText;
+      
+      textEl.appendChild(strong);
+      textEl.appendChild(document.createTextNode(' • '));
+      textEl.appendChild(document.createTextNode(`Punkte: ${collected}/${required}`));
+      
+      if (eventType === 'goal') {
+        textEl.appendChild(document.createTextNode(' • 1. Field, 2. Goal, 3. Time'));
+      } else {
+        textEl.appendChild(document.createTextNode(' • 1. Click field'));
+      }
     } else {
       indicator.style.display = 'none';
       textEl.textContent = "";
