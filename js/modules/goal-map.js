@@ -118,8 +118,8 @@ App.goalMap = {
           console.log('[Goal Map] Starting RED workflow (conceded goal) from right half click');
           
           // Update workflow indicator
-          if (this.updateWorkflowIndicator) {
-            this.updateWorkflowIndicator();
+          if (App.goalMap && typeof App.goalMap.updateWorkflowIndicator === 'function') {
+            App.goalMap.updateWorkflowIndicator();
           }
           
           // Re-read variables after starting workflow
