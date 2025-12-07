@@ -85,7 +85,10 @@ App.goalMap = {
       const placeMarker = (pos, long, forceGrey = false) => {
         const workflowActive = App.goalMapWorkflow?.active;
         const eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
+        const workflowType = App.goalMapWorkflow?.workflowType; // 'scored' | 'conceded' | null
         const isGoalWorkflow = workflowActive && eventType === 'goal';
+        const isScoredWorkflow = workflowType === 'scored';
+        const isConcededWorkflow = workflowType === 'conceded';
         const neutralGrey = "#444444";
         const currentStep = App.goalMapWorkflow?.collectedPoints?.length || 0;
         
@@ -104,19 +107,31 @@ App.goalMap = {
         if (isGoalWorkflow) {
           const isFieldBox = box.classList.contains("field-box");
           const isGreenGoal = box.id === "goalGreenBox";
+          const isRedGoal = box.id === "goalRedBox";
           
           // Schritt 0: NUR Spielfeld erlaubt
           if (currentStep === 0) {
             if (!isFieldBox) {
-              console.log('[Goal Workflow] Schritt 1: Bitte zuerst Punkt im Spielfeld setzen');
+              console.log('[Goal Workflow] Step 1: Please click point in field first');
               return; // Blockiere alle anderen Bereiche
             }
+            // Detect which half was clicked and set workflow type
+            if (isFieldBox && !workflowType) {
+              // Left half (x < 50%) = scored (green), Right half (x >= 50%) = conceded (red)
+              const isRightHalf = pos.xPctImage >= 50;
+              App.goalMapWorkflow.workflowType = isRightHalf ? 'conceded' : 'scored';
+              console.log(`[Goal Workflow] Detected ${App.goalMapWorkflow.workflowType} workflow`);
+            }
           }
-          // Schritt 1: NUR grünes Tor erlaubt
+          // Schritt 1: Nur entsprechendes Tor erlaubt
           else if (currentStep === 1) {
-            if (!isGreenGoal) {
+            if (isScoredWorkflow && !isGreenGoal) {
               console.log('[Goal Workflow] Step 2: Please click point in green goal');
-              return; // Blockiere Spielfeld und rotes Tor
+              return;
+            }
+            if (isConcededWorkflow && !isRedGoal) {
+              console.log('[Goal Workflow] Step 2: Please click point in red goal');
+              return;
             }
           }
           // Schritt 2: Timebox (wird separat in initTimeTracking behandelt)
@@ -358,9 +373,44 @@ App.goalMap = {
               return;
             }
             
+            const workflowType = App.goalMapWorkflow?.workflowType;
             const isTopRow = newBtn.closest('.period-buttons')?.classList.contains('top-row');
-            if (!isTopRow) {
-              console.log('[Goal Workflow] Only green time buttons allowed');
+            const isBottomRow = newBtn.closest('.period-buttons')?.classList.contains('bottom-row');
+            
+            // Green workflow (scored): only top row buttons allowed
+            if (workflowType === 'scored' && !isTopRow) {
+              console.log('[Goal Workflow] Only green time buttons (top row) allowed for scored goals');
+              return;
+            }
+            
+            // Red workflow (conceded): only bottom row buttons allowed
+            if (workflowType === 'conceded' && !isBottomRow) {
+              console.log('[Goal Workflow] Only red time buttons (bottom row) allowed for conceded goals');
+              return;
+            }
+            
+            // If it's a conceded goal workflow, show goalie selection modal
+            if (workflowType === 'conceded' && isBottomRow) {
+              // Record the time button click
+              const btnRect = newBtn.getBoundingClientRect();
+              const boxRect = this.timeTrackingBox.getBoundingClientRect();
+              const xPct = ((btnRect.left + btnRect.width / 2 - boxRect.left) / boxRect.width) * 100;
+              const yPct = ((btnRect.top + btnRect.height / 2 - boxRect.top) / boxRect.height) * 100;
+              
+              App.addGoalMapPoint('time', xPct, yPct, '#444444', 'timeTrackingBox');
+              
+              // Show goalie selection modal
+              this.showGoalieSelectionModal((selectedGoalie) => {
+                if (selectedGoalie) {
+                  // Update the workflow with goalie info
+                  App.goalMapWorkflow.playerName = selectedGoalie;
+                  console.log(`[Goal Workflow] Goalie selected: ${selectedGoalie}`);
+                  // Increment the time counter for the goalie
+                  updateValue(1);
+                } else {
+                  console.log('[Goal Workflow] Goalie selection cancelled');
+                }
+              });
               return;
             }
           }
@@ -556,13 +606,35 @@ App.goalMap = {
       const required = App.goalMapWorkflow.requiredPoints;
       const eventType = App.goalMapWorkflow.eventType;
       const playerName = App.goalMapWorkflow.playerName;
+      const workflowType = App.goalMapWorkflow.workflowType;
+      
+      let workflowDesc = '';
+      if (workflowType === 'scored') {
+        workflowDesc = '🟢 SCORED';
+      } else if (workflowType === 'conceded') {
+        workflowDesc = '🔴 CONCEDED';
+      }
       
       indicator.style.display = 'block';
-      textEl.innerHTML = `
-        <strong>${eventType.toUpperCase()} - ${playerName}</strong> •
-        Punkte: ${collected}/${required}
-        ${eventType === 'goal' ? ' • 1. Feld, 2. Tor, 3. Zeit' : ' • 1. Feld klicken'}
-      `;
+      
+      // Build text safely using textContent to prevent XSS
+      textEl.textContent = '';
+      
+      const strong = document.createElement('strong');
+      const eventTypeText = eventType ? eventType.toUpperCase() : '';
+      const workflowText = workflowDesc ? ' - ' + workflowDesc : '';
+      const playerText = playerName ? ' - ' + playerName : '';
+      strong.textContent = eventTypeText + workflowText + playerText;
+      
+      textEl.appendChild(strong);
+      textEl.appendChild(document.createTextNode(' • '));
+      textEl.appendChild(document.createTextNode(`Punkte: ${collected}/${required}`));
+      
+      if (eventType === 'goal') {
+        textEl.appendChild(document.createTextNode(' • 1. Field, 2. Goal, 3. Time'));
+      } else {
+        textEl.appendChild(document.createTextNode(' • 1. Click field'));
+      }
     } else {
       indicator.style.display = 'none';
       textEl.textContent = "";
@@ -653,5 +725,73 @@ App.goalMap = {
     this.initTimeTracking();
     
     alert("Goal Map reset.");
+  },
+  
+  // Show Goalie Selection Modal
+  showGoalieSelectionModal(callback) {
+    // Get goalies from currently selected players
+    const goalies = App.data.selectedPlayers?.filter(p => p.position === "G") || [];
+    
+    if (goalies.length === 0) {
+      alert("No goalies available. Please add goalies in Player Selection.");
+      callback(null);
+      return;
+    }
+    
+    const list = document.getElementById("goalieSelectionList");
+    if (!list) {
+      console.error("goalieSelectionList element not found");
+      callback(null);
+      return;
+    }
+    
+    // Clear existing content
+    list.innerHTML = "";
+    
+    // Create goalie options with proper escaping
+    goalies.forEach(g => {
+      const label = document.createElement("label");
+      label.className = "goalie-option";
+      
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "goalieSelect";
+      radio.value = g.name;
+      
+      const span = document.createElement("span");
+      span.textContent = g.name; // textContent automatically escapes HTML
+      
+      label.appendChild(radio);
+      label.appendChild(span);
+      list.appendChild(label);
+    });
+    
+    const modal = document.getElementById("goalieSelectionModal");
+    if (!modal) {
+      console.error("goalieSelectionModal element not found");
+      callback(null);
+      return;
+    }
+    
+    modal.style.display = "flex";
+    
+    const confirmBtn = document.getElementById("goalieSelectionConfirm");
+    const cancelBtn = document.getElementById("goalieSelectionCancel");
+    
+    // Use event handler properties to avoid duplicate listeners
+    confirmBtn.onclick = () => {
+      const selected = document.querySelector('input[name="goalieSelect"]:checked');
+      if (selected) {
+        modal.style.display = "none";
+        callback(selected.value);
+      } else {
+        alert("Please select a goalie");
+      }
+    };
+    
+    cancelBtn.onclick = () => {
+      modal.style.display = "none";
+      callback(null);
+    };
   }
 };
