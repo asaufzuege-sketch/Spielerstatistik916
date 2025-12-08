@@ -616,13 +616,15 @@ App.goalMap = {
     boxes.forEach(box => {
       const markers = box.querySelectorAll(".marker-dot");
       markers.forEach(marker => {
-        const markerType = marker.dataset.type; // 'scored' or 'conceded'
+        const markerType = marker.dataset.type; // 'scored' or 'conceded' or undefined (legacy)
         const markerPlayer = marker.dataset.player;
         
         if (this.playerFilter) {
           // Player filter: only affect 'scored' markers (green area)
           if (this.filterType === 'player') {
-            if (markerType === 'scored') {
+            // Only filter scored markers, leave conceded markers visible
+            // Legacy markers without type are also filtered (backward compatibility)
+            if (markerType === 'scored' || !markerType) {
               // Filter scored markers by player
               marker.style.display = (markerPlayer === this.playerFilter) ? '' : 'none';
             }
@@ -634,7 +636,7 @@ App.goalMap = {
               // Filter conceded markers by goalie
               marker.style.display = (markerPlayer === this.playerFilter) ? '' : 'none';
             }
-            // Leave 'scored' markers unaffected
+            // Leave 'scored' markers and legacy markers unaffected
           }
         } else {
           // No filter active - show all markers
