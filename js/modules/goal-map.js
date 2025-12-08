@@ -558,16 +558,10 @@ App.goalMap = {
   // Player Filter Dropdown
   initPlayerFilter() {
     const filterSelect = document.getElementById("goalMapPlayerFilter");
+    const goalieFilterSelect = document.getElementById("goalMapGoalieFilter");
     if (!filterSelect) return;
     
-    // Prevent multiple event listener attachments
-    if (filterSelect.dataset.listenersAttached === 'true') {
-      console.log('[Goal Map] Filter listeners already attached, skipping re-attachment');
-      // Still restore filter state even if listeners are attached
-      this.restoreFilterState();
-      return;
-    }
-    
+    // ALWAYS repopulate dropdowns (player list may have changed)
     filterSelect.innerHTML = '<option value="">All Players</option>';
     // All Players - exclude goalies (only field players)
     const players = (App.data.selectedPlayers || []).filter(p => p && p.name && p.position !== 'G');
@@ -578,63 +572,38 @@ App.goalMap = {
       filterSelect.appendChild(option);
     });
     
-    filterSelect.addEventListener("change", () => {
-      // Clear goalie filter when player filter is used
-      const goalieFilterSelect = document.getElementById("goalMapGoalieFilter");
-      if (goalieFilterSelect) {
-        goalieFilterSelect.value = "";
-      }
-      
-      this.playerFilter = filterSelect.value || null;
-      this.filterType = filterSelect.value ? 'player' : null;
-      
-      console.log('[Goal Map] Player filter changed:', this.playerFilter, 'filterType:', this.filterType);
-      
-      // Task 1: Save filter state
-      if (this.playerFilter) {
-        localStorage.setItem("goalMapPlayerFilter", this.playerFilter);
-        localStorage.setItem("goalMapPlayerFilterType", "player");
-      } else {
-        localStorage.removeItem("goalMapPlayerFilter");
-        localStorage.removeItem("goalMapPlayerFilterType");
-      }
-      
-      this.applyPlayerFilter();
-      this.updateGoalieNameOverlay(); // Task 6
-    });
-    
-    // Goalie Filter Dropdown - populate with currently selected goalies
-    const goalieFilterSelect = document.getElementById("goalMapGoalieFilter");
+    // Repopulate goalie dropdown
     if (goalieFilterSelect) {
       goalieFilterSelect.innerHTML = '<option value="">Select a Goalie</option>'; // Task 2: Default text
       const goalies = (App.data.selectedPlayers || []).filter(p => p.position === "G");
+      console.log('[Goal Map] Populating goalie dropdown with', goalies.length, 'goalies:', goalies);
       goalies.forEach(goalie => {
         const option = document.createElement("option");
         option.value = goalie.name;
         option.textContent = goalie.name;
         goalieFilterSelect.appendChild(option);
       });
+    }
+    
+    // Attach event listeners only once
+    if (filterSelect.dataset.listenersAttached !== 'true') {
+      console.log('[Goal Map] Attaching filter event listeners');
       
-      goalieFilterSelect.addEventListener("change", () => {
-        // Clear player filter when goalie filter is used
-        const playerFilterSelect = document.getElementById("goalMapPlayerFilter");
-        if (playerFilterSelect) {
-          playerFilterSelect.value = "";
+      filterSelect.addEventListener("change", () => {
+        // Clear goalie filter when player filter is used
+        if (goalieFilterSelect) {
+          goalieFilterSelect.value = "";
         }
         
-        // Set goalie as player filter (same logic as player filter)
-        this.playerFilter = goalieFilterSelect.value || null;
-        this.filterType = goalieFilterSelect.value ? 'goalie' : null;
+        this.playerFilter = filterSelect.value || null;
+        this.filterType = filterSelect.value ? 'player' : null;
         
-        console.log('[Goal Map] Goalie filter changed:', this.playerFilter, 'filterType:', this.filterType);
-        
-        // Task 2 & 3: Update button title and active state
-        this.updateGoalieButtonTitle(this.playerFilter);
+        console.log('[Goal Map] Player filter changed:', this.playerFilter, 'filterType:', this.filterType);
         
         // Task 1: Save filter state
         if (this.playerFilter) {
           localStorage.setItem("goalMapPlayerFilter", this.playerFilter);
-          localStorage.setItem("goalMapPlayerFilterType", "goalie");
+          localStorage.setItem("goalMapPlayerFilterType", "player");
         } else {
           localStorage.removeItem("goalMapPlayerFilter");
           localStorage.removeItem("goalMapPlayerFilterType");
@@ -643,12 +612,44 @@ App.goalMap = {
         this.applyPlayerFilter();
         this.updateGoalieNameOverlay(); // Task 6
       });
-    }
-    
-    // Mark that listeners have been attached
-    filterSelect.dataset.listenersAttached = 'true';
-    if (goalieFilterSelect) {
-      goalieFilterSelect.dataset.listenersAttached = 'true';
+      
+      if (goalieFilterSelect) {
+        goalieFilterSelect.addEventListener("change", () => {
+          // Clear player filter when goalie filter is used
+          if (filterSelect) {
+            filterSelect.value = "";
+          }
+          
+          // Set goalie as player filter (same logic as player filter)
+          this.playerFilter = goalieFilterSelect.value || null;
+          this.filterType = goalieFilterSelect.value ? 'goalie' : null;
+          
+          console.log('[Goal Map] Goalie filter changed:', this.playerFilter, 'filterType:', this.filterType);
+          
+          // Task 2 & 3: Update button title and active state
+          this.updateGoalieButtonTitle(this.playerFilter);
+          
+          // Task 1: Save filter state
+          if (this.playerFilter) {
+            localStorage.setItem("goalMapPlayerFilter", this.playerFilter);
+            localStorage.setItem("goalMapPlayerFilterType", "goalie");
+          } else {
+            localStorage.removeItem("goalMapPlayerFilter");
+            localStorage.removeItem("goalMapPlayerFilterType");
+          }
+          
+          this.applyPlayerFilter();
+          this.updateGoalieNameOverlay(); // Task 6
+        });
+      }
+      
+      // Mark that listeners have been attached
+      filterSelect.dataset.listenersAttached = 'true';
+      if (goalieFilterSelect) {
+        goalieFilterSelect.dataset.listenersAttached = 'true';
+      }
+    } else {
+      console.log('[Goal Map] Filter listeners already attached, skipping re-attachment');
     }
     
     // Restore saved filter state
