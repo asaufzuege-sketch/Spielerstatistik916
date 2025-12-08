@@ -121,6 +121,7 @@ App.goalMap = {
             App.goalMapWorkflow.requiredPoints = 3;
             App.goalMapWorkflow.pointTypes = ['field', 'goal', 'time'];
             App.goalMapWorkflow.collectedPoints = [];
+            App.goalMapWorkflow.sessionId = 'wf_' + Date.now(); // Unique session ID
             console.log('[Goal Map] Starting RED workflow (conceded goal) from bottom half long press');
             
             // Update workflow indicator
@@ -215,13 +216,16 @@ App.goalMap = {
           
           const color = neutralGrey;
           
+          const workflowSessionId = workflowActive ? App.goalMapWorkflow.sessionId : null;
+          
           App.markerHandler.createMarkerPercent(
             pos.xPctContainer,
             pos.yPctContainer,
             color,
             box,
             true,
-            pointPlayer
+            pointPlayer,
+            workflowSessionId
           );
           
           if (workflowActive) {
@@ -253,13 +257,16 @@ App.goalMap = {
             color = pos.yPctImage >= App.goalMap.VERTICAL_SPLIT_THRESHOLD ? "#ff0000" : "#00ff66";
           }
           
+          const workflowSessionId = workflowActive ? App.goalMapWorkflow.sessionId : null;
+          
           App.markerHandler.createMarkerPercent(
             pos.xPctContainer,
             pos.yPctContainer,
             color,
             box,
             true,
-            pointPlayer
+            pointPlayer,
+            workflowSessionId
           );
           
           if (workflowActive) {
@@ -464,6 +471,28 @@ App.goalMap = {
                   // Update the workflow with goalie info
                   App.goalMapWorkflow.playerName = selectedGoalie;
                   console.log(`[Goal Workflow] Goalie selected: ${selectedGoalie}`);
+                  
+                  // Update all workflow markers with the selected goalie's name
+                  // Use the workflow session ID to identify markers from this specific workflow
+                  const workflowSessionId = App.goalMapWorkflow.sessionId;
+                  
+                  if (workflowSessionId) {
+                    const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
+                    let updatedCount = 0;
+                    boxes.forEach(box => {
+                      const markers = box.querySelectorAll(".marker-dot");
+                      markers.forEach(marker => {
+                        // Update only markers from this workflow session
+                        if (marker.dataset.workflowSession === workflowSessionId) {
+                          marker.dataset.player = selectedGoalie;
+                          updatedCount++;
+                        }
+                      });
+                    });
+                    
+                    console.log(`[Goal Workflow] Updated ${updatedCount} markers with goalie: ${selectedGoalie}`);
+                  }
+                  
                   // Increment the time counter for the goalie
                   updateValue(1);
                 } else {
@@ -505,7 +534,9 @@ App.goalMap = {
     if (!filterSelect) return;
     
     filterSelect.innerHTML = '<option value="">All Players</option>';
-    (App.data.selectedPlayers || []).forEach(player => {
+    // All Players - exclude goalies (only field players)
+    const players = (App.data.selectedPlayers || []).filter(p => p && p.name && p.position !== 'G');
+    players.forEach(player => {
       const option = document.createElement("option");
       option.value = player.name;
       option.textContent = player.name;

@@ -42,7 +42,8 @@ const App = {
     playerName: null,
     requiredPoints: 0,
     collectedPoints: [],
-    pointTypes: [] // ['field', 'goal', 'time'] for goal, ['field'] for shot
+    pointTypes: [], // ['field', 'goal', 'time'] for goal, ['field'] for shot
+    sessionId: null // Unique ID for current workflow session
   },
   
   // Selektoren
@@ -248,6 +249,7 @@ const App = {
     this.goalMapWorkflow.eventType = eventType;
     this.goalMapWorkflow.workflowType = null; // Reset workflow type, will be set on field click
     this.goalMapWorkflow.collectedPoints = [];
+    this.goalMapWorkflow.sessionId = 'wf_' + Date.now(); // Unique session ID
     
     if (eventType === 'goal') {
       this.goalMapWorkflow.requiredPoints = 3;

@@ -102,8 +102,9 @@ App.markerHandler = {
    * @param {HTMLElement} container Box (field-box/goal-img-box)
    * @param {boolean} interactive Klick zum Entfernen? 
    * @param {string|null} playerName optionaler Spielername
+   * @param {string|null} workflowSessionId optional workflow session ID
    */
-  createMarkerPercent(xPct, yPct, color, container, interactive = true, playerName = null) {
+  createMarkerPercent(xPct, yPct, color, container, interactive = true, playerName = null, workflowSessionId = null) {
     xPct = this.clampPct(xPct);
     yPct = this.clampPct(yPct);
     
@@ -117,6 +118,10 @@ App.markerHandler = {
     
     if (playerName) {
       dot.dataset.player = playerName;
+    }
+    
+    if (workflowSessionId) {
+      dot.dataset.workflowSession = workflowSessionId;
     }
     
     if (interactive) {
