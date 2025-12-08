@@ -482,7 +482,7 @@ App.lineUp = {
   },
   
   updateStats() {
-    // Update line stats
+    // Update line stats (forwards show goals)
     for (let line = 1; line <= 4; line++) {
       const lineEl = this.container?.querySelector(`.lineup-line[data-line="${line}"] .lineup-line-stats`);
       if (lineEl) {
@@ -491,7 +491,7 @@ App.lineUp = {
       }
     }
     
-    // Update defense pair stats
+    // Update defense pair stats (defense shows points = goals + assists)
     for (let pair = 1; pair <= 3; pair++) {
       const pairEl = this.container?.querySelector(`.lineup-defense-pair[data-pair="${pair}"] .lineup-pair-stats`);
       if (pairEl) {
