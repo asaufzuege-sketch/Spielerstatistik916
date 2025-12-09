@@ -19,6 +19,11 @@ App.playerSelection = {
     document.getElementById("lineupBtn")?.addEventListener("click", () => {
       this.handleConfirmAndNavigateToLineUp();
     });
+    
+    // Event Listener für Reset Button - löscht alle Spieler
+    document.getElementById("resetPlayersBtn")?.addEventListener("click", () => {
+      this.handleReset();
+    });
   },
   
   handleConfirmAndNavigate() {
@@ -65,6 +70,38 @@ App.playerSelection = {
       App.lineUp.loadData();
       App.lineUp.render();
     }
+  },
+  
+  handleReset() {
+    // Bestätigung vor dem Löschen
+    if (!confirm("Clear all players?")) return;
+    
+    // Alle Spieler-Inputs leeren
+    const playerList = document.getElementById("playerList");
+    if (playerList) {
+      playerList.querySelectorAll("li").forEach(li => {
+        const numInput = li.querySelector(".num-input");
+        const nameInput = li.querySelector(".name-input");
+        const checkbox = li.querySelector(".player-checkbox");
+        const posSelect = li.querySelector(".pos-select");
+        
+        if (numInput) numInput.value = "";
+        if (nameInput) nameInput.value = "";
+        if (checkbox) checkbox.checked = false;
+        if (posSelect) posSelect.value = "";
+      });
+    }
+    
+    // LocalStorage löschen für aktuelles Team
+    const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const currentTeamId = currentTeamInfo?.id;
+    if (currentTeamId) {
+      localStorage.removeItem(`playerSelectionData_${currentTeamId}`);
+    }
+    
+    // Selected Players leeren
+    App.data.selectedPlayers = [];
+    App.storage.saveSelectedPlayers();
   },
   
   getPlayers() {
