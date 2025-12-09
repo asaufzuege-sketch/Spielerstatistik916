@@ -289,6 +289,7 @@ h1 {
 }
 
 /* Unified Neon Pulse Animation for Player Out and Select Goalie */
+/* Uses currentColor to adapt to each button's color */
 @keyframes neon-pulse-sync {
   0%, 100% {
     box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
@@ -307,7 +308,7 @@ h1 {
   color: #00ff88;
 }
 
-/* Legacy animation kept for backwards compatibility */
+/* Legacy animations - kept for backwards compatibility, not currently in use */
 @keyframes neon-pulse {
   0%, 100% { 
     box-shadow: 0 0 5px #00ff88, 0 0 10px #00ff88; 
@@ -319,7 +320,6 @@ h1 {
   }
 }
 
-/* Legacy animation kept for backwards compatibility */
 @keyframes neon-pulse-current {
   0%, 100% {
     box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
