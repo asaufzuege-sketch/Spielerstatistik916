@@ -305,6 +305,16 @@ h1 {
   }
 }
 
+/* Neon Puls Animation mit currentColor - für Player Out Button */
+@keyframes neon-pulse-current {
+  0%, 100% {
+    box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+  }
+}
+
 /* Task 6: Goalie Name Overlay in Red Field Area */
 .goalie-name-overlay {
   position: absolute;
@@ -1702,6 +1712,7 @@ tr[data-player].dragging {
   background: #b00020 !important;
   color: #fff;
   position: relative;
+  animation: neon-pulse-current 2s ease-in-out infinite;
 }
 
 .lineup-player-out-btn:hover {
