@@ -30,6 +30,20 @@ App.lineUp = {
     } catch (e) {
       this.playersOut = [];
     }
+    
+    // Clean up playersOut array: remove non-existent players and goalies
+    const allPlayers = this.getAvailablePlayers();
+    const validPlayerNames = allPlayers
+      .filter(p => p.position !== 'G') // Exclude goalies
+      .map(p => p.name);
+    
+    // Filter playersOut to only include valid, non-goalie players
+    this.playersOut = this.playersOut.filter(name => validPlayerNames.includes(name));
+    
+    // Save the cleaned up array
+    const currentTeamInfoAfterCleanup = App.teamSelection?.getCurrentTeamInfo();
+    const currentTeamIdAfterCleanup = currentTeamInfoAfterCleanup?.id || 'team1';
+    localStorage.setItem(`playersOut_${currentTeamIdAfterCleanup}`, JSON.stringify(this.playersOut));
   },
   
   saveData() {
@@ -186,7 +200,9 @@ App.lineUp = {
     const list = document.getElementById("playerOutList");
     if (!list) return;
     
-    const players = this.getAvailablePlayers();
+    const allPlayers = this.getAvailablePlayers();
+    // Filter out goalies - they should NEVER appear in Player Out list
+    const players = allPlayers.filter(p => p.position !== 'G');
     
     if (players.length === 0) {
       list.innerHTML = '<div class="player-out-item" style="cursor: default; opacity: 0.7;">No active players</div>';
