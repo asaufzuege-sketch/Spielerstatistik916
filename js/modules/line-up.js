@@ -791,6 +791,12 @@ App.lineUp = {
    * Fills in order: Centers → Left Wings → Right Wings → Defense Left → Defense Right
    * 
    * @param {Array} noPositionPlayers - Array of player objects without positions, sorted by MVP points
+   * 
+   * Behavior:
+   * - Only fills positions that are currently empty (not already assigned)
+   * - Stops filling when all noPositionPlayers have been placed or all positions are filled
+   * - If there are more players than available slots, remaining players are not assigned
+   * - Does NOT fill Power Play or Box Play positions (only normal lineup positions)
    */
   fillRemainingWithNoPositionPlayers(noPositionPlayers) {
     if (noPositionPlayers.length === 0) return;

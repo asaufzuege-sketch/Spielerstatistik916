@@ -331,7 +331,7 @@ App.goalValue = {
     this.setData(newData);
     
     this.setBottom(opponents.map(() => 0));
-    this.setOpponents(Array.from({ length: 19 }, (_, i) => `Opponent ${i + 1}`));
+    this.setOpponents(Array.from({ length: opponents.length }, (_, i) => `Opponent ${i + 1}`));
     
     this.render();
     alert("Goal Value reset.");
