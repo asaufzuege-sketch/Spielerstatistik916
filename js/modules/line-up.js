@@ -687,7 +687,10 @@ App.lineUp = {
     const defense = activePlayers.filter(p => p.position === 'D').sort((a, b) => b.mvpPoints - a.mvpPoints);
     const allForwards = [...centers, ...wings].sort((a, b) => b.mvpPoints - a.mvpPoints);
     
-    return { centers, wings, defense, allForwards };
+    // New: Get players without positions
+    const noPosition = activePlayers.filter(p => !p.position || p.position.trim() === '').sort((a, b) => b.mvpPoints - a.mvpPoints);
+    
+    return { centers, wings, defense, allForwards, noPosition };
   },
   
   /**
@@ -784,7 +787,7 @@ App.lineUp = {
   },
   
   autoFillPowerMode() {
-    const { centers, wings, defense } = this.getActiveSortedPlayers();
+    const { centers, wings, defense, noPosition } = this.getActiveSortedPlayers();
     
     this.lineUpData = {};
     
@@ -816,11 +819,61 @@ App.lineUp = {
     if (defense[4]) this.lineUpData['DL_pair3'] = defense[4].name;
     if (defense[5]) this.lineUpData['DR_pair3'] = defense[5].name;
     
+    // === FILL REMAINING SPOTS WITH PLAYERS WITHOUT POSITIONS ===
+    if (noPosition.length > 0) {
+      let noPosIndex = 0;
+      
+      // Fill Centers (C_line1, C_line2, C_line3, C_line4)
+      const centerPositions = ['C_line1', 'C_line2', 'C_line3', 'C_line4'];
+      for (const pos of centerPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Left Wings (LW_line1, LW_line2, LW_line3, LW_line4)
+      const lwPositions = ['LW_line1', 'LW_line2', 'LW_line3', 'LW_line4'];
+      for (const pos of lwPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Right Wings (RW_line1, RW_line2, RW_line3, RW_line4)
+      const rwPositions = ['RW_line1', 'RW_line2', 'RW_line3', 'RW_line4'];
+      for (const pos of rwPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Defense Left (DL_pair1, DL_pair2, DL_pair3)
+      const dlPositions = ['DL_pair1', 'DL_pair2', 'DL_pair3'];
+      for (const pos of dlPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Defense Right (DR_pair1, DR_pair2, DR_pair3)
+      const drPositions = ['DR_pair1', 'DR_pair2', 'DR_pair3'];
+      for (const pos of drPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+    }
+    
     this.saveData();
   },
   
   autoFillNormalMode() {
-    const { centers, wings, defense } = this.getActiveSortedPlayers();
+    const { centers, wings, defense, noPosition } = this.getActiveSortedPlayers();
     
     this.lineUpData = {};
     
@@ -855,6 +908,56 @@ App.lineUp = {
     if (defense[4]) this.lineUpData['DR_pair2'] = defense[4].name;  // #5 mit #2
     if (defense[5]) this.lineUpData['DR_pair3'] = defense[5].name;  // #6 mit #3
     
+    // === FILL REMAINING SPOTS WITH PLAYERS WITHOUT POSITIONS ===
+    if (noPosition.length > 0) {
+      let noPosIndex = 0;
+      
+      // Fill Centers (C_line1, C_line2, C_line3, C_line4)
+      const centerPositions = ['C_line1', 'C_line2', 'C_line3', 'C_line4'];
+      for (const pos of centerPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Left Wings (LW_line1, LW_line2, LW_line3, LW_line4)
+      const lwPositions = ['LW_line1', 'LW_line2', 'LW_line3', 'LW_line4'];
+      for (const pos of lwPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Right Wings (RW_line1, RW_line2, RW_line3, RW_line4)
+      const rwPositions = ['RW_line1', 'RW_line2', 'RW_line3', 'RW_line4'];
+      for (const pos of rwPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Defense Left (DL_pair1, DL_pair2, DL_pair3)
+      const dlPositions = ['DL_pair1', 'DL_pair2', 'DL_pair3'];
+      for (const pos of dlPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+      
+      // Fill Defense Right (DR_pair1, DR_pair2, DR_pair3)
+      const drPositions = ['DR_pair1', 'DR_pair2', 'DR_pair3'];
+      for (const pos of drPositions) {
+        if (!this.lineUpData[pos] && noPosIndex < noPosition.length) {
+          this.lineUpData[pos] = noPosition[noPosIndex].name;
+          noPosIndex++;
+        }
+      }
+    }
+    
     // === SPECIAL TEAMS (PP + BP) ===
     this.calculateSpecialTeams();
     
@@ -869,7 +972,8 @@ App.lineUp = {
     let players = [];
     try {
       const savedPlayers = JSON.parse(localStorage.getItem(savedPlayersKey) || "[]");
-      players = savedPlayers.filter(p => p.active && p.name && p.name.trim() !== "" && p.position);
+      // Modified to NOT filter out players without positions
+      players = savedPlayers.filter(p => p.active && p.name && p.name.trim() !== "");
     } catch (e) {
       players = [];
     }
