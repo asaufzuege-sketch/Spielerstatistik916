@@ -279,136 +279,20 @@ App.seasonMap = {
   // Export aus Goal Map → Season Map
   // -----------------------------
   exportFromGoalMap() {
-    if (!confirm("In Season Map exportieren?")) return;
-    
-    const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
-    const allMarkers = boxes.map(box => {
-      const markers = [];
-      box.querySelectorAll(".marker-dot").forEach(dot => {
-        const left = dot.style.left || "";
-        const top = dot.style.top || "";
-        const bg = dot.style.backgroundColor || "";
-        const xPct = parseFloat(left.replace("%", "")) || 0;
-        const yPct = parseFloat(top.replace("%", "")) || 0;
-        const playerName = dot.dataset.player || null;
-        markers.push({ xPct, yPct, color: bg, player: playerName });
-      });
-      return markers;
-    });
-    
-    // ACCUMULATION: Merge new markers with existing markers instead of overwriting
-    const existingMarkersRaw = localStorage.getItem("seasonMapMarkers");
-    let existingMarkers = [];
-    if (existingMarkersRaw) {
-      try {
-        existingMarkers = JSON.parse(existingMarkersRaw);
-      } catch (e) {
-        console.warn("Failed to parse existing seasonMapMarkers", e);
-        existingMarkers = [];
+    // This function is called from Season Map page but needs to export Goal Map data
+    // Call the Goal Map's export function which properly exports to Season Map
+    if (App.goalMap && typeof App.goalMap.exportGoalMap === 'function') {
+      App.goalMap.exportGoalMap();
+      // Refresh the Season Map display to show newly exported data
+      this.render();
+      // Update momentum graphic if available
+      if (typeof window.renderSeasonMomentumGraphic === 'function') {
+        setTimeout(() => {
+          window.renderSeasonMomentumGraphic();
+        }, 100);
       }
-    }
-    
-    // Merge: For each box, add new markers to existing markers
-    const mergedMarkers = allMarkers.map((newMarkersForBox, idx) => {
-      const existingMarkersForBox = existingMarkers[idx] || [];
-      return [...existingMarkersForBox, ...newMarkersForBox];
-    });
-    
-    localStorage.setItem("seasonMapMarkers", JSON.stringify(mergedMarkers));
-    
-    // ACCUMULATION: Merge time data per player/goalie instead of overwriting
-    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
-    console.log('[Season Map Export] timeDataWithPlayers:', timeDataWithPlayers);
-    
-    const existingTimeDataRaw = localStorage.getItem("seasonMapTimeDataWithPlayers");
-    let existingTimeData = {};
-    if (existingTimeDataRaw) {
-      try {
-        existingTimeData = JSON.parse(existingTimeDataRaw);
-      } catch (e) {
-        console.warn("Failed to parse existing seasonMapTimeDataWithPlayers", e);
-        existingTimeData = {};
-      }
-    }
-    
-    // Merge: For each key, add values per player
-    const mergedTimeData = { ...existingTimeData };
-    Object.keys(timeDataWithPlayers).forEach(key => {
-      if (!mergedTimeData[key]) {
-        mergedTimeData[key] = {};
-      }
-      const newPlayerData = timeDataWithPlayers[key] || {};
-      Object.keys(newPlayerData).forEach(playerName => {
-        const existingValue = Number(mergedTimeData[key][playerName] || 0);
-        const newValue = Number(newPlayerData[playerName] || 0);
-        mergedTimeData[key][playerName] = existingValue + newValue;
-      });
-    });
-    
-    localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(mergedTimeData));
-    
-    // ACCUMULATION: Merge momentum data instead of overwriting
-    // Flache Zeitdaten für Momentum-Graph aus timeDataWithPlayers berechnen
-    // Format: { "p1": [button0, button1, ..., button7], "p2": [...], "p3": [...] }
-    const momentumData = {};
-    const periods = ['p1', 'p2', 'p3'];
-    
-    periods.forEach(periodNum => {
-      const periodValues = [];
-      // 8 Buttons pro Period (0-3 top-row/scored, 4-7 bottom-row/conceded)
-      for (let btnIdx = 0; btnIdx < 8; btnIdx++) {
-        const key = `${periodNum}_${btnIdx}`;
-        const playerData = timeDataWithPlayers[key] || {};
-        const total = Object.values(playerData).reduce((sum, val) => sum + Number(val || 0), 0);
-        periodValues.push(total);
-      }
-      momentumData[periodNum] = periodValues;
-    });
-    
-    console.log('[Season Map Export] momentumData:', momentumData);
-    
-    // Get existing momentum data
-    const existingMomentumRaw = localStorage.getItem("seasonMapTimeData");
-    let existingMomentum = {};
-    if (existingMomentumRaw) {
-      try {
-        existingMomentum = JSON.parse(existingMomentumRaw);
-      } catch (e) {
-        console.warn("Failed to parse existing seasonMapTimeData", e);
-        existingMomentum = {};
-      }
-    }
-    
-    // Merge: For each period, add button values
-    const mergedMomentum = {};
-    ['p1', 'p2', 'p3'].forEach(period => {
-      const existingPeriod = existingMomentum[period] || [];
-      const newPeriod = momentumData[period] || [];
-      mergedMomentum[period] = newPeriod.map((val, idx) => {
-        return Number(existingPeriod[idx] || 0) + Number(val || 0);
-      });
-    });
-    
-    // Speichere für Momentum-Graph
-    localStorage.setItem("seasonMapTimeData", JSON.stringify(mergedMomentum));
-    
-    const keep = confirm("Game exported to Season Map. Keep data in Goal Map? (OK = Yes)");
-    if (!keep) {
-      document.querySelectorAll("#torbildPage .marker-dot").forEach(d => d.remove());
-      document.querySelectorAll("#torbildPage .time-btn").forEach(btn => btn.textContent = "0");
-      localStorage.removeItem("timeData");
-      localStorage.removeItem("timeDataWithPlayers");
-    }
-    
-    App.showPage("seasonMap");
-    this.render();
-    
-    // Momentum-Grafik aktualisieren
-    // Timeout benötigt, damit Page-Wechsel, Rendering und localStorage-Änderungen abgeschlossen sind
-    if (typeof window.renderSeasonMomentumGraphic === 'function') {
-      setTimeout(() => {
-        window.renderSeasonMomentumGraphic();
-      }, 100);
+    } else {
+      alert("Goal Map module not available. Please ensure Goal Map is initialized.");
     }
   },
   
