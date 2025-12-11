@@ -103,6 +103,80 @@ App.lineUp = {
     return players;
   },
   
+  sortPlayersForLineup(players) {
+    // Check if season data exists and has entries
+    const hasSeasonData = App.data.seasonData && Object.keys(App.data.seasonData).length > 0;
+    
+    if (!hasSeasonData) {
+      // Fallback: Sort alphabetically by name
+      return players.sort((a, b) => {
+        const nameA = (a.name || '').toLowerCase();
+        const nameB = (b.name || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+    }
+    
+    // Helper function to calculate MVP points for a player
+    const calculateMVP = (playerName, seasonData) => {
+      if (!seasonData) return 0;
+      
+      const games = Number(seasonData.games || 0);
+      if (games === 0) return 0;
+      
+      const goals = Number(seasonData.goals || 0);
+      const assists = Number(seasonData.assists || 0);
+      const plusMinus = Number(seasonData.plusMinus || 0);
+      const shots = Number(seasonData.shots || 0);
+      const penalty = Number(seasonData.penaltys || 0);
+      
+      const avgPlusMinus = plusMinus / games;
+      const shotsPerGame = shots / games;
+      const goalsPerGame = goals / games;
+      const assistsPerGame = assists / games;
+      const penaltyPerGame = penalty / games;
+      
+      let goalValue = 0;
+      try {
+        if (App.goalValue && typeof App.goalValue.computeValueForPlayer === 'function') {
+          goalValue = App.goalValue.computeValueForPlayer(playerName) || Number(seasonData.goalValue || 0);
+        } else {
+          goalValue = Number(seasonData.goalValue || 0);
+        }
+      } catch (e) {
+        goalValue = Number(seasonData.goalValue || 0);
+      }
+      const gvNum = Number(goalValue || 0);
+      
+      // Calculate MVP points using the same formula as getPlayersWithMVP()
+      return (
+        (assistsPerGame * 8) +
+        (avgPlusMinus * 0.5) +
+        (shotsPerGame * 0.5) +
+        (goalsPerGame + (gvNum / games) * 10) -
+        (penaltyPerGame * 1.2)
+      );
+    };
+    
+    // Sort by season statistics (MVP points)
+    return players.sort((a, b) => {
+      const seasonDataA = App.data.seasonData?.[a.name];
+      const seasonDataB = App.data.seasonData?.[b.name];
+      
+      const mvpA = calculateMVP(a.name, seasonDataA);
+      const mvpB = calculateMVP(b.name, seasonDataB);
+      
+      // Sort descending (higher MVP first), fallback to alphabetical
+      if (mvpB !== mvpA) {
+        return mvpB - mvpA;
+      }
+      
+      // If MVP is equal, sort alphabetically
+      const nameA = (a.name || '').toLowerCase();
+      const nameB = (b.name || '').toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  },
+  
   attachEventListeners() {
     // Navigation buttons
     document.getElementById("lineUpPlayerSelectionBtn")?.addEventListener("click", () => {
@@ -334,7 +408,10 @@ App.lineUp = {
     
     // Get available players (excluding OUT players)
     const allPlayers = this.getAvailablePlayers();
-    const players = allPlayers.filter(p => !this.playersOut.includes(p.name));
+    let players = allPlayers.filter(p => !this.playersOut.includes(p.name));
+    
+    // Sort players (alphabetically if no season data, by MVP if season data exists)
+    players = this.sortPlayersForLineup(players);
     
     // Get already assigned players
     const assignedPlayers = Object.values(this.lineUpData);
