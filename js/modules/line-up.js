@@ -235,6 +235,14 @@ App.lineUp = {
   },
   
   togglePlayerOut(playerName) {
+    // Safety check: never allow goalies to be marked as out
+    const allPlayers = this.getAvailablePlayers();
+    const player = allPlayers.find(p => p.name === playerName);
+    if (player && player.position === 'G') {
+      console.warn(`Cannot mark goalie ${playerName} as out`);
+      return;
+    }
+    
     const index = this.playersOut.indexOf(playerName);
     if (index > -1) {
       // Reactivate player
