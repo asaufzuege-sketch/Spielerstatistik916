@@ -116,78 +116,54 @@ App.lineUp = {
       });
     }
     
+    // Helper function to calculate MVP points for a player
+    const calculateMVP = (playerName, seasonData) => {
+      if (!seasonData) return 0;
+      
+      const games = Number(seasonData.games || 0);
+      if (games === 0) return 0;
+      
+      const goals = Number(seasonData.goals || 0);
+      const assists = Number(seasonData.assists || 0);
+      const plusMinus = Number(seasonData.plusMinus || 0);
+      const shots = Number(seasonData.shots || 0);
+      const penalty = Number(seasonData.penaltys || 0);
+      
+      const avgPlusMinus = plusMinus / games;
+      const shotsPerGame = shots / games;
+      const goalsPerGame = goals / games;
+      const assistsPerGame = assists / games;
+      const penaltyPerGame = penalty / games;
+      
+      let goalValue = 0;
+      try {
+        if (App.goalValue && typeof App.goalValue.computeValueForPlayer === 'function') {
+          goalValue = App.goalValue.computeValueForPlayer(playerName) || Number(seasonData.goalValue || 0);
+        } else {
+          goalValue = Number(seasonData.goalValue || 0);
+        }
+      } catch (e) {
+        goalValue = Number(seasonData.goalValue || 0);
+      }
+      const gvNum = Number(goalValue || 0);
+      
+      // Calculate MVP points using the same formula as getPlayersWithMVP()
+      return (
+        (assistsPerGame * 8) +
+        (avgPlusMinus * 0.5) +
+        (shotsPerGame * 0.5) +
+        (goalsPerGame + (gvNum / games) * 10) -
+        (penaltyPerGame * 1.2)
+      );
+    };
+    
     // Sort by season statistics (MVP points)
     return players.sort((a, b) => {
       const seasonDataA = App.data.seasonData?.[a.name];
       const seasonDataB = App.data.seasonData?.[b.name];
       
-      // Calculate MVP points for player A
-      let mvpA = 0;
-      if (seasonDataA) {
-        const gamesA = Number(seasonDataA.games || 0);
-        const goalsA = Number(seasonDataA.goals || 0);
-        const assistsA = Number(seasonDataA.assists || 0);
-        const plusMinusA = Number(seasonDataA.plusMinus || 0);
-        const shotsA = Number(seasonDataA.shots || 0);
-        const penaltyA = Number(seasonDataA.penaltys || 0);
-        
-        if (gamesA > 0) {
-          const avgPlusMinusA = plusMinusA / gamesA;
-          const shotsPerGameA = shotsA / gamesA;
-          const goalsPerGameA = goalsA / gamesA;
-          const assistsPerGameA = assistsA / gamesA;
-          
-          let goalValueA = 0;
-          try {
-            if (App.goalValue && typeof App.goalValue.computeValueForPlayer === 'function') {
-              goalValueA = App.goalValue.computeValueForPlayer(a.name) || Number(seasonDataA.goalValue || 0);
-            } else {
-              goalValueA = Number(seasonDataA.goalValue || 0);
-            }
-          } catch (e) {
-            goalValueA = Number(seasonDataA.goalValue || 0);
-          }
-          const gvNumA = Number(goalValueA || 0);
-          
-          mvpA = (goalsA * 3) + (assistsA * 2) + (avgPlusMinusA * 1.5) + 
-                 (goalsPerGameA * 5) + (assistsPerGameA * 3) + 
-                 (shotsPerGameA * 0.5) + (gvNumA * 0.2) - (penaltyA * 0.5);
-        }
-      }
-      
-      // Calculate MVP points for player B
-      let mvpB = 0;
-      if (seasonDataB) {
-        const gamesB = Number(seasonDataB.games || 0);
-        const goalsB = Number(seasonDataB.goals || 0);
-        const assistsB = Number(seasonDataB.assists || 0);
-        const plusMinusB = Number(seasonDataB.plusMinus || 0);
-        const shotsB = Number(seasonDataB.shots || 0);
-        const penaltyB = Number(seasonDataB.penaltys || 0);
-        
-        if (gamesB > 0) {
-          const avgPlusMinusB = plusMinusB / gamesB;
-          const shotsPerGameB = shotsB / gamesB;
-          const goalsPerGameB = goalsB / gamesB;
-          const assistsPerGameB = assistsB / gamesB;
-          
-          let goalValueB = 0;
-          try {
-            if (App.goalValue && typeof App.goalValue.computeValueForPlayer === 'function') {
-              goalValueB = App.goalValue.computeValueForPlayer(b.name) || Number(seasonDataB.goalValue || 0);
-            } else {
-              goalValueB = Number(seasonDataB.goalValue || 0);
-            }
-          } catch (e) {
-            goalValueB = Number(seasonDataB.goalValue || 0);
-          }
-          const gvNumB = Number(goalValueB || 0);
-          
-          mvpB = (goalsB * 3) + (assistsB * 2) + (avgPlusMinusB * 1.5) + 
-                 (goalsPerGameB * 5) + (assistsPerGameB * 3) + 
-                 (shotsPerGameB * 0.5) + (gvNumB * 0.2) - (penaltyB * 0.5);
-        }
-      }
+      const mvpA = calculateMVP(a.name, seasonDataA);
+      const mvpB = calculateMVP(b.name, seasonDataB);
       
       // Sort descending (higher MVP first), fallback to alphabetical
       if (mvpB !== mvpA) {
