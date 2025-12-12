@@ -129,7 +129,7 @@ App.goalMap = {
                     App.goalMapWorkflow.playerName = selectedGoalie;
                     console.log(`[Goal Workflow] Goalie selected: ${selectedGoalie}`);
                     // Now place the marker with goalie name
-                    const color = neutralGrey;
+                    const color = "#444444"; // neutral grey
                     App.markerHandler.createMarkerPercent(
                       pos.xPctContainer,
                       pos.yPctContainer,
