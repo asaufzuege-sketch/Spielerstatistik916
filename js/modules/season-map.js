@@ -692,6 +692,7 @@ App.seasonMap = {
     }
     
     // Clone the momentum container if it exists
+    // Note: This container is dynamically created by season_map_momentum.js
     const momentumContainer = seasonMapPage.querySelector('#seasonMapMomentum');
     if (momentumContainer) {
       const momentumClone = momentumContainer.cloneNode(true);
