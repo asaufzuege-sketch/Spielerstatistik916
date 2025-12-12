@@ -662,10 +662,11 @@ App.seasonMap = {
   },
   
   exportAsImage() {
-    const layout = document.querySelector("#seasonMapPage .torbild-layout");
+    // Get both the layout AND the momentum container
+    const seasonMapPage = document.getElementById("seasonMapPage");
     
-    if (!layout) {
-      console.error("Season map layout not found");
+    if (!seasonMapPage) {
+      console.error("Season Map page not found");
       return;
     }
     
@@ -676,23 +677,59 @@ App.seasonMap = {
       return;
     }
     
-    console.log("Generating Season Map image...");
+    console.log("Generating Season Map image with momentum...");
     
-    // Capture the season map layout as image
-    html2canvas(layout, {
+    // Create a temporary container that includes both layout and momentum
+    const exportContainer = document.createElement('div');
+    exportContainer.style.backgroundColor = '#ffffff';
+    exportContainer.style.padding = '10px';
+    
+    // Clone the layout
+    const layout = seasonMapPage.querySelector('.torbild-layout');
+    if (layout) {
+      const layoutClone = layout.cloneNode(true);
+      exportContainer.appendChild(layoutClone);
+    }
+    
+    // Clone the momentum container if it exists
+    // Note: This container is dynamically created by season_map_momentum.js
+    const momentumContainer = seasonMapPage.querySelector('#seasonMapMomentum');
+    if (momentumContainer) {
+      const momentumClone = momentumContainer.cloneNode(true);
+      exportContainer.appendChild(momentumClone);
+    }
+    
+    // Temporarily add to page for html2canvas
+    exportContainer.style.position = 'absolute';
+    exportContainer.style.left = '-9999px';
+    document.body.appendChild(exportContainer);
+    
+    // Helper function to cleanup temporary container
+    const cleanupTempContainer = () => {
+      if (document.body.contains(exportContainer)) {
+        document.body.removeChild(exportContainer);
+      }
+    };
+    
+    // Capture the combined container as image
+    html2canvas(exportContainer, {
       scale: 2,
       backgroundColor: '#ffffff',
       logging: false,
       useCORS: true,
       allowTaint: true
     }).then(canvas => {
-      try {
-        // Convert canvas to blob and download
-        canvas.toBlob(blob => {
-          if (!blob) {
-            throw new Error("Failed to create image blob");
-          }
-          
+      // Remove temporary container
+      cleanupTempContainer();
+      
+      // Convert canvas to blob and download
+      canvas.toBlob(blob => {
+        if (!blob) {
+          alert("Error: Failed to create image blob");
+          return;
+        }
+        
+        try {
           // Generate filename with date
           const date = App.helpers.getCurrentDateString();
           const filename = `season_map_${date}.png`;
@@ -708,12 +745,14 @@ App.seasonMap = {
           URL.revokeObjectURL(link.href);
           
           console.log("Season Map export completed:", filename);
-        }, 'image/png');
-      } catch (error) {
-        console.error("Error creating download:", error);
-        alert("Error creating download: " + error.message);
-      }
+        } catch (error) {
+          console.error("Error creating download:", error);
+          alert("Error creating download: " + error.message);
+        }
+      }, 'image/png');
     }).catch(error => {
+      // Clean up on error
+      cleanupTempContainer();
       console.error("Error capturing season map:", error);
       alert("Error capturing season map: " + error.message);
     });
