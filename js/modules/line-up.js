@@ -1133,21 +1133,42 @@ App.lineUp = {
           format: 'a4'
         });
         
+        // Guard against division by zero
+        if (canvas.width === 0 || canvas.height === 0) {
+          throw new Error("Canvas has invalid dimensions");
+        }
+        
         // Calculate dimensions to fit the image on the page
-        const imgWidth = 297; // A4 landscape width in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const pageWidth = 297; // A4 landscape width in mm
+        const pageHeight = 210; // A4 landscape height in mm
+        const titleHeight = 20; // Space reserved for title
+        const availableHeight = pageHeight - titleHeight - 10; // 10mm bottom margin
+        
+        // Calculate scaling to fit both width and height
+        let imgWidth = pageWidth;
+        let imgHeight = (canvas.height * pageWidth) / canvas.width;
+        
+        // If height exceeds available space, scale down further
+        if (imgHeight > availableHeight) {
+          imgHeight = availableHeight;
+          imgWidth = (canvas.width * availableHeight) / canvas.height;
+        }
+        
+        // Center the image horizontally if it's narrower than the page
+        const xOffset = (pageWidth - imgWidth) / 2;
         
         // Add title
         pdf.setFontSize(16);
-        pdf.text(`LINE UP - ${modeName}`, imgWidth / 2, 15, { align: 'center' });
+        pdf.text(`LINE UP - ${modeName}`, pageWidth / 2, 15, { align: 'center' });
         
         // Add the image to PDF
         const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 0, 20, imgWidth, imgHeight);
+        pdf.addImage(imgData, 'PNG', xOffset, titleHeight, imgWidth, imgHeight);
         
-        // Generate filename with mode and date
-        const date = new Date().toISOString().slice(0, 10);
-        const filename = `lineup_${modeName.replace(/\s+/g, '_')}_${date}.pdf`;
+        // Generate filename with mode and date - sanitize mode name
+        const date = App.helpers.getCurrentDateString();
+        const sanitizedMode = App.helpers.sanitizeFilename(modeName);
+        const filename = `lineup_${sanitizedMode}_${date}.pdf`;
         
         // Save the PDF
         pdf.save(filename);

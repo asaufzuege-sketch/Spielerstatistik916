@@ -59,5 +59,13 @@ App.helpers = {
       headerBg: getComputedStyle(document.documentElement).getPropertyValue('--header-bg') || "#1E1E1E",
       headerText: getComputedStyle(document.documentElement).getPropertyValue('--text-color') || "#fff"
     };
+  },
+  
+  getCurrentDateString() {
+    return new Date().toISOString().slice(0, 10);
+  },
+  
+  sanitizeFilename(str) {
+    return String(str || "").replace(/[^a-zA-Z0-9]/g, '_');
   }
 };

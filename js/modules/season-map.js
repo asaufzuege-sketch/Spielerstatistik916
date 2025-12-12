@@ -694,7 +694,7 @@ App.seasonMap = {
           }
           
           // Generate filename with date
-          const date = new Date().toISOString().slice(0, 10);
+          const date = App.helpers.getCurrentDateString();
           const filename = `season_map_${date}.png`;
           
           // Create download link
