@@ -265,19 +265,16 @@ App.goalMap = {
           if (isRedZone && !isGoalWorkflow) {
             const activeGoalie = this.getActiveGoalie();
             
-            // Long press in red zone or manual red click - needs goalie
-            if (long || !activeGoalie) {
-              if (!activeGoalie) {
-                alert("Please select a goalie first");
-                console.log('[Goal Map] Red zone click without active goalie');
-                return;
-              }
-              // If goalie is active and long press, start workflow automatically
-              if (long && activeGoalie && !workflowActive) {
-                // Long press with active goalie - this will be handled by starting goal workflow
-                // The workflow will use the active goalie
-                console.log('[Goal Map] Long press in red zone with active goalie - starting workflow');
-              }
+            // If no goalie selected, block any interaction in red zone
+            if (!activeGoalie) {
+              alert("Please select a goalie first");
+              console.log('[Goal Map] Red zone click without active goalie');
+              return;
+            }
+            
+            // If goalie is active and long press, workflow will be started automatically
+            if (long && !workflowActive) {
+              console.log('[Goal Map] Long press in red zone with active goalie - starting workflow');
             }
           }
           
@@ -293,7 +290,7 @@ App.goalMap = {
           }
           // Normaler manueller Klick: oben grün, unten rot
           else {
-            color = pos.yPctImage > 50 ? "#ff0000" : "#00ff66";
+            color = pos.yPctImage > this.VERTICAL_SPLIT_THRESHOLD ? "#ff0000" : "#00ff66";
           }
           
           App.markerHandler.createMarkerPercent(
@@ -480,6 +477,7 @@ App.goalMap = {
       if (filterSelect) {
         filterSelect.value = savedFilter;
       }
+      this.applyPlayerFilter();
     }
     
     const savedGoalie = localStorage.getItem("goalMapActiveGoalie");
@@ -488,6 +486,13 @@ App.goalMap = {
       const goalieFilterSelect = document.getElementById("goalMapGoalieFilter");
       if (goalieFilterSelect) {
         goalieFilterSelect.value = savedGoalie;
+        
+        // Also apply goalie filtering
+        const goalies = (App.data.selectedPlayers || []).filter(p => p.position === "G");
+        const goalieNames = goalies.map(g => g.name);
+        if (goalieNames.includes(savedGoalie)) {
+          this.filterByGoalies([savedGoalie]);
+        }
       }
     }
     
@@ -682,15 +687,6 @@ App.goalMap = {
           this.filterByGoalies(goalieNames);
         }
       });
-      
-      // Restore saved goalie selection
-      const savedGoalie = localStorage.getItem("goalMapActiveGoalie");
-      if (savedGoalie) {
-        goalieFilterSelect.value = savedGoalie;
-        this.activeGoalie = savedGoalie;
-        this.updateGoalieButtonTitle();
-        this.updateGoalieNameOverlay();
-      }
     }
   },
   
