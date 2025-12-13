@@ -2402,7 +2402,7 @@ copilot/change-line-mode-functionality
   margin-right: auto !important;
 }
 
-/* FIX: Line Up Button - gleiches Blau auf allen Seiten */
+/* FIX: Line Up Button - consistent blue across all pages */
 .lineup-btn,
 #lineupBtn,
 #lineupFromStatsBtn {
