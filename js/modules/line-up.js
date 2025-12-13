@@ -610,7 +610,7 @@ App.lineUp = {
       }
       if (lineEl) {
         const stats = this.calculateLineStats(line);
-        lineEl.textContent = `${stats.goals}G / +- ${stats.plusMinus} / ${stats.shots} Sh`;
+        lineEl.textContent = `${stats.goals} G/G | +/- ${stats.plusMinus} | ${stats.shots} Sh/G`;
       }
     }
     
@@ -622,7 +622,7 @@ App.lineUp = {
       }
       if (pairEl) {
         const stats = this.calculatePairStats(pair);
-        pairEl.textContent = `${stats.goals}G / +- ${stats.plusMinus} / ${stats.shots} Sh`;
+        pairEl.textContent = `${stats.goals} P/G | +/- ${stats.plusMinus} | ${stats.shots} Sh/G`;
       }
     }
   },
@@ -648,42 +648,69 @@ App.lineUp = {
     let goals = 0;
     let plusMinus = 0;
     let shots = 0;
+    let games = 0;
     
     ["LW", "C", "RW"].forEach(pos => {
       const key = `${pos}_line${lineNum}`;
       const playerName = this.lineUpData[key];
       if (playerName) {
-        const playerStats = App.data.statsData?.[playerName];
-        if (playerStats) {
-          goals += playerStats["Goals"] || 0;
-          plusMinus += playerStats["+/-"] || 0;
-          shots += playerStats["Shot"] || 0;
+        const seasonData = App.data.seasonData?.[playerName];
+        const statsData = App.data.statsData?.[playerName];
+        
+        if (seasonData || statsData) {
+          // Try seasonData first (lowercase), then statsData (capitalized)
+          goals += Number(seasonData?.goals || statsData?.Goals || 0);
+          plusMinus += Number(seasonData?.plusMinus || statsData?.["+/-"] || 0);
+          shots += Number(seasonData?.shots || statsData?.Shot || 0);
+          const playerGames = Number(seasonData?.games || statsData?.Games || 0);
+          games = Math.max(games, playerGames);
         }
       }
     });
     
-    return { goals, plusMinus, shots };
+    // Calculate per-game averages
+    const divisor = games > 0 ? games : 1;
+    return { 
+      goals: (goals / divisor).toFixed(2), 
+      plusMinus: (plusMinus / divisor).toFixed(2), 
+      shots: (shots / divisor).toFixed(2) 
+    };
   },
   
   calculatePairStats(pairNum) {
     let goals = 0;
     let plusMinus = 0;
     let shots = 0;
+    let games = 0;
     
     ["DL", "DR"].forEach(pos => {
       const key = `${pos}_pair${pairNum}`;
       const playerName = this.lineUpData[key];
       if (playerName) {
-        const playerStats = App.data.statsData?.[playerName];
-        if (playerStats) {
-          goals += playerStats["Goals"] || 0;
-          plusMinus += playerStats["+/-"] || 0;
-          shots += playerStats["Shot"] || 0;
+        const seasonData = App.data.seasonData?.[playerName];
+        const statsData = App.data.statsData?.[playerName];
+        
+        if (seasonData || statsData) {
+          // Try seasonData first (lowercase), then statsData (capitalized)
+          // For defense, show Points (Goals + Assists) instead of Goals
+          const playerGoals = Number(seasonData?.goals || statsData?.Goals || 0);
+          const playerAssists = Number(seasonData?.assists || statsData?.Assists || 0);
+          goals += playerGoals + playerAssists; // Points for defense
+          plusMinus += Number(seasonData?.plusMinus || statsData?.["+/-"] || 0);
+          shots += Number(seasonData?.shots || statsData?.Shot || 0);
+          const playerGames = Number(seasonData?.games || statsData?.Games || 0);
+          games = Math.max(games, playerGames);
         }
       }
     });
     
-    return { goals, plusMinus, shots };
+    // Calculate per-game averages
+    const divisor = games > 0 ? games : 1;
+    return { 
+      goals: (goals / divisor).toFixed(2), // For defense, this is Points/Game
+      plusMinus: (plusMinus / divisor).toFixed(2), 
+      shots: (shots / divisor).toFixed(2) 
+    };
   },
   
   /**

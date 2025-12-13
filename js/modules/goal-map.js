@@ -12,6 +12,11 @@ App.goalMap = {
       this.exportGoalMap();
     });
     
+    // Event Listener für Export Season Map (gleiche Funktion)
+    document.getElementById("exportSeasonMapBtn")?.addEventListener("click", () => {
+      this.exportGoalMap();
+    });
+    
     // Reset Button (nur Goal Map)
     document.getElementById("resetTorbildBtn")?.addEventListener("click", () => {
       this.reset();

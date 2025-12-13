@@ -2346,6 +2346,8 @@ tr[data-player].dragging {
 #cancelTeamEditBtn {
   flex: 0 0 auto !important;
   width: 120px !important;
+  min-width: 120px !important;
+  max-width: 120px !important;
   padding: 12px 20px !important;
   font-size: 1rem !important;
   font-weight: 600 !important;
@@ -2407,14 +2409,14 @@ tr[data-player].dragging {
 /* FIX: Line Up Button - consistent blue across all pages */
 .lineup-btn,
 #lineupBtn,
-#lineupFromStatsBtn {
+#lineupBtnFromStats {
   background: #4a7fb5 !important;
   color: #fff !important;
 }
 
 .lineup-btn:hover,
 #lineupBtn:hover,
-#lineupFromStatsBtn:hover {
+#lineupBtnFromStats:hover {
   background: #3a6fa5 !important;
 }
 
