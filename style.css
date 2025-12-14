@@ -2234,10 +2234,10 @@ tr[data-player].dragging {
 #teamEditModal .modal-buttons .cancel-btn,
 #saveTeamNameBtn,
 #cancelTeamEditBtn {
-  flex: 0 0 auto !important;
-  width: 120px !important;
-  min-width: 120px !important;
-  max-width: 120px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  width: auto !important;
   padding: 12px 20px !important;
   font-size: 1rem !important;
   font-weight: 600 !important;
@@ -2245,6 +2245,7 @@ tr[data-player].dragging {
   cursor: pointer !important;
   border: none !important;
   box-sizing: border-box !important;
+  margin: 0 !important;
 }
 
 #saveTeamNameBtn,
