@@ -15,7 +15,22 @@ App.goalValue = {
   getOpponents() {
     try {
       const raw = localStorage.getItem("goalValueOpponents");
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        let opponents = JSON.parse(raw);
+        // Convert old German "Gegner" to English "Opponent"
+        let needsSave = false;
+        opponents = opponents.map((op, i) => {
+          if (op && op.startsWith("Gegner")) {
+            needsSave = true;
+            return `Opponent ${i + 1}`;
+          }
+          return op;
+        });
+        if (needsSave) {
+          this.setOpponents(opponents);
+        }
+        return opponents;
+      }
     } catch (e) {}
     return Array.from({ length: 19 }, (_, i) => `Opponent ${i + 1}`);
   },
@@ -101,9 +116,30 @@ App.goalValue = {
     const gData = this.getData();
     const bottom = this.getBottom();
     
-    const playersList = Object.keys(App.data.seasonData).length 
+    // Get player list and filter out goalies
+    let playersList = Object.keys(App.data.seasonData).length 
       ? Object.keys(App.data.seasonData).sort() 
       : App.data.selectedPlayers.map(p => p.name);
+    
+    // Filter out goalies - check both playerSelectionData and selectedPlayers
+    const currentTeamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const currentTeamId = currentTeamInfo?.id || 'team1';
+    const savedPlayersKey = `playerSelectionData_${currentTeamId}`;
+    
+    try {
+      const savedPlayers = JSON.parse(localStorage.getItem(savedPlayersKey) || "[]");
+      const goalieNames = savedPlayers
+        .filter(p => p.position === "G" || p.isGoalie)
+        .map(p => p.name);
+      
+      playersList = playersList.filter(name => !goalieNames.includes(name));
+    } catch (e) {
+      // Fallback: filter from selectedPlayers
+      const goalieNames = (App.data.selectedPlayers || [])
+        .filter(p => p.position === "G")
+        .map(p => p.name);
+      playersList = playersList.filter(name => !goalieNames.includes(name));
+    }
     
     // WICHTIG: Wrapper OHNE position:relative - das blockiert sticky! 
     const wrapper = document.createElement('div');
