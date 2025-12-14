@@ -600,6 +600,12 @@ App.lineUp = {
     this.updateStats();
   },
   
+  formatStat(value) {
+    const num = parseFloat(value);
+    if (Number.isInteger(num)) return num.toString();
+    return num.toFixed(1);
+  },
+  
   updateStats() {
     // Update line stats
     for (let line = 1; line <= 4; line++) {
@@ -610,7 +616,7 @@ App.lineUp = {
       }
       if (lineEl) {
         const stats = this.calculateLineStats(line);
-        lineEl.textContent = `${stats.goals} G/G | +/- ${stats.plusMinus} | ${stats.shots} Sh/G`;
+        lineEl.textContent = `${this.formatStat(stats.goals)} G | +/- ${this.formatStat(stats.plusMinus)} | ${this.formatStat(stats.shots)} Sh`;
       }
     }
     
@@ -622,7 +628,7 @@ App.lineUp = {
       }
       if (pairEl) {
         const stats = this.calculatePairStats(pair);
-        pairEl.textContent = `${stats.goals} P/G | +/- ${stats.plusMinus} | ${stats.shots} Sh/G`;
+        pairEl.textContent = `${this.formatStat(stats.goals)} P | +/- ${this.formatStat(stats.plusMinus)} | ${this.formatStat(stats.shots)} Sh`;
       }
     }
   },
@@ -671,9 +677,9 @@ App.lineUp = {
     // Calculate per-game averages
     const divisor = games > 0 ? games : 1;
     return { 
-      goals: (goals / divisor).toFixed(2), 
-      plusMinus: (plusMinus / divisor).toFixed(2), 
-      shots: (shots / divisor).toFixed(2) 
+      goals: goals / divisor, 
+      plusMinus: plusMinus / divisor, 
+      shots: shots / divisor 
     };
   },
   
@@ -707,9 +713,9 @@ App.lineUp = {
     // Calculate per-game averages
     const divisor = games > 0 ? games : 1;
     return { 
-      goals: (goals / divisor).toFixed(2), // For defense, this is Points/Game
-      plusMinus: (plusMinus / divisor).toFixed(2), 
-      shots: (shots / divisor).toFixed(2) 
+      goals: goals / divisor, // For defense, this is Points/Game
+      plusMinus: plusMinus / divisor, 
+      shots: shots / divisor 
     };
   },
   
