@@ -163,7 +163,7 @@ App.goalMap = {
           }
           // Rotes Tor nur im Workflow Schritt 1 (nach Feldpunkt)
           if (!workflowActive || !isConcededWorkflow || currentStep !== 1) {
-            console.log('[Goal Map] Red goal only allowed in workflow step 2');
+            console.log('[Goal Map] Red goal only allowed in workflow step 1 (after field point)');
             return;
           }
         }
