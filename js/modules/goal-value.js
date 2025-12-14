@@ -22,7 +22,9 @@ App.goalValue = {
         opponents = opponents.map((op, i) => {
           if (op && op.startsWith("Gegner")) {
             needsSave = true;
-            return `Opponent ${i + 1}`;
+            // Try to preserve original number from "Gegner X" format
+            const match = op.match(/Gegner\s+(\d+)/);
+            return match ? `Opponent ${match[1]}` : `Opponent ${i + 1}`;
           }
           return op;
         });
