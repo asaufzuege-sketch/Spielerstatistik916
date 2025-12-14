@@ -1689,6 +1689,12 @@ tr[data-player].dragging {
   filter: brightness(0.9);
 }
 
+/* Game Data Button on Line Up Page */
+#lineUpPage .top-btn.game-data-btn {
+  background: #44bb91;
+  color: #fff;
+}
+
 /* Player Out Button */
 .lineup-player-out-btn {
   background: #8b0000 !important;
@@ -1842,15 +1848,7 @@ tr[data-player].dragging {
   text-align: center;
 }
 
-/* Box Play Label - uses #FFD400 (Normal mode color from line-up.js) */
-.lineup-boxplay .lineup-section-title {
-  color: #FFD400;
-}
-
-/* Power Play Label - uses #FF6A00 (Power mode color from line-up.js) */
-.lineup-powerplay .lineup-section-title {
-  color: #FF6A00;
-}
+/* Box Play and Power Play Label colors are set dynamically via line-up.js updateModeColors() */
 
 /* Forward Lines */
 .lineup-forwards {
