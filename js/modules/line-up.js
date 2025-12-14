@@ -1125,6 +1125,18 @@ App.lineUp = {
       modeLabel.style.webkitTextFillColor = config.bg;
       modeLabel.style.background = 'none';
     }
+    
+    // Box Play Title Farbe ändern
+    const boxPlayTitle = document.querySelector('.lineup-boxplay .lineup-section-title');
+    if (boxPlayTitle) {
+      boxPlayTitle.style.color = config.bg;
+    }
+    
+    // Power Play Title Farbe ändern
+    const powerPlayTitle = document.querySelector('.lineup-powerplay .lineup-section-title');
+    if (powerPlayTitle) {
+      powerPlayTitle.style.color = config.bg;
+    }
   },
   
   updatePlayerOutButton() {
