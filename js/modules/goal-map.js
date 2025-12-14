@@ -95,14 +95,14 @@ App.goalMap = {
       };
       
       const placeMarker = (pos, long, forceGrey = false) => {
-        const workflowActive = App.goalMapWorkflow?.active;
-        const eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
-        const workflowType = App.goalMapWorkflow?.workflowType; // 'scored' | 'conceded' | null
-        const isGoalWorkflow = workflowActive && eventType === 'goal';
-        const isScoredWorkflow = workflowType === 'scored';
-        const isConcededWorkflow = workflowType === 'conceded';
+        let workflowActive = App.goalMapWorkflow?.active;
+        let eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
+        let workflowType = App.goalMapWorkflow?.workflowType; // 'scored' | 'conceded' | null
+        let isGoalWorkflow = workflowActive && eventType === 'goal';
+        let isScoredWorkflow = workflowType === 'scored';
+        let isConcededWorkflow = workflowType === 'conceded';
         const neutralGrey = "#444444";
-        const currentStep = App.goalMapWorkflow?.collectedPoints?.length || 0;
+        let currentStep = App.goalMapWorkflow?.collectedPoints?.length || 0;
         
         const pointPlayer =
           this.playerFilter ||
@@ -255,6 +255,7 @@ App.goalMap = {
               eventType = 'goal';
               workflowType = 'conceded';
               isGoalWorkflow = true;
+              isScoredWorkflow = false;
               isConcededWorkflow = true;
               currentStep = 0;
               
