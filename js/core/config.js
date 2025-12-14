@@ -68,90 +68,110 @@ const App = {
     const style = document.createElement('style');
     style.id = 'season-goalvalue-left-align';
     style.textContent = `
-      #seasonContainer {
-        display: flex !important;
-        justify-content: center !important;
-        align-items: flex-start !important;
-        padding-left: 0 !important;
-        margin-left: 0 !important;
-        box-sizing: border-box !important;
-        width: 100% !important;
-      }
-      #goalValueContainer {
-        display: flex !important;
-        justify-content: flex-start !important;
-        align-items: flex-start !important;
-        padding-left: 0 !important;
-        margin-left: 0 !important;
-        box-sizing: border-box !important;
-        width: 100% !important;
-      }
-      #seasonContainer .table-scroll, #goalValueContainer .table-scroll {
-        overflow-x: auto !important;          /* WICHTIG: horizontal scroll ermöglichen */
-        overflow-y: hidden !important;
-        -webkit-overflow-scrolling: touch !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-      #seasonContainer table {
-        white-space: nowrap !important;
-        margin: 0 auto !important;
-        width: auto !important;
-        max-width: none !important;
-        box-sizing: border-box !important;
-      }
-      #goalValueContainer table {
-        white-space: nowrap !important;
-        margin-left: 0 !important;
-        margin-right: auto !important;
-        width: auto !important;
-        max-width: none !important;
-        box-sizing: border-box !important;
-      }
-      #seasonContainer table th, #seasonContainer table td,
-      #goalValueContainer table th, #goalValueContainer table td {
-        text-align: center !important;
-        padding-left: 0 !important;
-      }
-      #seasonContainer table th:nth-child(1),
-      #seasonContainer table td:nth-child(1),
-      #seasonContainer table th:nth-child(2),
-      #seasonContainer table td:nth-child(2) {
-        text-align: left !important;
-        padding-left: 12px !important;
-      }
-      #goalValueContainer table th:first-child,
-      #goalValueContainer table td:first-child {
-        text-align: left !important;
-        padding-left: 12px !important;
-      }
-      @media (min-width: 1200px) {
-        #seasonContainer, #goalValueContainer {
-          width: 100vw !important;
-          overflow: visible !important;
-        }
-        /* Season soll auf sehr breiten Screens nicht mehr horizontal scrollen */
-        #seasonContainer .table-scroll {
-          overflow-x: hidden !important;
-        }
-        /* Goal Value DARF weiterhin scrollen -> KEIN overflow-x: hidden! */
-        #goalValueContainer .table-scroll {
-          overflow-x: auto !important;
-        }
-        #seasonContainer table {
-          width: auto !important;
-          table-layout: auto !important;
-          white-space: nowrap !important;
-          font-size: 13px !important;
-        }
-        #goalValueContainer table {
-          width: auto !important;
-          table-layout: fixed !important;
-          white-space: nowrap !important;
-          font-size: 13px !important;
-        }
-      }
-    `;
+  /* Goal Value Container - bleibt links */
+  #goalValueContainer {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+  
+  /* Season Container - ZENTRIERT */
+  #seasonContainer {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+  
+  #seasonContainer .table-scroll, #goalValueContainer .table-scroll {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Season Tabelle zentriert */
+  #seasonContainer table {
+    white-space: nowrap !important;
+    margin: 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Goal Value Tabelle links */
+  #goalValueContainer table {
+    white-space: nowrap !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+  }
+  
+  #seasonContainer table th, #seasonContainer table td,
+  #goalValueContainer table th, #goalValueContainer table td {
+    text-align: center !important;
+    padding-left: 0 !important;
+  }
+  #seasonContainer table th:nth-child(1),
+  #seasonContainer table td:nth-child(1),
+  #seasonContainer table th:nth-child(2),
+  #seasonContainer table td:nth-child(2) {
+    text-align: left !important;
+    padding-left: 12px !important;
+  }
+  #goalValueContainer table th:first-child,
+  #goalValueContainer table td:first-child {
+    text-align: left !important;
+    padding-left: 12px !important;
+  }
+  @media (min-width: 1200px) {
+    #seasonContainer {
+      width: 100% !important;
+      overflow: visible !important;
+      justify-content: center !important;
+    }
+    #goalValueContainer {
+      width: 100vw !important;
+      overflow: visible !important;
+    }
+    #seasonContainer .table-scroll {
+      overflow-x: auto !important;
+      display: flex !important;
+      justify-content: center !important;
+    }
+    #goalValueContainer .table-scroll {
+      overflow-x: auto !important;
+    }
+    #seasonContainer table {
+      width: auto !important;
+      table-layout: auto !important;
+      white-space: nowrap !important;
+      font-size: 13px !important;
+      margin: 0 auto !important;
+    }
+    #goalValueContainer table {
+      width: auto !important;
+      table-layout: fixed !important;
+      white-space: nowrap !important;
+      font-size: 13px !important;
+    }
+  }
+  #seasonContainer table {
+    width: auto !important;
+    table-layout: auto !important;
+    margin: 0 auto !important;
+  }
+`;
     document.head.appendChild(style);
   },
   

@@ -2327,3 +2327,24 @@ tr[data-player].dragging {
   background: #3a6fa5 !important;
 }
 
+/* ==================== */
+/* SEASON TABLE CENTERING FIX */
+/* ==================== */
+
+#seasonPage {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+#seasonPage #seasonContainer {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+}
+
+#seasonPage #seasonContainer table,
+#seasonPage #seasonContainer .season-table {
+  margin: 0 auto !important;
+}
+
