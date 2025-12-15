@@ -293,6 +293,44 @@ App.goalMap = {
             color = pos.yPctImage > this.VERTICAL_SPLIT_THRESHOLD ? "#ff0000" : "#00ff66";
           }
           
+          // SHOT WORKFLOW: Check if this is a shot workflow in green zone
+          if (workflowActive && eventType === 'shot' && !isRedZone) {
+            // Force green color for shot workflow
+            color = "#00ff66";
+            
+            App.markerHandler.createMarkerPercent(
+              pos.xPctContainer,
+              pos.yPctContainer,
+              color,
+              box,
+              true,
+              pointPlayer
+            );
+            
+            // Complete shot workflow immediately
+            App.addGoalMapPoint(
+              "field",
+              pos.xPctContainer,
+              pos.yPctContainer,
+              color,
+              box.id
+            );
+            
+            // Remove player name overlay
+            if (App.goalMap && typeof App.goalMap.updatePlayerNameOverlay === 'function') {
+              App.goalMap.updatePlayerNameOverlay();
+            }
+            
+            // Auto-navigate back to Game Data after short delay
+            setTimeout(() => {
+              if (typeof App.showPage === 'function') {
+                App.showPage('stats');
+              }
+            }, App.goalMap.AUTO_NAVIGATION_DELAY_MS);
+            
+            return;
+          }
+          
           App.markerHandler.createMarkerPercent(
             pos.xPctContainer,
             pos.yPctContainer,
@@ -521,11 +559,17 @@ App.goalMap = {
   updatePlayerNameOverlay() {
     const workflow = App.goalMapWorkflow;
     
-    if (workflow?.active && workflow?.eventType === 'goal' && workflow?.workflowType === 'scored' && workflow?.playerName) {
-      // If scored workflow is active, show player name
-      this.showPlayerNameOverlay(workflow.playerName);
+    if (workflow?.active && workflow?.playerName) {
+      // Show player name for shot workflow OR scored goal workflow
+      if (workflow.eventType === 'shot' || 
+          (workflow.eventType === 'goal' && workflow.workflowType === 'scored')) {
+        this.showPlayerNameOverlay(workflow.playerName);
+      } else {
+        // For other workflows (conceded), remove player overlays
+        document.querySelectorAll('.player-name-overlay').forEach(el => el.remove());
+      }
     } else {
-      // If no scored workflow, remove overlays
+      // If no workflow, remove overlays
       document.querySelectorAll('.player-name-overlay').forEach(el => el.remove());
     }
   },

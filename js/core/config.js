@@ -277,6 +277,16 @@ const App = {
           if (typeof this.goalMap.initPlayerFilter === 'function') {
             this.goalMap.initPlayerFilter();
           }
+          // Show player name overlay if workflow is active
+          if (this.goalMapWorkflow?.active) {
+            if ((this.goalMapWorkflow.eventType === 'shot' || 
+                 (this.goalMapWorkflow.eventType === 'goal' && this.goalMapWorkflow.workflowType === 'scored')) 
+                 && this.goalMapWorkflow.playerName) {
+              if (typeof this.goalMap.showPlayerNameOverlay === 'function') {
+                this.goalMap.showPlayerNameOverlay(this.goalMapWorkflow.playerName);
+              }
+            }
+          }
         }
         if (page === "teamSelection" && this.teamSelection && typeof this.teamSelection.updateButtonStates === 'function') {
           this.teamSelection.updateButtonStates();
