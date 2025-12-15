@@ -100,6 +100,7 @@ App.goalMap = {
         let eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
         let workflowType = App.goalMapWorkflow?.workflowType; // 'scored' | 'conceded' | null
         let isGoalWorkflow = workflowActive && eventType === 'goal';
+        let isShotWorkflow = workflowActive && eventType === 'shot';
         let isScoredWorkflow = workflowType === 'scored';
         let isConcededWorkflow = workflowType === 'conceded';
         const neutralGrey = "#444444";
@@ -115,6 +116,15 @@ App.goalMap = {
           box.id === "goalRedBox";
         
         if (!pos.insideImage) return;
+        
+        // Shot Workflow: Only allow clicks in field box (will be handled below)
+        if (isShotWorkflow) {
+          const isFieldBox = box.classList.contains("field-box");
+          if (!isFieldBox) {
+            console.log('[Shot Workflow] Please click in the field (green zone)');
+            return;
+          }
+        }
         
         // Im Goal-Workflow: Strenge Schritt-Kontrolle
         if (isGoalWorkflow) {
@@ -293,8 +303,13 @@ App.goalMap = {
             color = pos.yPctImage > this.VERTICAL_SPLIT_THRESHOLD ? "#ff0000" : "#00ff66";
           }
           
-          // SHOT WORKFLOW: Check if this is a shot workflow in green zone
-          if (workflowActive && eventType === 'shot' && !isRedZone) {
+          // SHOT WORKFLOW: Only allow green zone (top half)
+          if (workflowActive && eventType === 'shot') {
+            if (isRedZone) {
+              console.log('[Shot Workflow] Please click in the green zone (top half)');
+              return;
+            }
+            
             // Force green color for shot workflow
             color = "#00ff66";
             
