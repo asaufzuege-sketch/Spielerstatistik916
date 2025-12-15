@@ -664,12 +664,15 @@ App.goalMap = {
     if (!filterSelect) return;
     
     filterSelect.innerHTML = '<option value="">All Players</option>';
-    (App.data.selectedPlayers || []).forEach(player => {
-      const option = document.createElement("option");
-      option.value = player.name;
-      option.textContent = player.name;
-      filterSelect.appendChild(option);
-    });
+    // Nur Spieler ohne Goalie-Position (G) in die Liste aufnehmen
+    (App.data.selectedPlayers || [])
+      .filter(player => player.position !== "G" && !player.isGoalie)
+      .forEach(player => {
+        const option = document.createElement("option");
+        option.value = player.name;
+        option.textContent = player.name;
+        filterSelect.appendChild(option);
+      });
     
     filterSelect.addEventListener("change", () => {
       this.playerFilter = filterSelect.value || null;
