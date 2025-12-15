@@ -330,11 +330,7 @@ App.goalMap = {
               color,
               box.id
             );
-            
-            // Remove player name overlay
-            if (App.goalMap && typeof App.goalMap.updatePlayerNameOverlay === 'function') {
-              App.goalMap.updatePlayerNameOverlay();
-            }
+            // Note: addGoalMapPoint will call completeGoalMapWorkflow which removes overlay
             
             // Auto-navigate back to Game Data after short delay
             setTimeout(() => {
