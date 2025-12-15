@@ -100,6 +100,7 @@ App.goalMap = {
         let eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
         let workflowType = App.goalMapWorkflow?.workflowType; // 'scored' | 'conceded' | null
         let isGoalWorkflow = workflowActive && eventType === 'goal';
+        let isShotWorkflow = workflowActive && eventType === 'shot';
         let isScoredWorkflow = workflowType === 'scored';
         let isConcededWorkflow = workflowType === 'conceded';
         const neutralGrey = "#444444";
@@ -115,6 +116,15 @@ App.goalMap = {
           box.id === "goalRedBox";
         
         if (!pos.insideImage) return;
+        
+        // Shot Workflow: Only allow clicks in field box (will be handled below)
+        if (isShotWorkflow) {
+          const isFieldBox = box.classList.contains("field-box");
+          if (!isFieldBox) {
+            console.log('[Shot Workflow] Please click in the field (green zone)');
+            return;
+          }
+        }
         
         // Im Goal-Workflow: Strenge Schritt-Kontrolle
         if (isGoalWorkflow) {
@@ -291,6 +301,45 @@ App.goalMap = {
           // Normaler manueller Klick: oben grün, unten rot
           else {
             color = pos.yPctImage > this.VERTICAL_SPLIT_THRESHOLD ? "#ff0000" : "#00ff66";
+          }
+          
+          // SHOT WORKFLOW: Only allow green zone (top half)
+          if (workflowActive && eventType === 'shot') {
+            if (isRedZone) {
+              console.log('[Shot Workflow] Please click in the green zone (top half)');
+              return;
+            }
+            
+            // Force green color for shot workflow
+            color = "#00ff66";
+            
+            App.markerHandler.createMarkerPercent(
+              pos.xPctContainer,
+              pos.yPctContainer,
+              color,
+              box,
+              true,
+              pointPlayer
+            );
+            
+            // Complete shot workflow immediately
+            App.addGoalMapPoint(
+              "field",
+              pos.xPctContainer,
+              pos.yPctContainer,
+              color,
+              box.id
+            );
+            // Note: addGoalMapPoint will call completeGoalMapWorkflow which removes overlay
+            
+            // Auto-navigate back to Game Data after short delay
+            setTimeout(() => {
+              if (typeof App.showPage === 'function') {
+                App.showPage('stats');
+              }
+            }, App.goalMap.AUTO_NAVIGATION_DELAY_MS);
+            
+            return;
           }
           
           App.markerHandler.createMarkerPercent(
@@ -530,11 +579,17 @@ App.goalMap = {
   updatePlayerNameOverlay() {
     const workflow = App.goalMapWorkflow;
     
-    if (workflow?.active && workflow?.eventType === 'goal' && workflow?.workflowType === 'scored' && workflow?.playerName) {
-      // If scored workflow is active, show player name
-      this.showPlayerNameOverlay(workflow.playerName);
+    if (workflow?.active && workflow?.playerName) {
+      // Show player name for shot workflow OR scored goal workflow
+      if (workflow.eventType === 'shot' || 
+          (workflow.eventType === 'goal' && workflow.workflowType === 'scored')) {
+        this.showPlayerNameOverlay(workflow.playerName);
+      } else {
+        // For other workflows (conceded), remove player overlays
+        document.querySelectorAll('.player-name-overlay').forEach(el => el.remove());
+      }
     } else {
-      // If no scored workflow, remove overlays
+      // If no workflow, remove overlays
       document.querySelectorAll('.player-name-overlay').forEach(el => el.remove());
     }
   },
