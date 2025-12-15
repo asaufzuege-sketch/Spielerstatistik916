@@ -230,6 +230,14 @@ App.goalMap = {
                 "#ff0000", box, true,
                 activeGoalie.name, null, 'conceded'
               );
+              
+              // NEU: Sofort zurück zu Game Data nach Shot
+              setTimeout(() => {
+                if (typeof App.showPage === 'function') {
+                  App.showPage('stats');
+                }
+              }, 300); // Kurze Verzögerung damit der User den Punkt sieht
+              
               return; // WICHTIG: Hier beenden, kein Workflow
             }
             
@@ -674,6 +682,13 @@ App.goalMap = {
     filterSelect.addEventListener("change", () => {
       this.playerFilter = filterSelect.value || null;
       this.applyPlayerFilter();
+      
+      // NEU: Pulsieren aktivieren/deaktivieren
+      if (this.playerFilter) {
+        filterSelect.classList.add("active");
+      } else {
+        filterSelect.classList.remove("active");
+      }
     });
     
     const savedFilter = localStorage.getItem("goalMapPlayerFilter");
@@ -681,6 +696,7 @@ App.goalMap = {
       filterSelect.value = savedFilter;
       this.playerFilter = savedFilter;
       this.applyPlayerFilter();
+      filterSelect.classList.add("active");  // NEU: Pulsieren beim Laden
     }
     
     // Goalie Filter Dropdown - populate with currently selected goalies
