@@ -236,7 +236,7 @@ App.goalMap = {
                 if (typeof App.showPage === 'function') {
                   App.showPage('stats');
                 }
-              }, 300); // Kurze Verzögerung damit der User den Punkt sieht
+              }, this.AUTO_NAVIGATION_DELAY_MS); // Kurze Verzögerung damit der User den Punkt sieht
               
               return; // WICHTIG: Hier beenden, kein Workflow
             }
@@ -303,7 +303,7 @@ App.goalMap = {
               if (typeof App.showPage === 'function') {
                 App.showPage('stats');
               }
-            }, 300);
+            }, this.AUTO_NAVIGATION_DELAY_MS);
           }
           
           if (workflowActive) {
