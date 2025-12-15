@@ -771,8 +771,10 @@ App.goalMap = {
         // Save to localStorage
         if (selectedGoalie) {
           localStorage.setItem("goalMapActiveGoalie", selectedGoalie);
+          goalieFilterSelect.classList.add("active"); // Pulsieren AN
         } else {
           localStorage.removeItem("goalMapActiveGoalie");
+          goalieFilterSelect.classList.remove("active"); // Pulsieren AUS
         }
         
         // Update UI to show neon-pulse and overlay
