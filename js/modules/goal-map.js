@@ -707,6 +707,12 @@ App.goalMap = {
         };
         
         newBtn.addEventListener("click", () => {
+          // Shot-Workflow: KEINE Timebox-Buttons erlaubt
+          if (App.goalMapWorkflow?.active && App.goalMapWorkflow?.eventType === 'shot') {
+            console.log('[Shot Workflow] Timebox buttons not allowed during shot workflow');
+            return; // Blockiere ALLE Buttons
+          }
+          
           // Am Anfang des click handlers - ROTE BUTTONS blockieren
           const isBottomRow = newBtn.closest('.period-buttons')?.classList.contains('bottom-row');
           if (isBottomRow) {
@@ -979,6 +985,17 @@ App.goalMap = {
     const indicator = document.getElementById("workflowStatusIndicator");
     const textEl = document.getElementById("workflowStatusText");
     if (!indicator || !textEl) return;
+    
+    // Set body data-workflow attribute for CSS styling
+    if (App.goalMapWorkflow?.active) {
+      if (App.goalMapWorkflow.eventType === 'shot') {
+        document.body.setAttribute('data-workflow', 'shot');
+      } else if (App.goalMapWorkflow?.workflowType) {
+        document.body.setAttribute('data-workflow', App.goalMapWorkflow.workflowType);
+      }
+    } else {
+      document.body.removeAttribute('data-workflow');
+    }
     
     if (App.goalMapWorkflow?.active) {
       const collected = App.goalMapWorkflow.collectedPoints.length;
