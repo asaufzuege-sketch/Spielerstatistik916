@@ -983,6 +983,7 @@ copilot/change-line-mode-functionality
     const textEl = document.getElementById("workflowStatusText");
     if (!indicator || !textEl) return;
     
+copilot/revert-css-changes-pr-168
 copilot/block-timebox-buttons-shot-workflow
     // Set body data-workflow attribute for CSS styling
     if (App.goalMapWorkflow?.active) {
@@ -998,6 +999,7 @@ copilot/block-timebox-buttons-shot-workflow
     document.body.classList.remove('workflow-scored', 'workflow-conceded');
 copilot/change-line-mode-functionality
     
+copilot/change-line-mode-functionality
     if (App.goalMapWorkflow?.active) {
       const collected = App.goalMapWorkflow.collectedPoints.length;
       const required = App.goalMapWorkflow.requiredPoints;
@@ -1008,10 +1010,8 @@ copilot/change-line-mode-functionality
       let workflowDesc = '';
       if (workflowType === 'scored') {
         workflowDesc = '🟢 SCORED';
-        document.body.classList.add('workflow-scored');
       } else if (workflowType === 'conceded') {
         workflowDesc = '🔴 CONCEDED';
-        document.body.classList.add('workflow-conceded');
       }
       
       indicator.style.display = 'block';
