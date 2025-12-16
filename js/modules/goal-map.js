@@ -114,6 +114,15 @@ App.goalMap = {
         return { xPctContainer, yPctContainer, xPctImage, yPctImage, insideImage };
       };
       
+      // Helper function to set zone attribute on last created marker
+      const setMarkerZone = (box, zone) => {
+        const markers = box.querySelectorAll(".marker-dot");
+        const lastMarker = markers[markers.length - 1];
+        if (lastMarker) {
+          lastMarker.dataset.zone = zone;
+        }
+      };
+      
       const placeMarker = (pos, long, forceGrey = false) => {
         let workflowActive = App.goalMapWorkflow?.active;
         let eventType = App.goalMapWorkflow?.eventType; // 'goal' | 'shot' | null
@@ -232,6 +241,9 @@ App.goalMap = {
             pointPlayer
           );
           
+          // Set data-zone attribute for goal boxes
+          setMarkerZone(box, box.id === 'goalRedBox' ? 'red' : 'green');
+          
           this.saveMarkers();
           
           if (workflowActive) {
@@ -266,6 +278,9 @@ App.goalMap = {
                 "#ff0000", box, true,
                 activeGoalie.name, null, 'conceded'
               );
+              
+              // Set data-zone attribute for red zone shot
+              setMarkerZone(box, 'red');
               
               this.saveMarkers();
               
@@ -345,6 +360,9 @@ App.goalMap = {
               pointPlayer
             );
             
+            // Set data-zone attribute for shot workflow
+            setMarkerZone(box, 'green');
+            
             this.saveMarkers();
             
             // Complete shot workflow immediately
@@ -375,6 +393,9 @@ App.goalMap = {
             true,
             pointPlayer
           );
+          
+          // Set data-zone attribute for normal field point
+          setMarkerZone(box, isRedZone ? 'red' : 'green');
           
           this.saveMarkers();
           
@@ -497,14 +518,8 @@ App.goalMap = {
     // Red goal box = never green zone
     if (box.id === 'goalRedBox') return false;
     
-    // Field box: check position (top half = green)
-    if (box.classList.contains('field-box')) {
-      const topStr = marker.style.top || '0';
-      const top = parseFloat(topStr.replace('%', '')) || 0;
-      return top < this.VERTICAL_SPLIT_THRESHOLD; // top < 50% = green zone
-    }
-    
-    return false;
+    // For field box: check data-zone attribute
+    return marker.dataset.zone === 'green';
   },
   
   // Helper: Check if marker is in RED zone (bottom field half + red goal)
@@ -515,14 +530,8 @@ App.goalMap = {
     // Green goal box = never red zone
     if (box.id === 'goalGreenBox') return false;
     
-    // Field box: check position (bottom half = red)
-    if (box.classList.contains('field-box')) {
-      const topStr = marker.style.top || '0';
-      const top = parseFloat(topStr.replace('%', '')) || 0;
-      return top >= this.VERTICAL_SPLIT_THRESHOLD; // top >= 50% = red zone
-    }
-    
-    return false;
+    // For field box: check data-zone attribute
+    return marker.dataset.zone === 'red';
   },
   
   // Update goalie button title to show neon-pulse when active
@@ -729,7 +738,8 @@ App.goalMap = {
         const xPct = parseFloat(left.replace("%", "")) || 0;
         const yPct = parseFloat(top.replace("%", "")) || 0;
         const playerName = dot.dataset.player || null;
-        markers.push({ xPct, yPct, color: bg, player: playerName });
+        const zone = dot.dataset.zone || null; // Save zone attribute
+        markers.push({ xPct, yPct, color: bg, player: playerName, zone: zone });
       });
       return markers;
     });
@@ -764,8 +774,35 @@ App.goalMap = {
             true,
             marker.player
           );
+          
+          // Get the marker we just created (it's the last one in the box)
+          const dots = box.querySelectorAll(".marker-dot");
+          const lastDot = dots[dots.length - 1];
+          
+          if (!lastDot) return; // Safety check
+          
+          // Restore zone attribute or migrate old markers
+          if (marker.zone) {
+            // Marker has zone attribute - restore it
+            lastDot.dataset.zone = marker.zone;
+          } else {
+            // Migration: Calculate zone for old markers without zone attribute
+            if (box.id === 'goalRedBox') {
+              lastDot.dataset.zone = 'red';
+            } else if (box.id === 'goalGreenBox') {
+              lastDot.dataset.zone = 'green';
+            } else if (box.classList.contains('field-box')) {
+              // For field box, calculate from position
+              const topStr = lastDot.style.top || '0';
+              const top = parseFloat(topStr.replace('%', '')) || 0;
+              lastDot.dataset.zone = top >= this.VERTICAL_SPLIT_THRESHOLD ? 'red' : 'green';
+            }
+          }
         });
       });
+      
+      // Save markers to persist any migrated zone attributes
+      this.saveMarkers();
       
       // Apply both filters independently to ensure correct marker visibility
       this.applyPlayerFilter(); // Green zone
@@ -1250,7 +1287,8 @@ App.goalMap = {
         const xPct = parseFloat(left.replace("%", "")) || 0;
         const yPct = parseFloat(top.replace("%", "")) || 0;
         const playerName = dot.dataset.player || null;
-        markers.push({ xPct, yPct, color: bg, player: playerName });
+        const zone = dot.dataset.zone || null; // Include zone attribute
+        markers.push({ xPct, yPct, color: bg, player: playerName, zone: zone });
       });
       return markers;
     });
