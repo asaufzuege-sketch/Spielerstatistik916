@@ -1060,8 +1060,7 @@ App.goalMap = {
   },
   
   filterByGoalies(goalieNames) {
-    // DO NOT clear the player filter - filters are independent!
-    // REMOVED: filterSelect.value = ""; and this.playerFilter = null;
+    // Player and goalie filters operate independently on different zones
     
     // Detect if "All Goalies" is selected by checking if goalieNames contains all available goalies
     const allGoalies = (App.data.selectedPlayers || []).filter(p => p.position === "G");
@@ -1090,7 +1089,7 @@ App.goalMap = {
             marker.style.display = 'none';
           }
         }
-        // GREEN ZONE markers are NOT touched by this function
+        // green zone markers are not touched by this function
       });
     });
     
@@ -1148,7 +1147,7 @@ App.goalMap = {
             marker.style.display = '';
           }
         }
-        // RED ZONE markers are NOT touched by this function
+        // red zone markers are not touched by this function
       });
     });
     
