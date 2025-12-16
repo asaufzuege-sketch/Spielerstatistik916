@@ -776,7 +776,7 @@ App.goalMap = {
         if (goalieNames.includes(savedGoalie)) {
           this.filterByGoalies([savedGoalie]);
         } else {
-          // Goalie doesn't exist, show all
+          // Goalie doesn't exist, show all red zone markers
           this.filterByGoalies(goalieNames);
         }
       } else {
@@ -1089,7 +1089,7 @@ App.goalMap = {
             marker.style.display = 'none';
           }
         }
-        // green zone markers are not touched by this function
+        // Green zone markers are not touched by this function
       });
     });
     
@@ -1147,7 +1147,7 @@ App.goalMap = {
             marker.style.display = '';
           }
         }
-        // red zone markers are not touched by this function
+        // Red zone markers are not touched by this function
       });
     });
     
