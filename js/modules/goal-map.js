@@ -711,7 +711,19 @@ App.goalMap = {
       });
       
       // Apply current filter state to ensure correct marker visibility
-      this.applyPlayerFilter();
+      // Check if goalie filter is active
+      const savedGoalie = localStorage.getItem("goalMapActiveGoalie");
+      if (savedGoalie) {
+        const goalies = (App.data.selectedPlayers || []).filter(p => p.position === "G");
+        const goalieNames = goalies.map(g => g.name);
+        if (goalieNames.includes(savedGoalie)) {
+          this.filterByGoalies([savedGoalie]);
+        } else {
+          this.applyPlayerFilter();
+        }
+      } else {
+        this.applyPlayerFilter();
+      }
     } catch (e) {
       console.error('[Goal Map] Error restoring markers:', e);
     }
