@@ -34,11 +34,10 @@ App.seasonMap = {
       window.removeEventListener("resize", this.resizeListener);
     }
     
-    let resizeTimeout;
     this.resizeListener = () => {
       // Debounce resize events
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
         if (App.markerHandler && typeof App.markerHandler.repositionMarkers === 'function') {
           App.markerHandler.repositionMarkers();
         }
