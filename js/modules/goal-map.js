@@ -1062,17 +1062,11 @@ App.goalMap = {
   },
   
   filterByGoalies(goalieNames) {
-    console.log('[Goalie Filter] Filtering by:', goalieNames);
-    
     // Player and goalie filters operate independently on different zones
     
     // Detect if "All Goalies" is selected
     const allGoalies = (App.data.selectedPlayers || []).filter(p => p.position === "G");
     const isAllGoaliesFilter = goalieNames.length >= allGoalies.length || goalieNames.length === 0;
-    
-    console.log('[Goalie Filter] All goalies count:', allGoalies.length);
-    console.log('[Goalie Filter] Selected goalies:', goalieNames);
-    console.log('[Goalie Filter] Is "All Goalies" filter:', isAllGoaliesFilter);
     
     const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
     boxes.forEach(box => {
@@ -1080,13 +1074,6 @@ App.goalMap = {
       markers.forEach(marker => {
         // Only filter RED ZONE markers
         const isRedMarker = this.isRedZoneMarker(marker, box);
-        
-        console.log('[Goalie Filter] Marker:', {
-          box: box.id,
-          top: marker.style.top,
-          player: marker.dataset.player,
-          isRedMarker: isRedMarker
-        });
         
         if (isRedMarker) {
           const playerName = marker.dataset.player;
