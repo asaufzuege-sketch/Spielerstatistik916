@@ -172,7 +172,8 @@ App.markerHandler = {
    * Reposition all markers when window is resized
    */
   repositionMarkers() {
-    const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
+    // Use combined selector to work for both goal map and season map pages
+    const boxes = document.querySelectorAll(`${App.selectors.torbildBoxes}, ${App.selectors.seasonMapBoxes}`);
     boxes.forEach(box => {
       const img = box.querySelector("img");
       if (!img) return;

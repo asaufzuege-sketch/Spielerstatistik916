@@ -58,9 +58,13 @@ App.goalMap = {
       this.filterByGoalies(goalieNames);
     }
     
-    // Add window resize listener to reposition markers
+    // Add window resize listener to reposition markers (with cleanup)
+    if (this.resizeListener) {
+      window.removeEventListener("resize", this.resizeListener);
+    }
+    
     let resizeTimeout;
-    window.addEventListener("resize", () => {
+    this.resizeListener = () => {
       // Debounce resize events
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
@@ -68,7 +72,8 @@ App.goalMap = {
           App.markerHandler.repositionMarkers();
         }
       }, 100);
-    });
+    };
+    window.addEventListener("resize", this.resizeListener);
     
     // Initial repositioning after markers are restored
     if (App.markerHandler && typeof App.markerHandler.repositionMarkers === 'function') {

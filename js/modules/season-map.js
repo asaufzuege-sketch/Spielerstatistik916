@@ -29,9 +29,13 @@ App.seasonMap = {
     // Player Filter
     this.initPlayerFilter();
     
-    // Add window resize listener to reposition markers
+    // Add window resize listener to reposition markers (with cleanup)
+    if (this.resizeListener) {
+      window.removeEventListener("resize", this.resizeListener);
+    }
+    
     let resizeTimeout;
-    window.addEventListener("resize", () => {
+    this.resizeListener = () => {
       // Debounce resize events
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
@@ -39,7 +43,8 @@ App.seasonMap = {
           App.markerHandler.repositionMarkers();
         }
       }, 100);
-    });
+    };
+    window.addEventListener("resize", this.resizeListener);
   },
   
   // -----------------------------
