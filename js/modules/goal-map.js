@@ -782,9 +782,29 @@ App.goalMap = {
             if (lastDot) {
               lastDot.dataset.zone = marker.zone;
             }
+          } else {
+            // Migration: Calculate zone for old markers without zone attribute
+            const dots = box.querySelectorAll(".marker-dot");
+            const lastDot = dots[dots.length - 1];
+            if (lastDot) {
+              // For goal boxes, determine zone from box id
+              if (box.id === 'goalRedBox') {
+                lastDot.dataset.zone = 'red';
+              } else if (box.id === 'goalGreenBox') {
+                lastDot.dataset.zone = 'green';
+              } else if (box.classList.contains('field-box')) {
+                // For field box, calculate from position
+                const topStr = lastDot.style.top || '0';
+                const top = parseFloat(topStr.replace('%', '')) || 0;
+                lastDot.dataset.zone = top >= this.VERTICAL_SPLIT_THRESHOLD ? 'red' : 'green';
+              }
+            }
           }
         });
       });
+      
+      // Save markers to persist any migrated zone attributes
+      this.saveMarkers();
       
       // Apply both filters independently to ensure correct marker visibility
       this.applyPlayerFilter(); // Green zone
