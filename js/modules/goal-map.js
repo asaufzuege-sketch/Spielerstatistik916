@@ -1066,13 +1066,12 @@ App.goalMap = {
     
     // Player and goalie filters operate independently on different zones
     
-    // Detect if "All Goalies" is selected by checking if goalieNames contains all available goalies
+    // Detect if "All Goalies" is selected
     const allGoalies = (App.data.selectedPlayers || []).filter(p => p.position === "G");
-    const allGoalieNames = allGoalies.map(g => g.name);
-    const isAllGoaliesFilter = goalieNames.length === allGoalieNames.length && 
-                                goalieNames.every(name => allGoalieNames.includes(name));
+    const isAllGoaliesFilter = goalieNames.length >= allGoalies.length || goalieNames.length === 0;
     
-    console.log('[Goalie Filter] All goalies:', allGoalieNames);
+    console.log('[Goalie Filter] All goalies count:', allGoalies.length);
+    console.log('[Goalie Filter] Selected goalies:', goalieNames);
     console.log('[Goalie Filter] Is "All Goalies" filter:', isAllGoaliesFilter);
     
     const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
@@ -1095,12 +1094,13 @@ App.goalMap = {
           if (isAllGoaliesFilter) {
             // "All Goalies" - show all red zone markers
             marker.style.display = '';
-          } else if (playerName) {
-            // Specific goalie - only show markers matching the selected goalie
-            marker.style.display = goalieNames.includes(playerName) ? '' : 'none';
           } else {
-            // Marker without player - hide when specific goalie filter is active
-            marker.style.display = 'none';
+            // Specific goalie filter
+            if (playerName && goalieNames.includes(playerName)) {
+              marker.style.display = '';
+            } else {
+              marker.style.display = 'none';
+            }
           }
         }
         // Green zone markers are not touched by this function
