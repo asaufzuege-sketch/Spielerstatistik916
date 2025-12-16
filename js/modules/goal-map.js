@@ -775,29 +775,27 @@ App.goalMap = {
             marker.player
           );
           
-          // Restore zone attribute
+          // Get the marker we just created (it's the last one in the box)
+          const dots = box.querySelectorAll(".marker-dot");
+          const lastDot = dots[dots.length - 1];
+          
+          if (!lastDot) return; // Safety check
+          
+          // Restore zone attribute or migrate old markers
           if (marker.zone) {
-            const dots = box.querySelectorAll(".marker-dot");
-            const lastDot = dots[dots.length - 1];
-            if (lastDot) {
-              lastDot.dataset.zone = marker.zone;
-            }
+            // Marker has zone attribute - restore it
+            lastDot.dataset.zone = marker.zone;
           } else {
             // Migration: Calculate zone for old markers without zone attribute
-            const dots = box.querySelectorAll(".marker-dot");
-            const lastDot = dots[dots.length - 1];
-            if (lastDot) {
-              // For goal boxes, determine zone from box id
-              if (box.id === 'goalRedBox') {
-                lastDot.dataset.zone = 'red';
-              } else if (box.id === 'goalGreenBox') {
-                lastDot.dataset.zone = 'green';
-              } else if (box.classList.contains('field-box')) {
-                // For field box, calculate from position
-                const topStr = lastDot.style.top || '0';
-                const top = parseFloat(topStr.replace('%', '')) || 0;
-                lastDot.dataset.zone = top >= this.VERTICAL_SPLIT_THRESHOLD ? 'red' : 'green';
-              }
+            if (box.id === 'goalRedBox') {
+              lastDot.dataset.zone = 'red';
+            } else if (box.id === 'goalGreenBox') {
+              lastDot.dataset.zone = 'green';
+            } else if (box.classList.contains('field-box')) {
+              // For field box, calculate from position
+              const topStr = lastDot.style.top || '0';
+              const top = parseFloat(topStr.replace('%', '')) || 0;
+              lastDot.dataset.zone = top >= this.VERTICAL_SPLIT_THRESHOLD ? 'red' : 'green';
             }
           }
         });
