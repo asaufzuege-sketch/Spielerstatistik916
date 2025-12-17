@@ -28,6 +28,22 @@ App.seasonMap = {
     
     // Player Filter
     this.initPlayerFilter();
+    
+    // Add window resize listener to reposition markers (with cleanup)
+    if (this.resizeListener) {
+      window.removeEventListener("resize", this.resizeListener);
+    }
+    
+    this.resizeListener = () => {
+      // Debounce resize events
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
+        if (App.markerHandler && typeof App.markerHandler.repositionMarkers === 'function') {
+          App.markerHandler.repositionMarkers();
+        }
+      }, 100);
+    };
+    window.addEventListener("resize", this.resizeListener);
   },
   
   // -----------------------------
@@ -276,6 +292,13 @@ App.seasonMap = {
       this.applyPlayerFilter();
     } else {
       this.renderGoalAreaStats();
+    }
+    
+    // Reposition markers after rendering to ensure correct placement
+    if (App.markerHandler && typeof App.markerHandler.repositionMarkers === 'function') {
+      setTimeout(() => {
+        App.markerHandler.repositionMarkers();
+      }, 100);
     }
   },
   

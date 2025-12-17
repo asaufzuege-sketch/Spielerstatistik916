@@ -57,6 +57,30 @@ App.goalMap = {
       const goalieNames = allGoalies.map(g => g.name);
       this.filterByGoalies(goalieNames);
     }
+    
+    // Add window resize listener to reposition markers (with cleanup)
+    if (this.resizeListener) {
+      window.removeEventListener("resize", this.resizeListener);
+    }
+    
+    this.resizeListener = () => {
+      // Debounce resize events
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
+        if (App.markerHandler && typeof App.markerHandler.repositionMarkers === 'function') {
+          App.markerHandler.repositionMarkers();
+        }
+      }, 100);
+    };
+    window.addEventListener("resize", this.resizeListener);
+    
+    // Initial repositioning after markers are restored
+    if (App.markerHandler && typeof App.markerHandler.repositionMarkers === 'function') {
+      // Small delay to ensure images are loaded
+      setTimeout(() => {
+        App.markerHandler.repositionMarkers();
+      }, 100);
+    }
   },
   
   attachMarkerHandlers() {
@@ -223,18 +247,18 @@ App.goalMap = {
           if (!sampler || !sampler.valid) return;
           
           if (box.id === "goalGreenBox") {
-            if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
+            if (!sampler.isWhiteAt(pos.xPctImage, pos.yPctImage, 220)) return;
           } else if (box.id === "goalRedBox") {
-            if (!sampler.isNeutralWhiteAt(pos.xPctContainer, pos.yPctContainer, 235, 12)) return;
+            if (!sampler.isNeutralWhiteAt(pos.xPctImage, pos.yPctImage, 235, 12)) return;
           } else {
-            if (!sampler.isWhiteAt(pos.xPctContainer, pos.yPctContainer, 220)) return;
+            if (!sampler.isWhiteAt(pos.xPctImage, pos.yPctImage, 220)) return;
           }
           
           const color = neutralGrey;
           
           App.markerHandler.createMarkerPercent(
-            pos.xPctContainer,
-            pos.yPctContainer,
+            pos.xPctImage,
+            pos.yPctImage,
             color,
             box,
             true,
@@ -249,8 +273,8 @@ App.goalMap = {
           if (workflowActive) {
             App.addGoalMapPoint(
               "goal",
-              pos.xPctContainer,
-              pos.yPctContainer,
+              pos.xPctImage,
+              pos.yPctImage,
               color,
               box.id
             );
@@ -274,7 +298,7 @@ App.goalMap = {
             // Kurzer Klick = Roter Punkt (Shot) - NUR bei kurzem Klick!
             if (!long) {
               App.markerHandler.createMarkerPercent(
-                pos.xPctContainer, pos.yPctContainer,
+                pos.xPctImage, pos.yPctImage,
                 "#ff0000", box, true,
                 activeGoalie.name, null, 'conceded'
               );
@@ -352,8 +376,8 @@ App.goalMap = {
             color = "#00ff66";
             
             App.markerHandler.createMarkerPercent(
-              pos.xPctContainer,
-              pos.yPctContainer,
+              pos.xPctImage,
+              pos.yPctImage,
               color,
               box,
               true,
@@ -368,8 +392,8 @@ App.goalMap = {
             // Complete shot workflow immediately
             App.addGoalMapPoint(
               "field",
-              pos.xPctContainer,
-              pos.yPctContainer,
+              pos.xPctImage,
+              pos.yPctImage,
               color,
               box.id
             );
@@ -386,8 +410,8 @@ App.goalMap = {
           }
           
           App.markerHandler.createMarkerPercent(
-            pos.xPctContainer,
-            pos.yPctContainer,
+            pos.xPctImage,
+            pos.yPctImage,
             color,
             box,
             true,
@@ -411,8 +435,8 @@ App.goalMap = {
           if (workflowActive) {
             App.addGoalMapPoint(
               "field",
-              pos.xPctContainer,
-              pos.yPctContainer,
+              pos.xPctImage,
+              pos.yPctImage,
               color,
               box.id
             );
@@ -732,14 +756,13 @@ App.goalMap = {
     const allMarkers = boxes.map(box => {
       const markers = [];
       box.querySelectorAll(".marker-dot").forEach(dot => {
-        const left = dot.style.left || "";
-        const top = dot.style.top || "";
+        // Save image-relative coordinates (from data attributes)
+        const xPctImage = parseFloat(dot.dataset.xPctImage) || 0;
+        const yPctImage = parseFloat(dot.dataset.yPctImage) || 0;
         const bg = dot.style.backgroundColor || "";
-        const xPct = parseFloat(left.replace("%", "")) || 0;
-        const yPct = parseFloat(top.replace("%", "")) || 0;
         const playerName = dot.dataset.player || null;
-        const zone = dot.dataset.zone || null; // Save zone attribute
-        markers.push({ xPct, yPct, color: bg, player: playerName, zone: zone });
+        const zone = dot.dataset.zone || null;
+        markers.push({ xPct: xPctImage, yPct: yPctImage, color: bg, player: playerName, zone: zone });
       });
       return markers;
     });
