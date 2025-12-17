@@ -561,10 +561,10 @@ App.goalMap = {
     if (isGreyMarker) {
       const yPctImage = parseFloat(marker.dataset.yPctImage) || 0;
       if (yPctImage > 0) {
-        return yPctImage < 50;
+        return yPctImage < this.VERTICAL_SPLIT_THRESHOLD;
       }
       const top = parseFloat(marker.style.top) || 0;
-      return top < 50;
+      return top < this.VERTICAL_SPLIT_THRESHOLD;
     }
     
     return false;
@@ -599,11 +599,11 @@ App.goalMap = {
       // Grey markers: check position (yPctImage from data attribute or style.top)
       const yPctImage = parseFloat(marker.dataset.yPctImage) || 0;
       if (yPctImage > 0) {
-        return yPctImage >= 50;
+        return yPctImage >= this.VERTICAL_SPLIT_THRESHOLD;
       }
       // Last resort: use style.top (less accurate but better than nothing)
       const top = parseFloat(marker.style.top) || 0;
-      return top >= 50;
+      return top >= this.VERTICAL_SPLIT_THRESHOLD;
     }
     
     return false;  // Green markers are not red zone
@@ -868,7 +868,7 @@ App.goalMap = {
             } else if (box.classList.contains('field-box')) {
               // For field box: use saved yPct (image coordinates) if available
               if (marker.yPct && marker.yPct > 0) {
-                lastDot.dataset.zone = marker.yPct >= 50 ? 'red' : 'green';
+                lastDot.dataset.zone = marker.yPct >= this.VERTICAL_SPLIT_THRESHOLD ? 'red' : 'green';
               } else {
                 // Fallback: calculate from rendered position
                 const topStr = lastDot.style.top || '0';
