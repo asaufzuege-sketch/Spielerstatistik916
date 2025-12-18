@@ -1180,6 +1180,42 @@ App.lineUp = {
     // Show loading indicator (optional)
     console.log("Generating PDF...");
     
+    // Temporär alle Boxen auf weiß setzen für den Export
+    const lineupLines = container.querySelectorAll('.lineup-line');
+    const originalBackgrounds = [];
+    
+    lineupLines.forEach((line, index) => {
+      originalBackgrounds[index] = line.style.backgroundColor;
+      line.style.backgroundColor = '#ffffff';
+    });
+    
+    // Auch die Sections (Forwards, Defense, etc.)
+    const lineupSections = container.querySelectorAll('.lineup-section');
+    const originalSectionBgs = [];
+    
+    lineupSections.forEach((section, index) => {
+      originalSectionBgs[index] = section.style.backgroundColor;
+      section.style.backgroundColor = '#ffffff';
+    });
+    
+    // Auch Defense-Pairs
+    const lineupPairs = container.querySelectorAll('.lineup-defense-pair');
+    const originalPairBgs = [];
+    
+    lineupPairs.forEach((pair, index) => {
+      originalPairBgs[index] = pair.style.backgroundColor;
+      pair.style.backgroundColor = '#ffffff';
+    });
+    
+    // Auch Formations (Box Play und Power Play)
+    const lineupFormations = container.querySelectorAll('.lineup-formation');
+    const originalFormationBgs = [];
+    
+    lineupFormations.forEach((formation, index) => {
+      originalFormationBgs[index] = formation.style.backgroundColor;
+      formation.style.backgroundColor = '#ffffff';
+    });
+    
     // Capture the lineup container as image
     html2canvas(container, {
       scale: 2,
@@ -1241,10 +1277,38 @@ App.lineUp = {
       } catch (error) {
         console.error("Error generating PDF:", error);
         alert("Error generating PDF: " + error.message);
+      } finally {
+        // Nach dem Export die Original-Farben wiederherstellen
+        lineupLines.forEach((line, index) => {
+          line.style.backgroundColor = originalBackgrounds[index] || '';
+        });
+        lineupSections.forEach((section, index) => {
+          section.style.backgroundColor = originalSectionBgs[index] || '';
+        });
+        lineupPairs.forEach((pair, index) => {
+          pair.style.backgroundColor = originalPairBgs[index] || '';
+        });
+        lineupFormations.forEach((formation, index) => {
+          formation.style.backgroundColor = originalFormationBgs[index] || '';
+        });
       }
     }).catch(error => {
       console.error("Error capturing lineup:", error);
       alert("Error capturing lineup: " + error.message);
+      
+      // Bei Fehler auch Original-Farben wiederherstellen
+      lineupLines.forEach((line, index) => {
+        line.style.backgroundColor = originalBackgrounds[index] || '';
+      });
+      lineupSections.forEach((section, index) => {
+        section.style.backgroundColor = originalSectionBgs[index] || '';
+      });
+      lineupPairs.forEach((pair, index) => {
+        pair.style.backgroundColor = originalPairBgs[index] || '';
+      });
+      lineupFormations.forEach((formation, index) => {
+        formation.style.backgroundColor = originalFormationBgs[index] || '';
+      });
     });
   }
 };
