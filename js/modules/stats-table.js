@@ -124,7 +124,8 @@ App.statsTable = {
       
       // Teamspezifische Gegner-Schüsse aus LocalStorage wiederherstellen
       if (c === "Shot") {
-        const teamId = App.teamSelection.getCurrentTeamInfo().id;
+        const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+        const teamId = teamInfo ? teamInfo.id : 'team1';
         const savedOppShots = localStorage.getItem(`opponentShots_${teamId}`);
         if (savedOppShots) {
           td.dataset.opp = savedOppShots;
@@ -527,7 +528,8 @@ App.statsTable = {
           tc.dataset.opp = String(Number(tc.dataset.opp || 0) + 1);
           
           // Gegner-Schüsse teamspezifisch in LocalStorage speichern
-          const teamId = App.teamSelection.getCurrentTeamInfo().id;
+          const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+          const teamId = teamInfo ? teamInfo.id : 'team1';
           localStorage.setItem(`opponentShots_${teamId}`, tc.dataset.opp);
           
           this.updateTotals();
@@ -586,7 +588,12 @@ App.statsTable = {
   
   // Teamspezifische Lade- und Speicherfunktionen
   loadTeamSpecificData() {
-    const teamId = App.teamSelection.getCurrentTeamInfo().id;
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    if (!teamInfo || !teamInfo.id) {
+      console.warn('No team selected, cannot load team-specific data');
+      return;
+    }
+    const teamId = teamInfo.id;
     
     // Load team-specific selectedPlayers order if it exists
     const savedSelectedPlayers = localStorage.getItem(`selectedPlayers_${teamId}`);
@@ -620,14 +627,20 @@ App.statsTable = {
   },
   
   saveToStorage() {
-    const teamId = App.teamSelection.getCurrentTeamInfo().id;
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    if (!teamInfo || !teamInfo.id) {
+      console.warn('No team selected, cannot save team-specific data');
+      return;
+    }
+    const teamId = teamInfo.id;
     localStorage.setItem(`selectedPlayers_${teamId}`, JSON.stringify(App.data.selectedPlayers));
     localStorage.setItem(`statsData_${teamId}`, JSON.stringify(App.data.statsData));
     localStorage.setItem(`playerTimes_${teamId}`, JSON.stringify(App.data.playerTimes));
   },
   
   saveActiveTimersState() {
-    const teamId = App.teamSelection.getCurrentTeamInfo().id;
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const teamId = teamInfo ? teamInfo.id : 'team1';
     const activeTimerPlayers = Object.keys(App.data.activeTimers);
     localStorage.setItem(`activeTimerPlayers_${teamId}`, JSON.stringify(activeTimerPlayers));
   },
