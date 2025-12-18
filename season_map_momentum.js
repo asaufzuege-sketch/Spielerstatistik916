@@ -360,7 +360,12 @@
 
     // Get active filters
     const playerFilter = App.seasonMap?.playerFilter || null;
-    const goalieFilter = localStorage.getItem("seasonMapActiveGoalie") || null;
+    let goalieFilter = localStorage.getItem("seasonMapActiveGoalie") || null;
+    
+    // Normalize empty string and "All Goalies" values to null for consistent filter logic
+    if (goalieFilter === "" || goalieFilter === "All Goalies") {
+      goalieFilter = null;
+    }
     
     // Load per-player data instead of aggregated totals
     let timeDataWithPlayers = {};
@@ -383,22 +388,14 @@
         if (goalieFilter) {
           return Number(playerData[goalieFilter] || 0);
         }
-        // If player filter is active (but no goalie filter), hide conceded
-        if (playerFilter) {
-          return 0;
-        }
-        // No filter = Total sum
+        // No goalie filter = Sum all goalies
         return Object.values(playerData).reduce((sum, val) => sum + Number(val || 0), 0);
       } else {
         // Top row (scored/green) = Player Filter
         if (playerFilter) {
           return Number(playerData[playerFilter] || 0);
         }
-        // If goalie filter is active (but no player filter), hide scored
-        if (goalieFilter) {
-          return 0;
-        }
-        // No filter = Total sum
+        // No player filter = Sum all players
         return Object.values(playerData).reduce((sum, val) => sum + Number(val || 0), 0);
       }
     }
