@@ -288,7 +288,7 @@ App.teamSelection = (function() {
                     <li>Filter-sensitiv: Player-Filter für grüne Linie (oben)</li>
                     <li>Goalie-Filter für rote Linie (unten)</li>
                 </ul>
-                <button id="infoCloseBtn" class="primary-btn">Schließen</button>
+                <button id="infoCloseBtn">Schließen</button>
             </div>
         `;
         document.body.appendChild(modal);

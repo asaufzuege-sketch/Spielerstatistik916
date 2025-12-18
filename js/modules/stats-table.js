@@ -661,7 +661,8 @@ App.statsTable = {
     App.data.activeTimers = {};
     
     // Teamspezifisch löschen
-    const teamId = App.teamSelection ? App.teamSelection.getCurrentTeamInfo().id : 'team1';
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const teamId = teamInfo ? teamInfo.id : 'team1';
     localStorage.removeItem(`statsData_${teamId}`);
     localStorage.removeItem(`playerTimes_${teamId}`);
     localStorage.removeItem(`activeTimerPlayers_${teamId}`);
