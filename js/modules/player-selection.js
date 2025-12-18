@@ -19,6 +19,21 @@ App.playerSelection = {
     document.getElementById("lineupBtn")?.addEventListener("click", () => {
       this.handleConfirmAndNavigateToLineUp();
     });
+    
+    // Event Listener für Reset Button - löscht alle Spieler und Goalies
+    document.getElementById("resetPlayersBtn")?.addEventListener("click", () => {
+      if (confirm("Alle Spieler und Goalies zurücksetzen?")) {
+        App.data.selectedPlayers = [];
+        App.data.goalies = [];
+        // LocalStorage auch löschen
+        const teamId = App.teamSelection?.getCurrentTeamInfo()?.id;
+        if (teamId) {
+          localStorage.removeItem(`selectedPlayers_${teamId}`);
+          localStorage.removeItem(`playerSelectionData_${teamId}`);
+        }
+        this.render();
+      }
+    });
   },
   
   handleConfirmAndNavigate() {

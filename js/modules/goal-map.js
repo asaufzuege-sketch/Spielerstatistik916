@@ -3,6 +3,7 @@
 App.goalMap = {
   timeTrackingBox: null,
   playerFilter: null,
+  timeTrackingInitialized: false, // Flag to prevent duplicate initialization
   VERTICAL_SPLIT_THRESHOLD: 50, // y-percent threshold for green (top) vs red (bottom) half
   WORKFLOW_STEP_FIELD: 0, // First step: click in field
   WORKFLOW_STEP_GOAL: 1, // Second step: click in goal
@@ -921,6 +922,13 @@ App.goalMap = {
   initTimeTracking() {
     if (!this.timeTrackingBox) return;
     
+    // Verhindere doppelte Initialisierung
+    if (this.timeTrackingInitialized) {
+      console.log("[Goal Map] TimeTracking already initialized, skipping...");
+      return;
+    }
+    this.timeTrackingInitialized = true;
+    
     let timeData = JSON.parse(localStorage.getItem("timeData")) || {};
     let timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     
@@ -1470,6 +1478,9 @@ App.goalMap = {
     localStorage.removeItem("timeData");
     localStorage.removeItem("timeDataWithPlayers");
     localStorage.removeItem("goalMapMarkers");
+    
+    // Reset initialization flag to allow re-initialization
+    this.timeTrackingInitialized = false;
     
     // KRITISCH: Buttons neu initialisieren damit Closures neue leere Daten haben!
     this.initTimeTracking();
