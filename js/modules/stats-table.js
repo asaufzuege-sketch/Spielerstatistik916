@@ -28,6 +28,9 @@ App.statsTable = {
   render() {
     if (!this.container) return;
     
+    // Load team-specific player order from localStorage before rendering
+    this.loadTeamSpecificData();
+    
     this.container.innerHTML = "";
     
     const table = document.createElement("table");
@@ -121,7 +124,8 @@ App.statsTable = {
       
       // Teamspezifische Gegner-Schüsse aus LocalStorage wiederherstellen
       if (c === "Shot") {
-        const teamId = App.teamSelection.getCurrentTeamInfo().id;
+        const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+        const teamId = teamInfo ? teamInfo.id : 'team1';
         const savedOppShots = localStorage.getItem(`opponentShots_${teamId}`);
         if (savedOppShots) {
           td.dataset.opp = savedOppShots;
@@ -524,7 +528,8 @@ App.statsTable = {
           tc.dataset.opp = String(Number(tc.dataset.opp || 0) + 1);
           
           // Gegner-Schüsse teamspezifisch in LocalStorage speichern
-          const teamId = App.teamSelection.getCurrentTeamInfo().id;
+          const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+          const teamId = teamInfo ? teamInfo.id : 'team1';
           localStorage.setItem(`opponentShots_${teamId}`, tc.dataset.opp);
           
           this.updateTotals();
@@ -581,16 +586,61 @@ App.statsTable = {
     });
   },
   
-  // Teamspezifische Speicherfunktionen
+  // Teamspezifische Lade- und Speicherfunktionen
+  loadTeamSpecificData() {
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    if (!teamInfo || !teamInfo.id) {
+      console.warn('No team selected, cannot load team-specific data');
+      return;
+    }
+    const teamId = teamInfo.id;
+    
+    // Load team-specific selectedPlayers order if it exists
+    const savedSelectedPlayers = localStorage.getItem(`selectedPlayers_${teamId}`);
+    if (savedSelectedPlayers) {
+      try {
+        App.data.selectedPlayers = JSON.parse(savedSelectedPlayers);
+      } catch (e) {
+        console.warn('Failed to load team-specific selectedPlayers:', e);
+      }
+    }
+    
+    // Load team-specific stats data
+    const savedStatsData = localStorage.getItem(`statsData_${teamId}`);
+    if (savedStatsData) {
+      try {
+        App.data.statsData = JSON.parse(savedStatsData);
+      } catch (e) {
+        console.warn('Failed to load team-specific statsData:', e);
+      }
+    }
+    
+    // Load team-specific player times
+    const savedPlayerTimes = localStorage.getItem(`playerTimes_${teamId}`);
+    if (savedPlayerTimes) {
+      try {
+        App.data.playerTimes = JSON.parse(savedPlayerTimes);
+      } catch (e) {
+        console.warn('Failed to load team-specific playerTimes:', e);
+      }
+    }
+  },
+  
   saveToStorage() {
-    const teamId = App.teamSelection.getCurrentTeamInfo().id;
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    if (!teamInfo || !teamInfo.id) {
+      console.warn('No team selected, cannot save team-specific data');
+      return;
+    }
+    const teamId = teamInfo.id;
     localStorage.setItem(`selectedPlayers_${teamId}`, JSON.stringify(App.data.selectedPlayers));
     localStorage.setItem(`statsData_${teamId}`, JSON.stringify(App.data.statsData));
     localStorage.setItem(`playerTimes_${teamId}`, JSON.stringify(App.data.playerTimes));
   },
   
   saveActiveTimersState() {
-    const teamId = App.teamSelection.getCurrentTeamInfo().id;
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const teamId = teamInfo ? teamInfo.id : 'team1';
     const activeTimerPlayers = Object.keys(App.data.activeTimers);
     localStorage.setItem(`activeTimerPlayers_${teamId}`, JSON.stringify(activeTimerPlayers));
   },
@@ -611,7 +661,8 @@ App.statsTable = {
     App.data.activeTimers = {};
     
     // Teamspezifisch löschen
-    const teamId = App.teamSelection ? App.teamSelection.getCurrentTeamInfo().id : 'team1';
+    const teamInfo = App.teamSelection?.getCurrentTeamInfo();
+    const teamId = teamInfo ? teamInfo.id : 'team1';
     localStorage.removeItem(`statsData_${teamId}`);
     localStorage.removeItem(`playerTimes_${teamId}`);
     localStorage.removeItem(`activeTimerPlayers_${teamId}`);
