@@ -362,7 +362,7 @@
     const playerFilter = App.seasonMap?.playerFilter || null;
     let goalieFilter = localStorage.getItem("seasonMapActiveGoalie") || null;
     
-    // "All Goalies" explizit auf null setzen (value ist "" bei All Goalies)
+    // Normalize empty string and "All Goalies" values to null for consistent filter logic
     if (goalieFilter === "" || goalieFilter === "All Goalies") {
       goalieFilter = null;
     }
