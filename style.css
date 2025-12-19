@@ -596,22 +596,22 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   transform: translate(-50%, -50%);
 }
 
-/* Marker: ALLE dunkelgrau, scharfer Rand, gleiche Optik für Feld & Tor */
+/* KRITISCH: Marker sichtbar machen auf allen Geräten */
 .marker-dot {
-  position: absolute;
   width: 14px;
   height: 14px;
   border-radius: 50%;
+  border: 2px solid #000;
+  box-shadow: 0 0 3px rgba(0,0,0,0.5);
+  position: absolute;
+  z-index: 100 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  pointer-events: auto;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
-  border: 2px solid #000;      /* Schwarzer Rand für Kontrast */
   cursor: pointer;
   background-color: #444444;
-  z-index: 100;                /* HOCH - über dem Bild */
-  opacity: 1 !important;
-  pointer-events: auto;
-  display: block !important;
-  visibility: visible !important;
 }
 
 /* Farben explizit setzen für grüne Marker */
@@ -632,14 +632,24 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   border-color: #000000;       /* Schwarzer Rand */
 }
 
-/* Container müssen Marker außerhalb erlauben */
+/* Container müssen Marker außerhalb erlauben - KRITISCH für Sichtbarkeit */
 .field-box,
 .goal-img-box,
 #fieldBox,
 #goalGreenBox,
-#goalRedBox {
-  position: relative;
+#goalRedBox,
+#seasonFieldBox,
+#seasonGoalGreenBox,
+#seasonGoalRedBox {
+  position: relative !important;
   overflow: visible !important;
+}
+
+/* Bilder unter den Markern positionieren */
+.field-box img,
+.goal-img-box img {
+  position: relative;
+  z-index: 1;
 }
 
 /* Kein Scale-Effekt beim Klicken auf Feld/Tor */

@@ -1247,6 +1247,8 @@ App.goalMap = {
   },
   
   filterByGoalies(goalieNames) {
+    console.log('[Goal Map] filterByGoalies called:', goalieNames);
+    
     // Player and goalie filters operate independently on different zones
     
     // Detect if "All Goalies" is selected
@@ -1254,6 +1256,8 @@ App.goalMap = {
     const allGoalieNames = allGoalies.map(g => g.name);
     const isAllGoaliesFilter = (goalieNames.length === allGoalieNames.length && 
                                  goalieNames.every(name => allGoalieNames.includes(name)));
+    
+    console.log('[Goal Map] isAllGoaliesFilter:', isAllGoaliesFilter);
     
     const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
     boxes.forEach(box => {
@@ -1265,12 +1269,22 @@ App.goalMap = {
         if (isRedMarker) {
           const playerName = marker.dataset.player;
           
+          console.log('[Goal Map] Red marker:', {
+            player: playerName,
+            goalieNames: goalieNames,
+            isAllGoalies: isAllGoaliesFilter
+          });
+          
           if (isAllGoaliesFilter) {
             // "All Goalies" - show all red zone markers
-            marker.style.display = '';
+            marker.style.display = 'block';
+            marker.style.visibility = 'visible';
+            marker.style.opacity = '1';
           } else if (playerName && goalieNames.includes(playerName)) {
             // Marker belongs to selected goalie - show
-            marker.style.display = '';
+            marker.style.display = 'block';
+            marker.style.visibility = 'visible';
+            marker.style.opacity = '1';
           } else {
             // Marker doesn't belong to selected goalie - hide
             marker.style.display = 'none';
@@ -1309,6 +1323,8 @@ App.goalMap = {
   },
   
   applyPlayerFilter() {
+    console.log('[Goal Map] applyPlayerFilter called, filter:', this.playerFilter);
+    
     if (this.playerFilter) {
       localStorage.setItem("goalMapPlayerFilter", this.playerFilter);
     } else {
@@ -1316,17 +1332,38 @@ App.goalMap = {
     }
     
     const boxes = document.querySelectorAll(App.selectors.torbildBoxes);
+    console.log('[Goal Map] Found boxes:', boxes.length);
+    
     boxes.forEach(box => {
       const markers = box.querySelectorAll(".marker-dot");
+      console.log('[Goal Map] Found markers in box:', markers.length);
+      
       markers.forEach(marker => {
         // Only filter GREEN ZONE markers
         const isGreenMarker = this.isGreenZoneMarker(marker, box);
+        const playerName = marker.dataset.player;
+        
+        console.log('[Goal Map] Marker:', {
+          isGreen: isGreenMarker,
+          player: playerName,
+          filter: this.playerFilter
+        });
         
         if (isGreenMarker) {
           if (this.playerFilter) {
-            marker.style.display = (marker.dataset.player === this.playerFilter) ? '' : 'none';
+            // KRITISCH: Vergleich muss korrekt sein
+            if (playerName === this.playerFilter) {
+              marker.style.display = 'block';
+              marker.style.visibility = 'visible';
+              marker.style.opacity = '1';
+            } else {
+              marker.style.display = 'none';
+            }
           } else {
-            marker.style.display = '';
+            // "All Players" - alle grünen Marker anzeigen
+            marker.style.display = 'block';
+            marker.style.visibility = 'visible';
+            marker.style.opacity = '1';
           }
         }
         // Red zone markers are not touched by this function
