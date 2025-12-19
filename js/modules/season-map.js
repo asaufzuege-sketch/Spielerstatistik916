@@ -239,9 +239,13 @@ App.seasonMap = {
   },
   
   filterByGoalies(goalieNames) {
+    console.log('[Season Map] filterByGoalies called:', goalieNames);
+    
     const allGoalies = this.getAllGoaliesFromData();
     const isAllGoaliesFilter = (goalieNames.length === allGoalies.length && 
                                  goalieNames.every(name => allGoalies.includes(name)));
+    
+    console.log('[Season Map] isAllGoaliesFilter:', isAllGoaliesFilter);
     
     const boxes = document.querySelectorAll(App.selectors.seasonMapBoxes);
     boxes.forEach(box => {
@@ -252,10 +256,20 @@ App.seasonMap = {
         if (isRedMarker) {
           const playerName = marker.dataset.player;
           
+          console.log('[Season Map] Red marker:', {
+            player: playerName,
+            goalieNames: goalieNames,
+            isAllGoalies: isAllGoaliesFilter
+          });
+          
           if (isAllGoaliesFilter) {
-            marker.style.display = '';
+            marker.style.display = 'block';
+            marker.style.visibility = 'visible';
+            marker.style.opacity = '1';
           } else if (playerName && goalieNames.includes(playerName)) {
-            marker.style.display = '';
+            marker.style.display = 'block';
+            marker.style.visibility = 'visible';
+            marker.style.opacity = '1';
           } else {
             marker.style.display = 'none';
           }
@@ -295,6 +309,8 @@ App.seasonMap = {
   },
   
   applyPlayerFilter() {
+    console.log('[Season Map] applyPlayerFilter called, filter:', this.playerFilter);
+    
     if (this.playerFilter) {
       localStorage.setItem("seasonMapPlayerFilter", this.playerFilter);
     } else {
@@ -302,16 +318,35 @@ App.seasonMap = {
     }
     
     const boxes = document.querySelectorAll(App.selectors.seasonMapBoxes);
+    console.log('[Season Map] Found boxes:', boxes.length);
+    
     boxes.forEach(box => {
       const markers = box.querySelectorAll(".marker-dot");
+      console.log('[Season Map] Found markers in box:', markers.length);
+      
       markers.forEach(marker => {
         const isGreenMarker = this.isGreenZoneMarker(marker, box);
+        const playerName = marker.dataset.player;
+        
+        console.log('[Season Map] Marker:', {
+          isGreen: isGreenMarker,
+          player: playerName,
+          filter: this.playerFilter
+        });
         
         if (isGreenMarker) {
           if (this.playerFilter) {
-            marker.style.display = (marker.dataset.player === this.playerFilter) ? '' : 'none';
+            if (playerName === this.playerFilter) {
+              marker.style.display = 'block';
+              marker.style.visibility = 'visible';
+              marker.style.opacity = '1';
+            } else {
+              marker.style.display = 'none';
+            }
           } else {
-            marker.style.display = '';
+            marker.style.display = 'block';
+            marker.style.visibility = 'visible';
+            marker.style.opacity = '1';
           }
         }
       });
