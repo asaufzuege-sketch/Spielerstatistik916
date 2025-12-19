@@ -267,7 +267,7 @@ App.teamSelection = (function() {
 ________________________________________
 
 Team Selection
-Team wählen oder bearbeiten
+• Team wählen oder bearbeiten
 
 ________________________________________
 
@@ -368,7 +368,7 @@ Reset (irreversibel)
 ________________________________________
 
 Team Selection
-Choose or edit team
+• Choose or edit team
 
 ________________________________________
 
@@ -469,7 +469,7 @@ Reset (irreversible)
 ________________________________________
 
 Team Selection
-Выбрать или редактировать команду
+• Выбрать или редактировать команду
 
 ________________________________________
 
@@ -570,7 +570,7 @@ Reset (необратимо)
 ________________________________________
 
 Team Selection
-Välj eller redigera lag
+• Välj eller redigera lag
 
 ________________________________________
 
@@ -671,7 +671,7 @@ Reset (oåterkallelig)
 ________________________________________
 
 Team Selection
-Valitse tai muokkaa joukkuetta
+• Valitse tai muokkaa joukkuetta
 
 ________________________________________
 
