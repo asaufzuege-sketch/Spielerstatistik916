@@ -616,6 +616,7 @@ App.goalMap = {
     
     // Grey markers - check position
     const yPct = parseFloat(marker.dataset.yPctImage);
+    // Allow yPct >= 0 to handle markers at top edge (y=0)
     if (!isNaN(yPct) && yPct >= 0) {
       return yPct < this.VERTICAL_SPLIT_THRESHOLD;
     }
@@ -653,6 +654,7 @@ App.goalMap = {
     
     // Grey markers - check position
     const yPct = parseFloat(marker.dataset.yPctImage);
+    // Allow yPct >= 0 to handle markers at top edge (y=0)
     if (!isNaN(yPct) && yPct >= 0) {
       return yPct >= this.VERTICAL_SPLIT_THRESHOLD;
     }
