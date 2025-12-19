@@ -9,8 +9,11 @@ App.statsTable = {
     currentY: 0,
     initialMouseY: 0,
     yOffset: 0,
-    draggedElement: null
+    draggedElement: null,
+    currentDragHandle: null
   },
+  // Store references to document-level event handlers for cleanup
+  documentHandlersAttached: false,
   
   init() {
     this.container = document.getElementById("statsContainer");
@@ -162,22 +165,17 @@ App.statsTable = {
   attachDragHandlers(row, dragHandle) {
     if (!dragHandle) return;
     
-    let longPressTimer = null;
-    let isDragging = false;
-    let startY = 0;
-    let hasMoved = false;
-    
     const startDrag = (e) => {
-      if (isDragging) return;
+      if (this.dragState.isDragging) return;
       
       const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-      startY = clientY;
-      hasMoved = false;
+      this.dragState.startY = clientY;
+      this.dragState.hasMoved = false;
       
-      longPressTimer = setTimeout(() => {
-        if (!hasMoved && !isDragging) {
+      this.dragState.longPressTimer = setTimeout(() => {
+        if (!this.dragState.hasMoved && !this.dragState.isDragging) {
+          this.dragState.currentDragHandle = dragHandle; // Set just before dragging starts
           this.startDragging(row);
-          isDragging = true;
           dragHandle.style.cursor = 'grabbing';
           
           // Haptic feedback
@@ -190,49 +188,60 @@ App.statsTable = {
       }, 600); // 600ms für Long Press
     };
     
-    const moveDrag = (e) => {
+    // Attach only local events to drag handle
+    dragHandle.addEventListener('mousedown', startDrag);
+    dragHandle.addEventListener('touchstart', startDrag, { passive: false });
+    
+    // Attach document-level handlers only once
+    if (!this.documentHandlersAttached) {
+      this.attachGlobalDragHandlers();
+      this.documentHandlersAttached = true;
+    }
+  },
+  
+  attachGlobalDragHandlers() {
+    // Global move handler
+    const globalMoveDrag = (e) => {
       const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
-      const deltaY = Math.abs(clientY - startY);
+      const deltaY = Math.abs(clientY - this.dragState.startY);
       
       if (deltaY > 10) {
-        hasMoved = true;
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
+        this.dragState.hasMoved = true;
+        if (this.dragState.longPressTimer) {
+          clearTimeout(this.dragState.longPressTimer);
+          this.dragState.longPressTimer = null;
         }
       }
       
-      if (isDragging) {
+      if (this.dragState.isDragging) {
         e.preventDefault();
         this.handleDragMove(clientY);
       }
     };
     
-    const endDrag = (e) => {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
-        longPressTimer = null;
+    // Global end handler
+    const globalEndDrag = (e) => {
+      if (this.dragState.longPressTimer) {
+        clearTimeout(this.dragState.longPressTimer);
+        this.dragState.longPressTimer = null;
       }
       
-      if (isDragging) {
+      if (this.dragState.isDragging) {
         this.endDragging();
-        isDragging = false;
-        dragHandle.style.cursor = 'grab';
+        if (this.dragState.currentDragHandle) {
+          this.dragState.currentDragHandle.style.cursor = 'grab';
+        }
       }
       
-      hasMoved = false;
+      this.dragState.hasMoved = false;
     };
     
-    // Mouse events
-    dragHandle.addEventListener('mousedown', startDrag);
-    document.addEventListener('mousemove', moveDrag);
-    document.addEventListener('mouseup', endDrag);
-    
-    // Touch events
-    dragHandle.addEventListener('touchstart', startDrag, { passive: false });
-    document.addEventListener('touchmove', moveDrag, { passive: false });
-    document.addEventListener('touchend', endDrag, { passive: false });
-    dragHandle.addEventListener('touchcancel', endDrag, { passive: false });
+    // Attach to document - these will persist across re-renders
+    document.addEventListener('mousemove', globalMoveDrag);
+    document.addEventListener('mouseup', globalEndDrag);
+    document.addEventListener('touchmove', globalMoveDrag, { passive: false });
+    document.addEventListener('touchend', globalEndDrag, { passive: false });
+    document.addEventListener('touchcancel', globalEndDrag, { passive: false });
   },
   
   startDragging(row) {
