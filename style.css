@@ -566,14 +566,27 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 /* Marker: ALLE dunkelgrau, scharfer Rand, gleiche Optik für Feld & Tor */
 .marker-dot {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
+  border: 2px solid #000;
+  box-shadow: 0 0 3px rgba(0,0,0,0.5);
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.6);
   cursor: pointer;
   background-color: #444444;
+}
+
+/* Mobile: Doppeltipp-Zoom auf interaktiven Elementen unterdrücken */
+.stats-table td,
+.season-table td,
+.goalvalue-table td,
+.time-btn,
+.time-cell,
+.stat-cell,
+[data-stat],
+.lineup-position,
+.player-row {
+  touch-action: manipulation;
 }
 
 /* Kein Scale-Effekt beim Klicken auf Feld/Tor */
