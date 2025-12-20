@@ -454,7 +454,17 @@ App.seasonMap = {
     canvas.width = rect.width;
     canvas.height = rect.height;
     
+    // Validate canvas dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      console.warn('[Season Map] Cannot render heatmap: image not loaded or has zero dimensions');
+      return;
+    }
+    
     const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.warn('[Season Map] Cannot render heatmap: canvas context unavailable');
+      return;
+    }
     
     // Get all markers
     const markers = fieldBox.querySelectorAll('.marker-dot');
@@ -469,6 +479,9 @@ App.seasonMap = {
       
       const yPct = parseFloat(marker.dataset.yPctImage) || 0;
       const xPct = parseFloat(marker.dataset.xPctImage) || 0;
+      
+      // Skip markers with invalid coordinates (0,0 or out of bounds)
+      if (xPct < 0.1 || yPct < 0.1 || xPct > 100 || yPct > 100) return;
       
       if (yPct < 50) {
         greenZoneMarkers.push({ x: xPct, y: yPct });
@@ -489,12 +502,14 @@ App.seasonMap = {
   drawHeatmapZone(ctx, markers, width, height, color) {
     if (markers.length === 0) return;
     
+    // Calculate radius once for all markers in this zone
+    const radius = Math.min(width, height) * App.seasonMap.HEATMAP_RADIUS_FACTOR;
+    
     markers.forEach(marker => {
       const x = (marker.x / 100) * width;
       const y = (marker.y / 100) * height;
       
       // Create radial gradient for each point
-      const radius = Math.min(width, height) * App.seasonMap.HEATMAP_RADIUS_FACTOR;
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
       
       // Parse color and create gradient
