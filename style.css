@@ -588,6 +588,7 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 }
 
 /* Marker: ALLE dunkelgrau, scharfer Rand, gleiche Optik für Feld & Tor */
+/* Default: 14px for Goal Map, overridden to 8px for Season Map below */
 .marker-dot {
   position: absolute;
   width: 14px;
@@ -598,14 +599,6 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   transform: translate(-50%, -50%);
   cursor: pointer;
   background-color: #444444;
-}
-
-/* Goal Map: Größere Marker-Punkte (14px) - bleibt wie vorher */
-#torbildPage .marker-dot {
-  width: 14px;
-  height: 14px;
-  border: 2px solid #000;
-  box-shadow: 0 0 3px rgba(0,0,0,0.5);
 }
 
 /* Mobile: Doppeltipp-Zoom auf interaktiven Elementen unterdrücken */
