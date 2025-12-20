@@ -481,9 +481,9 @@ App.seasonMap = {
       const xPct = parseFloat(marker.dataset.xPctImage) || 0;
       
       // Skip markers with invalid coordinates (0,0 or out of bounds)
-      if (xPct < 0.1 || yPct < 0.1 || xPct > 100 || yPct > 100) return;
+      if (xPct < 0.1 || yPct < 0.1 || xPct >= 100 || yPct >= 100) return;
       
-      if (yPct < 50) {
+      if (yPct < this.VERTICAL_SPLIT_THRESHOLD) {
         greenZoneMarkers.push({ x: xPct, y: yPct });
       } else {
         redZoneMarkers.push({ x: xPct, y: yPct });
@@ -503,7 +503,7 @@ App.seasonMap = {
     if (markers.length === 0) return;
     
     // Calculate radius once for all markers in this zone
-    const radius = Math.min(width, height) * App.seasonMap.HEATMAP_RADIUS_FACTOR;
+    const radius = Math.min(width, height) * this.HEATMAP_RADIUS_FACTOR;
     
     markers.forEach(marker => {
       const x = (marker.x / 100) * width;
