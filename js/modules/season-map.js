@@ -454,24 +454,16 @@ App.seasonMap = {
     canvas.width = rect.width;
     canvas.height = rect.height;
     
-    // Validate canvas dimensions
-    if (canvas.width === 0 || canvas.height === 0) {
-      console.warn('[Season Map] Cannot render heatmap: image not loaded or has zero dimensions');
-      return;
-    }
-    
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.warn('[Season Map] Cannot render heatmap: canvas context unavailable');
-      return;
-    }
+    if (!ctx) return;
     
-    // Get all markers
+    // Get all VISIBLE markers
     const markers = fieldBox.querySelectorAll('.marker-dot');
     
-    // Separate markers by zone
-    const greenZoneMarkers = [];
-    const redZoneMarkers = [];
+    // Separate markers by COLOR (not by position!)
+    const greenMarkers = [];
+    const redMarkers = [];
+    const greyMarkers = [];
     
     markers.forEach(marker => {
       // Skip hidden markers
@@ -480,30 +472,43 @@ App.seasonMap = {
       const yPct = parseFloat(marker.dataset.yPctImage) || 0;
       const xPct = parseFloat(marker.dataset.xPctImage) || 0;
       
-      // Skip markers with invalid coordinates (0,0 or out of bounds)
+      // Skip invalid coordinates
       if (xPct < 0.1 || yPct < 0.1 || xPct >= 100 || yPct >= 100) return;
       
-      if (yPct < this.VERTICAL_SPLIT_THRESHOLD) {
-        greenZoneMarkers.push({ x: xPct, y: yPct });
-      } else {
-        redZoneMarkers.push({ x: xPct, y: yPct });
+      const color = marker.style.backgroundColor || '';
+      
+      // Check marker color
+      const isGreen = color.includes('0, 255, 102') || color.includes('00ff66');
+      const isRed = color.includes('255, 0, 0') || color.includes('ff0000');
+      const isGrey = color.includes('68, 68, 68') || color.includes('444444');
+      
+      const point = { x: xPct, y: yPct };
+      
+      if (isGreen) {
+        greenMarkers.push(point);
+      } else if (isRed) {
+        redMarkers.push(point);
+      } else if (isGrey) {
+        greyMarkers.push(point);
       }
     });
     
-    // Draw green heatmap (top half)
-    this.drawHeatmapZone(ctx, greenZoneMarkers, canvas.width, canvas.height, 'rgba(0, 255, 102, 0.6)');
+    const radius = Math.min(canvas.width, canvas.height) * this.HEATMAP_RADIUS_FACTOR;
     
-    // Draw red heatmap (bottom half)
-    this.drawHeatmapZone(ctx, redZoneMarkers, canvas.width, canvas.height, 'rgba(255, 0, 0, 0.6)');
+    // Draw grey heatmap first (behind others)
+    this.drawHeatmapZone(ctx, greyMarkers, canvas.width, canvas.height, 'rgba(100, 100, 100, 0.5)', radius);
+    
+    // Draw green heatmap
+    this.drawHeatmapZone(ctx, greenMarkers, canvas.width, canvas.height, 'rgba(0, 255, 102, 0.6)', radius);
+    
+    // Draw red heatmap
+    this.drawHeatmapZone(ctx, redMarkers, canvas.width, canvas.height, 'rgba(255, 0, 0, 0.6)', radius);
     
     fieldBox.appendChild(canvas);
   },
   
-  drawHeatmapZone(ctx, markers, width, height, color) {
+  drawHeatmapZone(ctx, markers, width, height, color, radius) {
     if (markers.length === 0) return;
-    
-    // Calculate radius once for all markers in this zone
-    const radius = Math.min(width, height) * this.HEATMAP_RADIUS_FACTOR;
     
     markers.forEach(marker => {
       const x = (marker.x / 100) * width;
