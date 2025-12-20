@@ -7,6 +7,9 @@ App.seasonMap = {
   playerFilter: null,
   // Vertical split threshold (Y-coordinate) that separates green zone (scored/upper) from red zone (conceded/lower)
   VERTICAL_SPLIT_THRESHOLD: 50,
+  // Heatmap configuration
+  HEATMAP_RENDER_DELAY: 150, // ms delay after marker rendering to ensure proper positioning
+  HEATMAP_RADIUS_FACTOR: 0.15, // Heatmap gradient radius as percentage of smaller dimension
   
   init() {
     this.timeTrackingBox = document.getElementById("seasonMapTimeTrackingBox");
@@ -267,6 +270,9 @@ App.seasonMap = {
     
     // Update Momentum Graphic when goalie filter changes
     this.refreshMomentumGraphic();
+    
+    // Update heatmap after filter change
+    this.renderHeatmap();
   },
   
   applyGoalieTimeTrackingFilter(goalieNames) {
@@ -321,6 +327,9 @@ App.seasonMap = {
     
     // Update Momentum Graphic when player filter changes
     this.refreshMomentumGraphic();
+    
+    // Update heatmap after filter change
+    this.renderHeatmap();
   },
   
   // Apply player filter to time tracking
@@ -415,6 +424,103 @@ App.seasonMap = {
         App.markerHandler.repositionMarkers();
       }, 100);
     }
+    
+    // Render heatmap after markers are positioned
+    setTimeout(() => {
+      this.renderHeatmap();
+    }, this.HEATMAP_RENDER_DELAY);
+  },
+  
+  // -----------------------------
+  // Heatmap Rendering
+  // -----------------------------
+  renderHeatmap() {
+    const fieldBox = document.getElementById('seasonFieldBox');
+    if (!fieldBox) return;
+    
+    // Remove existing heatmap
+    const existingCanvas = fieldBox.querySelector('.heatmap-canvas');
+    if (existingCanvas) existingCanvas.remove();
+    
+    // Create canvas overlay
+    const canvas = document.createElement('canvas');
+    canvas.className = 'heatmap-canvas';
+    
+    const img = fieldBox.querySelector('img');
+    if (!img) return;
+    
+    // Set canvas size to match image
+    const rect = img.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    
+    // Validate canvas dimensions
+    if (canvas.width === 0 || canvas.height === 0) {
+      console.warn('[Season Map] Cannot render heatmap: image not loaded or has zero dimensions');
+      return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.warn('[Season Map] Cannot render heatmap: canvas context unavailable');
+      return;
+    }
+    
+    // Get all markers
+    const markers = fieldBox.querySelectorAll('.marker-dot');
+    
+    // Separate markers by zone
+    const greenZoneMarkers = [];
+    const redZoneMarkers = [];
+    
+    markers.forEach(marker => {
+      // Skip hidden markers
+      if (marker.style.display === 'none') return;
+      
+      const yPct = parseFloat(marker.dataset.yPctImage) || 0;
+      const xPct = parseFloat(marker.dataset.xPctImage) || 0;
+      
+      // Skip markers with invalid coordinates (0,0 or out of bounds)
+      if (xPct < 0.1 || yPct < 0.1 || xPct >= 100 || yPct >= 100) return;
+      
+      if (yPct < this.VERTICAL_SPLIT_THRESHOLD) {
+        greenZoneMarkers.push({ x: xPct, y: yPct });
+      } else {
+        redZoneMarkers.push({ x: xPct, y: yPct });
+      }
+    });
+    
+    // Draw green heatmap (top half)
+    this.drawHeatmapZone(ctx, greenZoneMarkers, canvas.width, canvas.height, 'rgba(0, 255, 102, 0.6)');
+    
+    // Draw red heatmap (bottom half)
+    this.drawHeatmapZone(ctx, redZoneMarkers, canvas.width, canvas.height, 'rgba(255, 0, 0, 0.6)');
+    
+    fieldBox.appendChild(canvas);
+  },
+  
+  drawHeatmapZone(ctx, markers, width, height, color) {
+    if (markers.length === 0) return;
+    
+    // Calculate radius once for all markers in this zone
+    const radius = Math.min(width, height) * this.HEATMAP_RADIUS_FACTOR;
+    
+    markers.forEach(marker => {
+      const x = (marker.x / 100) * width;
+      const y = (marker.y / 100) * height;
+      
+      // Create radial gradient for each point
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      
+      // Parse color and create gradient
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
   },
   
   // -----------------------------

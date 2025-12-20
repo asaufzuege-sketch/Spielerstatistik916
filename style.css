@@ -543,6 +543,24 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   overflow: hidden; /* Versteckt überstehende Teile */
 }
 
+/* Container muss position relative haben für Heatmap */
+#seasonFieldBox {
+  position: relative;
+}
+
+/* Heatmap Canvas für Season Map */
+.heatmap-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+}
+
 #seasonMapPage .field-box img {
   width: 100%;
   height: 100%;
@@ -561,9 +579,16 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
 #seasonMapPage .marker-dot {
   position: absolute;
   transform: translate(-50%, -50%);
+  /* Kleinere Marker für Season Map (8px statt 14px) */
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #000;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
 }
 
 /* Marker: ALLE dunkelgrau, scharfer Rand, gleiche Optik für Feld & Tor */
+/* Default: 14px for Goal Map, overridden to 8px for Season Map below */
 .marker-dot {
   position: absolute;
   width: 14px;
@@ -1017,6 +1042,21 @@ th .sort-arrow { font-size: 0.7rem; color: #ddd }
   dominant-baseline: middle;
   font-family: "Segoe UI", Roboto, Arial, sans-serif;
   font-size: 11px;
+}
+
+/* Desktop: Torbilder je 30% der Viewport-Höhe */
+@media (min-width: 769px) {
+  #torbildPage .goal-img-box,
+  #seasonMapPage .goal-img-box {
+    min-height: 30vh;
+    flex: 0 0 30%;
+  }
+  
+  /* Spielfeld nimmt restlichen Platz */
+  #torbildPage .field-box,
+  #seasonMapPage .field-box {
+    flex: 1;
+  }
 }
 
 @media (max-width: 900px) {
