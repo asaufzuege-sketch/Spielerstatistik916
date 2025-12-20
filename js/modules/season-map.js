@@ -478,7 +478,7 @@ App.seasonMap = {
       } else if (color.includes('255, 0, 0') || color.includes('ff0000')) {
         glowColor = 'rgba(255, 0, 0, 0.5)';    // Roter Glow
       } else if (color.includes('68, 68, 68') || color.includes('444444')) {
-        glowColor = 'rgba(80, 80, 80, 0.5)';   // Grauer Glow
+        glowColor = 'rgba(68, 68, 68, 0.5)';   // Grauer Glow
       } else {
         return; // Unbekannte Farbe, überspringen
       }
