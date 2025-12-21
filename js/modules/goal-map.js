@@ -139,7 +139,6 @@ App.goalMap = {
           yPctImage = yPctContainer;
         }
         
-        console.log('[getPosFromEvent] xPctImage:', xPctImage, 'yPctImage:', yPctImage, 'insideImage:', insideImage);
         return { xPctContainer, yPctContainer, xPctImage, yPctImage, insideImage };
       };
       

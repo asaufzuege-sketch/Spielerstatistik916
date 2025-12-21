@@ -104,9 +104,6 @@ App.markerHandler = {
    * @param {string|null} playerName optionaler Spielername
    */
   createMarkerPercent(xPct, yPct, color, container, interactive = true, playerName = null) {
-    // Debug logging to trace coordinate flow
-    console.log('[createMarkerPercent] xPct:', xPct, 'yPct:', yPct, 'player:', playerName);
-    
     xPct = this.clampPct(xPct);
     yPct = this.clampPct(yPct);
     
@@ -116,9 +113,6 @@ App.markerHandler = {
     // Store image-relative coordinates as data attributes
     dot.dataset.xPctImage = xPct;
     dot.dataset.yPctImage = yPct;
-    
-    // Debug: Verify data attributes were set
-    console.log('[createMarkerPercent] Set data attributes - xPctImage:', dot.dataset.xPctImage, 'yPctImage:', dot.dataset.yPctImage);
     
     // Calculate position relative to rendered image
     const img = container.querySelector("img");
