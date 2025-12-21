@@ -105,6 +105,7 @@ App.goalMap = {
       let lastMouseUp = 0;
       let lastTouchEnd = 0;
       let lastTouchTime = 0;
+      let lastMarkerPlacedTime = 0;  // NEU: Flag für letzten Marker
       
       const getPosFromEvent = (e) => {
         const boxRect = img.getBoundingClientRect();
@@ -248,11 +249,11 @@ App.goalMap = {
           if (!sampler || !sampler.valid) return;
           
           if (box.id === "goalGreenBox") {
-            if (!sampler.isWhiteAt(pos.xPctImage, pos.yPctImage, 220)) return;
+            if (!sampler.isWhiteAt(pos.xPctImage, pos.yPctImage, 180)) return;  // War: 220
           } else if (box.id === "goalRedBox") {
-            if (!sampler.isNeutralWhiteAt(pos.xPctImage, pos.yPctImage, 235, 12)) return;
+            if (!sampler.isNeutralWhiteAt(pos.xPctImage, pos.yPctImage, 200, 30)) return;  // War: 235, 12
           } else {
-            if (!sampler.isWhiteAt(pos.xPctImage, pos.yPctImage, 220)) return;
+            if (!sampler.isWhiteAt(pos.xPctImage, pos.yPctImage, 180)) return;  // War: 220
           }
           
           const color = neutralGrey;
@@ -467,6 +468,13 @@ App.goalMap = {
           return;
         }
         
+        // NEU: Blockiere wenn kürzlich ein Marker gesetzt wurde
+        if (Date.now() - lastMarkerPlacedTime < 500) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          return;
+        }
+        
         if (mouseHoldTimer) {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
@@ -503,6 +511,7 @@ App.goalMap = {
           const touch = ev.touches[0];
           const pos = getPosFromEvent(touch);
           placeMarker(pos, true);
+          lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag nach long-press Marker
           if (navigator.vibrate) navigator.vibrate(50);
         }, App.markerHandler.LONG_MARK_MS);
       }, { passive: false });
@@ -511,6 +520,12 @@ App.goalMap = {
         ev.preventDefault();      // Prevent default touch behavior and subsequent click events
         ev.stopPropagation();     // Stop event bubbling to prevent premature navigation
         lastTouchTime = Date.now();  // Store touch timestamp to block synthetic clicks
+        
+        // NEU: Blockiere wenn kürzlich ein Marker gesetzt wurde (verhindert Doppelmarker)
+        if (Date.now() - lastMarkerPlacedTime < 500) {
+          return;
+        }
+        
         if (mouseHoldTimer) {
           clearTimeout(mouseHoldTimer);
           mouseHoldTimer = null;
@@ -521,9 +536,13 @@ App.goalMap = {
         
         if (now - lastTouchEnd < 300) {
           placeMarker(pos, true, true);
+          lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag
           lastTouchEnd = 0;
         } else {
-          if (!isLong) placeMarker(pos, false);
+          if (!isLong) {
+            placeMarker(pos, false);
+            lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag
+          }
           lastTouchEnd = now;
         }
         isLong = false;
