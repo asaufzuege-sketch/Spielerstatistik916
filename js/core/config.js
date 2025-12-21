@@ -42,7 +42,8 @@ const App = {
     playerName: null,
     requiredPoints: 0,
     collectedPoints: [],
-    pointTypes: [] // ['field', 'goal', 'time'] for goal, ['field'] for shot
+    pointTypes: [], // ['field', 'goal', 'time'] for goal, ['field'] for shot
+    lastTouchMarkerTime: 0 // Timestamp to prevent double markers from synthetic clicks
   },
   
   // Selektoren
@@ -442,6 +443,7 @@ const App = {
     this.goalMapWorkflow.collectedPoints = [];
     this.goalMapWorkflow.requiredPoints = 0;
     this.goalMapWorkflow.pointTypes = [];
+    this.goalMapWorkflow.lastTouchMarkerTime = 0;
     
     // Update workflow indicator to hide it
     if (this.goalMap && typeof this.goalMap.updateWorkflowIndicator === 'function') {
@@ -468,6 +470,7 @@ const App = {
     this.goalMapWorkflow.collectedPoints = [];
     this.goalMapWorkflow.requiredPoints = 0;
     this.goalMapWorkflow.pointTypes = [];
+    this.goalMapWorkflow.lastTouchMarkerTime = 0;
     console.log('Goal Map workflow cancelled');
     
     // Update workflow indicator to hide it and remove body classes
