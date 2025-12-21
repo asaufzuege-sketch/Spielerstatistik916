@@ -483,10 +483,14 @@ App.goalMap = {
         const pos = getPosFromEvent(ev);
         
         if (now - lastMouseUp < 300) {
+          lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag VOR placeMarker
           placeMarker(pos, true, true);
           lastMouseUp = 0;
         } else {
-          if (!isLong) placeMarker(pos, false);
+          if (!isLong) {
+            lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag VOR placeMarker
+            placeMarker(pos, false);
+          }
           lastMouseUp = now;
         }
         isLong = false;
@@ -510,8 +514,8 @@ App.goalMap = {
           isLong = true;
           const touch = ev.touches[0];
           const pos = getPosFromEvent(touch);
+          lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag VOR placeMarker
           placeMarker(pos, true);
-          lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag nach long-press Marker
           if (navigator.vibrate) navigator.vibrate(50);
         }, App.markerHandler.LONG_MARK_MS);
       }, { passive: false });
@@ -535,13 +539,13 @@ App.goalMap = {
         const pos = getPosFromEvent(touch);
         
         if (now - lastTouchEnd < 300) {
+          lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag VOR placeMarker
           placeMarker(pos, true, true);
-          lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag
           lastTouchEnd = 0;
         } else {
           if (!isLong) {
+            lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag VOR placeMarker
             placeMarker(pos, false);
-            lastMarkerPlacedTime = Date.now();  // NEU: Setze Flag
           }
           lastTouchEnd = now;
         }
