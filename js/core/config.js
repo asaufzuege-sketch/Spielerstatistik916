@@ -430,44 +430,9 @@ const App = {
     
     console.log(`Goal Map workflow completed for ${playerName}:`, points);
     
-    // ZUSÄTZLICH: Workflow-Punkte in goalMapMarkers speichern für Persistenz
-    try {
-      const existingMarkers = JSON.parse(localStorage.getItem("goalMapMarkers")) || [[], [], []];
-      
-      points.forEach(point => {
-        // Determine zone based on yPct position (for field points)
-        let zone = null;
-        if (point.boxId === 'fieldBox') {
-          zone = point.yPct < 50 ? 'green' : 'red';
-        } else if (point.boxId === 'goalGreenBox') {
-          zone = 'green';
-        } else if (point.boxId === 'goalRedBox') {
-          zone = 'red';
-        }
-        
-        const markerData = {
-          xPct: point.xPct,
-          yPct: point.yPct,
-          color: point.color,
-          player: playerName,
-          zone: zone
-        };
-        
-        // Add to appropriate box based on boxId
-        if (point.boxId === 'fieldBox') {
-          existingMarkers[0].push(markerData);
-        } else if (point.boxId === 'goalGreenBox') {
-          existingMarkers[1].push(markerData);
-        } else if (point.boxId === 'goalRedBox') {
-          existingMarkers[2].push(markerData);
-        }
-      });
-      
-      localStorage.setItem("goalMapMarkers", JSON.stringify(existingMarkers));
-      console.log('[Workflow] Saved workflow points to goalMapMarkers:', existingMarkers);
-    } catch (err) {
-      console.error('[Workflow] Failed to save workflow points to goalMapMarkers:', err);
-    }
+    // NOTE: Workflow points are already saved to goalMapMarkers via addMarkerToStore()
+    // during marker creation, so we don't need to duplicate them here.
+    // The goalMapData above is for statistics/history tracking, not for display.
     
     // Reset workflow state
     this.goalMapWorkflow.active = false;
