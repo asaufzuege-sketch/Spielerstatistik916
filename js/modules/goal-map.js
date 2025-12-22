@@ -1272,6 +1272,9 @@ App.goalMap = {
       const buttons = period.querySelectorAll(".time-btn");
       
       buttons.forEach((btn, idx) => {
+        // Only update bottom-row buttons (red zone, indices 4-7)
+        if (idx < 4) return;
+        
         const key = `${periodNum}_${idx}`;
         const playerData = timeDataWithPlayers[key] || {};
         
@@ -1324,6 +1327,9 @@ App.goalMap = {
       const buttons = period.querySelectorAll(".time-btn");
       
       buttons.forEach((btn, idx) => {
+        // Only update top-row buttons (green zone, indices 0-3)
+        if (idx >= 4) return;
+        
         const key = `${periodNum}_${idx}`;
         const playerData = timeDataWithPlayers[key] || {};
         
