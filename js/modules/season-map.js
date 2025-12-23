@@ -655,35 +655,58 @@ App.seasonMap = {
     // Read existing season map data to ACCUMULATE instead of replace
     const existingMarkers = App.helpers.safeJSONParse("seasonMapMarkers", []);
     
-    const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
-    const newMarkers = boxes.map(box => {
+    // Create allMarkers explicitly in the order [fieldBox, goalGreenBox, goalRedBox]
+    // This ensures proper mapping regardless of DOM ordering
+    const boxIds = ["fieldBox", "goalGreenBox", "goalRedBox"];
+    const newMarkers = boxIds.map(id => {
+      const box = document.getElementById(id);
       const markers = [];
+      if (!box) return markers;
+      
       box.querySelectorAll(".marker-dot").forEach(dot => {
-        // Use image-relative coordinates instead of box-relative coordinates
         const xPct = parseFloat(dot.dataset.xPctImage) || 0;
         const yPct = parseFloat(dot.dataset.yPctImage) || 0;
-        const bg = dot.style.backgroundColor || "";
-        const playerName = dot.dataset.player || null;
-        const zone = dot.dataset.zone || null;
-        markers.push({ xPct, yPct, color: bg, player: playerName, zone: zone });
+        const color = dot.style.backgroundColor || "";
+        const player = dot.dataset.player || null;
+        
+        // Determine zone based on box ID
+        const zone =
+          id === "goalGreenBox" ? "green" :
+          id === "goalRedBox"   ? "red"   :
+          (dot.dataset.zone || (yPct >= 50 ? "red" : "green"));
+        
+        markers.push({ xPct, yPct, color, player, zone });
       });
       return markers;
     });
     
     // ACCUMULATE: Merge new markers with existing ones for each box
-    // Note: No deduplication is performed intentionally, as:
-    // - Multiple games may legitimately place markers at the same coordinates
-    // - Users should export once per game, then clear Goal Map
-    // - If duplicates occur from accidental double-export, users can reset Season Map
-    const mergedMarkers = existingMarkers.map((existingBoxMarkers, idx) => {
-      const newBoxMarkers = newMarkers[idx] || [];
-      // Combine existing and new markers for this box
-      return [...(existingBoxMarkers || []), ...newBoxMarkers];
-    });
+    // Use improved deduplication based on coordinate + zone + player
+    const isDuplicate = (a, b) =>
+      Math.abs(a.xPct - b.xPct) < 0.5 &&
+      Math.abs(a.yPct - b.yPct) < 0.5 &&
+      (a.zone || "") === (b.zone || "") &&
+      (a.player || "") === (b.player || "");
     
-    // If existingMarkers had fewer boxes than newMarkers, add the remaining boxes
-    for (let i = existingMarkers.length; i < newMarkers.length; i++) {
-      mergedMarkers.push(newMarkers[i]);
+    const mergedMarkers = [];
+    for (let idx = 0; idx < Math.max(existingMarkers.length, newMarkers.length); idx++) {
+      const existingBoxMarkers = existingMarkers[idx] || [];
+      const newBoxMarkers = newMarkers[idx] || [];
+      
+      // Start with existing markers
+      const combined = [...existingBoxMarkers];
+      
+      // Add new markers if they're not duplicates
+      newBoxMarkers.forEach(newMarker => {
+        const isAlreadyPresent = combined.some(existingMarker => 
+          isDuplicate(existingMarker, newMarker)
+        );
+        if (!isAlreadyPresent) {
+          combined.push(newMarker);
+        }
+      });
+      
+      mergedMarkers.push(combined);
     }
     
     localStorage.setItem("seasonMapMarkers", JSON.stringify(mergedMarkers));
@@ -991,10 +1014,22 @@ App.seasonMap = {
         }
         return true;
       });
-      const total = markers.length;
+      
+      // Deduplicate markers before counting
+      const seen = new Set();
+      const uniq = markers.filter(m => {
+        const left = Math.round(parseFloat(m.style.left) || 0);
+        const top  = Math.round(parseFloat(m.style.top)  || 0);
+        const key = `${left}:${top}:${m.dataset.player || ''}:${box.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      
+      const total = uniq.length;
       
       const counts = { tl: 0, tr: 0, bl: 0, bm: 0, br: 0 };
-      markers.forEach(m => {
+      uniq.forEach(m => {
         const left = parseFloat(m.style.left) || 0;
         const top = parseFloat(m.style.top) || 0;
         if (top < 50) {
