@@ -11,6 +11,9 @@ App.seasonMap = {
   // Heatmap configuration
   HEATMAP_RENDER_DELAY: 150, // ms delay after marker rendering to ensure proper positioning
   HEATMAP_RADIUS_FACTOR: 0.15, // Heatmap gradient radius as percentage of smaller dimension
+  HEATMAP_MIN_OPACITY: 0.2, // Minimum opacity for low-density areas
+  HEATMAP_MAX_OPACITY: 0.95, // Maximum opacity for high-density areas
+  HEATMAP_DENSITY_POWER: 0.7, // Power function exponent for density scaling (< 1 for faster initial rise)
   
   init() {
     this.timeTrackingBox = document.getElementById("seasonMapTimeTrackingBox");
@@ -582,15 +585,14 @@ App.seasonMap = {
       // Use exponential scaling to create more dramatic differences
       const densityRatio = densities[idx] / maxDensity;
       
-      // Enhanced opacity range: 0.2 (low density) to 0.95 (high density)
+      // Enhanced opacity range for better visual contrast
       // Apply power function for more dramatic increase in high-density areas
-      const baseOpacity = 0.2;
-      const maxOpacity = 0.95;
-      const opacityRange = maxOpacity - baseOpacity;
+      const opacityRange = this.HEATMAP_MAX_OPACITY - this.HEATMAP_MIN_OPACITY;
       
-      // Square the ratio to emphasize high-density areas more
-      const enhancedRatio = Math.pow(densityRatio, 0.7); // Slightly less aggressive than linear
-      const opacity = baseOpacity + (enhancedRatio * opacityRange);
+      // Apply power < 1 to create a curve that rises faster initially, then slower at high densities
+      // This makes medium-density areas more visible while still emphasizing high-density concentrations
+      const enhancedRatio = Math.pow(densityRatio, this.HEATMAP_DENSITY_POWER);
+      const opacity = this.HEATMAP_MIN_OPACITY + (enhancedRatio * opacityRange);
       
       // Create radial gradient for each point
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);

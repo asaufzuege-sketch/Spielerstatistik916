@@ -9,6 +9,7 @@ App.goalMap = {
   WORKFLOW_STEP_GOAL: 1, // Second step: click in goal
   WORKFLOW_STEP_TIME: 2, // Third step: click time button
   AUTO_NAVIGATION_DELAY_MS: 300, // Delay before auto-navigating after workflow completion
+  MARKER_POSITION_TOLERANCE: 0.01, // Tolerance for marker position comparison (absolute percentage points)
   
   init() {
     this.timeTrackingBox = document.getElementById("timeTrackingBox");
@@ -1427,9 +1428,8 @@ App.goalMap = {
     
     // Helper function to check if two markers are duplicates
     const isDuplicate = (marker1, marker2) => {
-      const tolerance = 0.01; // Allow 0.01% difference to account for floating point precision
-      return Math.abs(marker1.xPct - marker2.xPct) < tolerance &&
-             Math.abs(marker1.yPct - marker2.yPct) < tolerance &&
+      return Math.abs(marker1.xPct - marker2.xPct) < this.MARKER_POSITION_TOLERANCE &&
+             Math.abs(marker1.yPct - marker2.yPct) < this.MARKER_POSITION_TOLERANCE &&
              marker1.color === marker2.color &&
              marker1.player === marker2.player;
     };
