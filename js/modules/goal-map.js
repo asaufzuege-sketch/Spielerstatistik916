@@ -1421,7 +1421,7 @@ App.goalMap = {
     localStorage.setItem("seasonMapMarkers", JSON.stringify(allMarkers));
     
     // Player-bezogene Zeitdaten übernehmen
-    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    const timeDataWithPlayers = App.helpers.safeJSONParse("timeDataWithPlayers", {});
     console.log('[Goal Map Export] timeDataWithPlayers:', timeDataWithPlayers);
     localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
     

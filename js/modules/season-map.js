@@ -707,7 +707,9 @@ App.seasonMap = {
     // Show the season map page
     App.showPage("seasonMap");
     
-    // Explicitly call render() to display the exported data
+    // Explicitly call render() to display the exported data immediately
+    // This ensures markers are rendered even if showPage() doesn't trigger it
+    // (e.g., if the page is already visible or markers exist in DOM from previous session)
     this.render();
     
     // Momentum-Grafik aktualisieren
