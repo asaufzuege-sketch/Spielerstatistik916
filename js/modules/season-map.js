@@ -241,7 +241,7 @@ App.seasonMap = {
     return Array.from(allGoalies);
   },
   
-  filterByGoalies(goalieNames) {
+  filterByGoalies(goalieNames, skipStatsRender = false) {
     const allGoalies = this.getAllGoaliesFromData();
     const isAllGoaliesFilter = (goalieNames.length === allGoalies.length && 
                                  goalieNames.every(name => allGoalies.includes(name)));
@@ -274,8 +274,10 @@ App.seasonMap = {
     // Update heatmap after filter change
     this.renderHeatmap();
     
-    // Update goalie statistics
-    this.renderGoalAreaStats();
+    // Update goalie statistics (skip during initial render to avoid counting before all filters applied)
+    if (!skipStatsRender) {
+      this.renderGoalAreaStats();
+    }
   },
   
   applyGoalieTimeTrackingFilter(goalieNames) {
@@ -303,7 +305,7 @@ App.seasonMap = {
     });
   },
   
-  applyPlayerFilter() {
+  applyPlayerFilter(skipStatsRender = false) {
     if (this.playerFilter) {
       localStorage.setItem("seasonMapPlayerFilter", this.playerFilter);
     } else {
@@ -334,8 +336,10 @@ App.seasonMap = {
     // Update heatmap after filter change
     this.renderHeatmap();
     
-    // Update goalie statistics
-    this.renderGoalAreaStats();
+    // Update goalie statistics (skip during initial render to avoid counting before all filters applied)
+    if (!skipStatsRender) {
+      this.renderGoalAreaStats();
+    }
   },
   
   // Apply player filter to time tracking
@@ -414,14 +418,14 @@ App.seasonMap = {
     }
     
     // Apply filters after restoring
-    this.applyPlayerFilter();
+    this.applyPlayerFilter(true); // Skip stats render - will be called after both filters applied
     
     const savedGoalie = localStorage.getItem("seasonMapActiveGoalie");
     if (savedGoalie) {
-      this.filterByGoalies([savedGoalie]);
+      this.filterByGoalies([savedGoalie], true); // Skip stats render - will be called after both filters applied
     } else {
       const allGoalies = this.getAllGoaliesFromData();
-      this.filterByGoalies(allGoalies);
+      this.filterByGoalies(allGoalies, true); // Skip stats render - will be called after both filters applied
     }
     
     // Reposition markers after rendering to ensure correct placement
@@ -513,15 +517,50 @@ App.seasonMap = {
     // Calculate radius once for all markers in this zone
     const radius = Math.min(width, height) * this.HEATMAP_RADIUS_FACTOR;
     
-    markers.forEach(marker => {
+    // Calculate local density for each marker (how many markers are nearby)
+    const densities = markers.map((marker, idx) => {
       const x = (marker.x / 100) * width;
       const y = (marker.y / 100) * height;
+      
+      // Count nearby markers within 2x radius
+      const nearbyCount = markers.reduce((count, otherMarker, otherIdx) => {
+        if (idx === otherIdx) return count;
+        
+        const otherX = (otherMarker.x / 100) * width;
+        const otherY = (otherMarker.y / 100) * height;
+        const distance = Math.sqrt(Math.pow(x - otherX, 2) + Math.pow(y - otherY, 2));
+        
+        // Count markers within 2x radius as contributing to density
+        return distance <= (radius * 2) ? count + 1 : count;
+      }, 1); // Start with 1 to count the marker itself
+      
+      return nearbyCount;
+    });
+    
+    // Find max density for normalization
+    const maxDensity = Math.max(...densities);
+    
+    // Parse base color to extract RGB values
+    const baseColorMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!baseColorMatch) return;
+    
+    const r = parseInt(baseColorMatch[1]);
+    const g = parseInt(baseColorMatch[2]);
+    const b = parseInt(baseColorMatch[3]);
+    
+    markers.forEach((marker, idx) => {
+      const x = (marker.x / 100) * width;
+      const y = (marker.y / 100) * height;
+      
+      // Calculate opacity based on local density (0.3 to 0.8 range)
+      const densityRatio = densities[idx] / maxDensity;
+      const opacity = 0.3 + (densityRatio * 0.5); // Scale from 0.3 (low density) to 0.8 (high density)
       
       // Create radial gradient for each point
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
       
-      // Parse color and create gradient
-      gradient.addColorStop(0, color);
+      // Use density-adjusted opacity for more intense glow in dense areas
+      gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${opacity})`);
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       
       ctx.fillStyle = gradient;
