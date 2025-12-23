@@ -578,15 +578,27 @@ App.seasonMap = {
       const x = (marker.x / 100) * width;
       const y = (marker.y / 100) * height;
       
-      // Calculate opacity based on local density (0.3 to 0.8 range)
+      // Calculate opacity based on local density with improved scaling
+      // Use exponential scaling to create more dramatic differences
       const densityRatio = densities[idx] / maxDensity;
-      const opacity = 0.3 + (densityRatio * 0.5); // Scale from 0.3 (low density) to 0.8 (high density)
+      
+      // Enhanced opacity range: 0.2 (low density) to 0.95 (high density)
+      // Apply power function for more dramatic increase in high-density areas
+      const baseOpacity = 0.2;
+      const maxOpacity = 0.95;
+      const opacityRange = maxOpacity - baseOpacity;
+      
+      // Square the ratio to emphasize high-density areas more
+      const enhancedRatio = Math.pow(densityRatio, 0.7); // Slightly less aggressive than linear
+      const opacity = baseOpacity + (enhancedRatio * opacityRange);
       
       // Create radial gradient for each point
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
       
       // Use density-adjusted opacity for more intense glow in dense areas
+      // Inner circle has full opacity, outer circle fades to transparent
       gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${opacity})`);
+      gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.6})`);
       gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
       
       ctx.fillStyle = gradient;

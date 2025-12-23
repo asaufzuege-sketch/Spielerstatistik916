@@ -1425,11 +1425,32 @@ App.goalMap = {
     const existingSeasonMarkers = App.helpers.safeJSONParse("seasonMapMarkers", []);
     const mergedMarkers = [];
     
-    // Merge each box's markers
+    // Helper function to check if two markers are duplicates
+    const isDuplicate = (marker1, marker2) => {
+      const tolerance = 0.01; // Allow 0.01% difference to account for floating point precision
+      return Math.abs(marker1.xPct - marker2.xPct) < tolerance &&
+             Math.abs(marker1.yPct - marker2.yPct) < tolerance &&
+             marker1.color === marker2.color &&
+             marker1.player === marker2.player;
+    };
+    
+    // Merge each box's markers with deduplication
     for (let i = 0; i < Math.max(allMarkers.length, existingSeasonMarkers.length); i++) {
       const currentMarkers = allMarkers[i] || [];
       const existingMarkers = existingSeasonMarkers[i] || [];
-      mergedMarkers[i] = [...existingMarkers, ...currentMarkers];
+      
+      // Start with existing markers
+      const combined = [...existingMarkers];
+      
+      // Add current markers only if they're not duplicates
+      currentMarkers.forEach(newMarker => {
+        const isAlreadyPresent = combined.some(existingMarker => isDuplicate(newMarker, existingMarker));
+        if (!isAlreadyPresent) {
+          combined.push(newMarker);
+        }
+      });
+      
+      mergedMarkers[i] = combined;
     }
     
     // ACCUMULATE time data (merge player times)
