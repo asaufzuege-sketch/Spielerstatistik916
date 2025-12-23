@@ -8,7 +8,7 @@ App.seasonMap = {
   isRendering: false, // Guard flag to prevent duplicate renders
   // Vertical split threshold (Y-coordinate) that separates green zone (scored/upper) from red zone (conceded/lower)
   VERTICAL_SPLIT_THRESHOLD: 50,
-  // Duplicate detection tolerance for marker coordinates (in percentage points)
+  // Duplicate detection tolerance for marker coordinates (in percentage units, 0-100 scale)
   DUPLICATE_COORDINATE_TOLERANCE: 0.5,
   // Heatmap configuration
   HEATMAP_RENDER_DELAY: 150, // ms delay after marker rendering to ensure proper positioning
@@ -684,6 +684,7 @@ App.seasonMap = {
     
     // ACCUMULATE: Merge new markers with existing ones for each box
     // Use improved deduplication based on coordinate + zone + player
+    // Note: This deduplicates at the DATA level before rendering, using percentage coordinates
     const isDuplicate = (a, b) =>
       Math.abs(a.xPct - b.xPct) < this.DUPLICATE_COORDINATE_TOLERANCE &&
       Math.abs(a.yPct - b.yPct) < this.DUPLICATE_COORDINATE_TOLERANCE &&
@@ -1018,6 +1019,8 @@ App.seasonMap = {
       });
       
       // Deduplicate markers before counting
+      // Note: This deduplicates at the DOM level after rendering, using pixel coordinates
+      // Different from export deduplication which operates on data before rendering
       const seen = new Set();
       const uniq = markers.filter(m => {
         const left = Math.round(parseFloat(m.style.left) || 0);
