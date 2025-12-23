@@ -1401,86 +1401,39 @@ App.goalMap = {
   },
   
   exportGoalMap() {
+    if (!confirm("In Season Map exportieren?")) return;
+    
     const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
     const allMarkers = boxes.map(box => {
       const markers = [];
       box.querySelectorAll(".marker-dot").forEach(dot => {
+        const left = dot.style.left || "";
+        const top = dot.style.top || "";
         const bg = dot.style.backgroundColor || "";
-        // Use image-relative coordinates from data attributes
-        const xPct = parseFloat(dot.dataset.xPctImage) || 0;
-        const yPct = parseFloat(dot.dataset.yPctImage) || 0;
+        const xPct = parseFloat(left.replace("%", "")) || 0;
+        const yPct = parseFloat(top.replace("%", "")) || 0;
         const playerName = dot.dataset.player || null;
-        const zone = dot.dataset.zone || null; // Include zone attribute
-        markers.push({ xPct, yPct, color: bg, player: playerName, zone: zone });
+        markers.push({ xPct, yPct, color: bg, player: playerName });
       });
       return markers;
     });
     
-    localStorage.setItem("goalMapMarkers", JSON.stringify(allMarkers));
+    localStorage.setItem("seasonMapMarkers", JSON.stringify(allMarkers));
     
-    // Time Data für Momentum-Tabelle exportieren
-    const timeDataWithPlayers = App.helpers.safeJSONParse("timeDataWithPlayers", {});
+    // Player-bezogene Zeitdaten übernehmen
+    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
     console.log('[Goal Map Export] timeDataWithPlayers:', timeDataWithPlayers);
+    localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
     
-    // ACCUMULATE markers to Season Map (merge instead of overwrite)
-    const existingSeasonMarkers = App.helpers.safeJSONParse("seasonMapMarkers", []);
-    const mergedMarkers = [];
-    
-    // Helper function to check if two markers are duplicates
-    const isDuplicate = (marker1, marker2) => {
-      return Math.abs(marker1.xPct - marker2.xPct) < this.MARKER_POSITION_TOLERANCE &&
-             Math.abs(marker1.yPct - marker2.yPct) < this.MARKER_POSITION_TOLERANCE &&
-             marker1.color === marker2.color &&
-             marker1.player === marker2.player &&
-             marker1.zone === marker2.zone;
-    };
-    
-    // Merge each box's markers with deduplication
-    for (let i = 0; i < Math.max(allMarkers.length, existingSeasonMarkers.length); i++) {
-      const currentMarkers = allMarkers[i] || [];
-      const existingMarkers = existingSeasonMarkers[i] || [];
-      
-      // Start with existing markers
-      const combined = [...existingMarkers];
-      
-      // Add current markers only if they're not duplicates
-      currentMarkers.forEach(newMarker => {
-        const isAlreadyPresent = combined.some(existingMarker => isDuplicate(newMarker, existingMarker));
-        if (!isAlreadyPresent) {
-          combined.push(newMarker);
-        }
-      });
-      
-      mergedMarkers[i] = combined;
-    }
-    
-    // ACCUMULATE time data (merge player times)
-    const existingTimeData = App.helpers.safeJSONParse("seasonMapTimeDataWithPlayers", {});
-    const mergedTimeData = { ...existingTimeData };
-    
-    // Merge time data for each button
-    Object.keys(timeDataWithPlayers).forEach(key => {
-      if (!mergedTimeData[key]) {
-        mergedTimeData[key] = {};
-      }
-      const currentPlayers = timeDataWithPlayers[key];
-      Object.keys(currentPlayers).forEach(playerName => {
-        const currentValue = Number(currentPlayers[playerName]) || 0;
-        const existingValue = Number(mergedTimeData[key][playerName]) || 0;
-        mergedTimeData[key][playerName] = existingValue + currentValue;
-      });
-    });
-    
-    // Flaches Format für Momentum-Tabelle erstellen (from merged data)
+    // Flache Zeitdaten für Momentum-Graph aus timeDataWithPlayers berechnen
     const momentumData = {};
     const periods = ['p1', 'p2', 'p3'];
     
     periods.forEach(periodNum => {
       const periodValues = [];
-      // 8 Buttons pro Period (0-3 top-row/scored, 4-7 bottom-row/conceded)
       for (let btnIdx = 0; btnIdx < 8; btnIdx++) {
         const key = `${periodNum}_${btnIdx}`;
-        const playerData = mergedTimeData[key] || {};
+        const playerData = timeDataWithPlayers[key] || {};
         const total = Object.values(playerData).reduce((sum, val) => sum + Number(val || 0), 0);
         periodValues.push(total);
       }
@@ -1488,18 +1441,34 @@ App.goalMap = {
     });
     
     console.log('[Goal Map Export] momentumData:', momentumData);
-    console.log('[Goal Map Export] Merged markers count:', mergedMarkers.map(m => m.length));
-    
-    // Speichere merged/accumulated data
-    localStorage.setItem("seasonMapMarkers", JSON.stringify(mergedMarkers));
-    localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(mergedTimeData));
     localStorage.setItem("seasonMapTimeData", JSON.stringify(momentumData));
     
     // Alte timeData ebenfalls aktualisieren
     const timeData = this.readTimeTrackingFromBox();
     localStorage.setItem("timeData", JSON.stringify(timeData));
     
-    alert("Goal Map data exported to Season Map!");
+    const keep = confirm("Game exported to Season Map. Keep data in Goal Map? (OK = Yes)");
+    if (!keep) {
+      document.querySelectorAll("#torbildPage .marker-dot").forEach(d => d.remove());
+      document.querySelectorAll("#torbildPage .time-btn").forEach(btn => btn.textContent = "0");
+      localStorage.removeItem("timeData");
+      localStorage.removeItem("timeDataWithPlayers");
+      localStorage.removeItem("goalMapMarkers");
+    }
+    
+    App.showPage("seasonMap");
+    
+    // Render Season Map
+    if (App.seasonMap && typeof App.seasonMap.render === 'function') {
+      App.seasonMap.render();
+    }
+    
+    // Momentum-Grafik aktualisieren
+    if (typeof window.renderSeasonMomentumGraphic === 'function') {
+      setTimeout(() => {
+        window.renderSeasonMomentumGraphic();
+      }, 100);
+    }
   },
   
   readTimeTrackingFromBox() {
