@@ -1431,7 +1431,8 @@ App.goalMap = {
       return Math.abs(marker1.xPct - marker2.xPct) < this.MARKER_POSITION_TOLERANCE &&
              Math.abs(marker1.yPct - marker2.yPct) < this.MARKER_POSITION_TOLERANCE &&
              marker1.color === marker2.color &&
-             marker1.player === marker2.player;
+             marker1.player === marker2.player &&
+             marker1.zone === marker2.zone;
     };
     
     // Merge each box's markers with deduplication
