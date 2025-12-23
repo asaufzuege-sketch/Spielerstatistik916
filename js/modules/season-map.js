@@ -654,107 +654,44 @@ App.seasonMap = {
   exportFromGoalMap() {
     if (!confirm("In Season Map exportieren?")) return;
     
-    // Read existing season map data to ACCUMULATE instead of replace
-    const existingMarkers = App.helpers.safeJSONParse("seasonMapMarkers", []);
-    
-    // Create allMarkers explicitly in the order [fieldBox, goalGreenBox, goalRedBox]
-    // This ensures proper mapping regardless of DOM ordering
-    const boxIds = ["fieldBox", "goalGreenBox", "goalRedBox"];
-    const newMarkers = boxIds.map(id => {
-      const box = document.getElementById(id);
+    const boxes = Array.from(document.querySelectorAll(App.selectors.torbildBoxes));
+    const allMarkers = boxes.map(box => {
       const markers = [];
-      if (!box) return markers;
-      
       box.querySelectorAll(".marker-dot").forEach(dot => {
-        const xPct = parseFloat(dot.dataset.xPctImage) || 0;
-        const yPct = parseFloat(dot.dataset.yPctImage) || 0;
-        const color = dot.style.backgroundColor || "";
-        const player = dot.dataset.player || null;
-        
-        // Determine zone based on box ID
-        const zone =
-          id === "goalGreenBox" ? "green" :
-          id === "goalRedBox"   ? "red"   :
-          (dot.dataset.zone || (yPct >= 50 ? "red" : "green"));
-        
-        markers.push({ xPct, yPct, color, player, zone });
+        const left = dot.style.left || "";
+        const top = dot.style.top || "";
+        const bg = dot.style.backgroundColor || "";
+        const xPct = parseFloat(left.replace("%", "")) || 0;
+        const yPct = parseFloat(top.replace("%", "")) || 0;
+        const playerName = dot.dataset.player || null;
+        markers.push({ xPct, yPct, color: bg, player: playerName });
       });
       return markers;
     });
     
-    // ACCUMULATE: Merge new markers with existing ones for each box
-    // Use improved deduplication based on coordinate + zone + player
-    // Note: This deduplicates at the DATA level before rendering, using percentage coordinates
-    const isDuplicate = (a, b) =>
-      Math.abs(a.xPct - b.xPct) < this.DUPLICATE_COORDINATE_TOLERANCE &&
-      Math.abs(a.yPct - b.yPct) < this.DUPLICATE_COORDINATE_TOLERANCE &&
-      (a.zone || "") === (b.zone || "") &&
-      (a.player || "") === (b.player || "");
+    localStorage.setItem("seasonMapMarkers", JSON.stringify(allMarkers));
     
-    const mergedMarkers = [];
-    for (let idx = 0; idx < Math.max(existingMarkers.length, newMarkers.length); idx++) {
-      const existingBoxMarkers = existingMarkers[idx] || [];
-      const newBoxMarkers = newMarkers[idx] || [];
-      
-      // Start with existing markers
-      const combined = [...existingBoxMarkers];
-      
-      // Add new markers if they're not duplicates
-      newBoxMarkers.forEach(newMarker => {
-        const isAlreadyPresent = combined.some(existingMarker => 
-          isDuplicate(existingMarker, newMarker)
-        );
-        if (!isAlreadyPresent) {
-          combined.push(newMarker);
-        }
-      });
-      
-      mergedMarkers.push(combined);
-    }
+    // Player-bezogene Zeitdaten übernehmen
+    const timeDataWithPlayers = JSON.parse(localStorage.getItem("timeDataWithPlayers")) || {};
+    console.log('[Season Map Export] timeDataWithPlayers:', timeDataWithPlayers);
+    localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(timeDataWithPlayers));
     
-    localStorage.setItem("seasonMapMarkers", JSON.stringify(mergedMarkers));
-    
-    // ACCUMULATE time data: merge with existing seasonMapTimeDataWithPlayers
-    const existingTimeData = App.helpers.safeJSONParse("seasonMapTimeDataWithPlayers", {});
-    const newTimeData = App.helpers.safeJSONParse("timeDataWithPlayers", {});
-    console.log('[Season Map Export] Existing timeData:', existingTimeData);
-    console.log('[Season Map Export] New timeData:', newTimeData);
-    
-    // Merge time data - add new counts to existing counts for each key/player
-    const mergedTimeData = { ...existingTimeData };
-    Object.keys(newTimeData).forEach(key => {
-      if (!mergedTimeData[key]) {
-        mergedTimeData[key] = {};
-      }
-      Object.keys(newTimeData[key]).forEach(player => {
-        const existingCount = mergedTimeData[key][player] || 0;
-        const newCount = newTimeData[key][player] || 0;
-        mergedTimeData[key][player] = existingCount + newCount;
-      });
-    });
-    
-    localStorage.setItem("seasonMapTimeDataWithPlayers", JSON.stringify(mergedTimeData));
-    
-    // Flache Zeitdaten für Momentum-Graph aus mergedTimeData berechnen
-    // Format: { "p1": [button0, button1, ..., button7], "p2": [...], "p3": [...] }
+    // Flache Zeitdaten für Momentum-Graph aus timeDataWithPlayers berechnen
     const momentumData = {};
     const periods = ['p1', 'p2', 'p3'];
     
     periods.forEach(periodNum => {
       const periodValues = [];
-      // 8 Buttons pro Period (0-3 top-row/scored, 4-7 bottom-row/conceded)
       for (let btnIdx = 0; btnIdx < 8; btnIdx++) {
         const key = `${periodNum}_${btnIdx}`;
-        const playerData = mergedTimeData[key] || {};
+        const playerData = timeDataWithPlayers[key] || {};
         const total = Object.values(playerData).reduce((sum, val) => sum + Number(val || 0), 0);
         periodValues.push(total);
       }
       momentumData[periodNum] = periodValues;
     });
     
-    console.log('[Season Map Export] Accumulated momentumData:', momentumData);
-    
-    // Speichere für Momentum-Graph
+    console.log('[Season Map Export] momentumData:', momentumData);
     localStorage.setItem("seasonMapTimeData", JSON.stringify(momentumData));
     
     const keep = confirm("Game exported to Season Map. Keep data in Goal Map? (OK = Yes)");
@@ -765,13 +702,9 @@ App.seasonMap = {
       localStorage.removeItem("timeDataWithPlayers");
     }
     
-    // Show the season map page
-    // Note: showPage() will automatically call render() if markers are missing from DOM
-    // This is the desired behavior since we just saved new data to localStorage
     App.showPage("seasonMap");
+    this.render();  // <-- WICHTIG! Das fehlte im vorherigen PR!
     
-    // Momentum-Grafik aktualisieren
-    // Timeout benötigt, damit Page-Wechsel, Rendering und localStorage-Änderungen abgeschlossen sind
     if (typeof window.renderSeasonMomentumGraphic === 'function') {
       setTimeout(() => {
         window.renderSeasonMomentumGraphic();
