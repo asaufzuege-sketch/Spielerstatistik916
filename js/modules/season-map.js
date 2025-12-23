@@ -375,7 +375,6 @@ App.seasonMap = {
   // -----------------------------
   render() {
     // Guard against duplicate render calls
-    // Note: JavaScript is single-threaded, so this check is atomic in practice
     if (this.isRendering) {
       console.log('[Season Map] Render already in progress, skipping duplicate call');
       return;
@@ -388,10 +387,7 @@ App.seasonMap = {
       const boxes = Array.from(document.querySelectorAll(App.selectors.seasonMapBoxes));
       
       // CRITICAL: Remove ALL existing markers before creating new ones
-      boxes.forEach(box => {
-        const existingMarkers = box.querySelectorAll(".marker-dot");
-        existingMarkers.forEach(marker => marker.remove());
-      });
+      boxes.forEach(box => box.querySelectorAll(".marker-dot").forEach(d => d.remove()));
       
       // CSS steuert die Bildgröße - kein JavaScript-Override mehr nötig
       // Stelle sicher dass die Boxen relativ positioniert sind für Marker
