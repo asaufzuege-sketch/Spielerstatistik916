@@ -375,11 +375,13 @@ App.seasonMap = {
   // -----------------------------
   render() {
     // Guard against duplicate render calls
+    // Note: JavaScript is single-threaded, so this check is atomic in practice
     if (this.isRendering) {
       console.log('[Season Map] Render already in progress, skipping duplicate call');
       return;
     }
     
+    // Set flag immediately to prevent any subsequent render calls
     this.isRendering = true;
     
     try {
@@ -655,7 +657,9 @@ App.seasonMap = {
       localStorage.removeItem("timeDataWithPlayers");
     }
     
-    // Show the season map page - render() will be called automatically by showPage()
+    // Show the season map page
+    // Note: showPage() will automatically call render() if markers are missing from DOM
+    // This is the desired behavior since we just saved new data to localStorage
     App.showPage("seasonMap");
     
     // Momentum-Grafik aktualisieren
