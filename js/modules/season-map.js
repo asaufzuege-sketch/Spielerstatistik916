@@ -705,9 +705,12 @@ App.seasonMap = {
     }
     
     // Show the season map page
-    // Note: showPage() will automatically call render() if markers are missing from DOM
-    // This is the desired behavior since we just saved new data to localStorage
     App.showPage("seasonMap");
+    
+    // Explicitly call render() to display the exported data immediately
+    // This ensures markers are rendered even if showPage() doesn't trigger it
+    // (e.g., if the page is already visible or markers exist in DOM from previous session)
+    this.render();
     
     // Momentum-Grafik aktualisieren
     // Timeout benötigt, damit Page-Wechsel, Rendering und localStorage-Änderungen abgeschlossen sind
